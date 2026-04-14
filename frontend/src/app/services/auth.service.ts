@@ -4,13 +4,14 @@ import { LoginRequest } from '../auth/models/login-request';
 import { LoginResponse } from '../auth/models/login-response';
 import { jwtDecode } from 'jwt-decode';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  private API = "http://localhost:8080/api/v1/svua/auth";
+  private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
   private refreshTimeout: any;
 
@@ -62,11 +63,11 @@ export class AuthService {
   }
 
   login(data: LoginRequest) {
-    return this.http.post<LoginResponse>(`${this.API}/login`, data);
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data);
   }
 
   register(data: LoginRequest) {
-    return this.http.post<LoginResponse>(`${this.API}/login`, data);
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data);
   }
 
   guardarToken(token: string) {
@@ -84,7 +85,7 @@ export class AuthService {
   getRefreshToken() {
     const refreshToken = localStorage.getItem('refreshToken');
 
-    this.http.post<any>(`${this.API}/refresh`, {
+    this.http.post<any>(`${this.apiUrl}/auth/refresh`, {
       refreshToken
     }).subscribe({
       next: (res) => {
@@ -102,7 +103,7 @@ export class AuthService {
   }
 
   logout() {
-    return this.http.post(`${this.API}/logout`, null);
+    return this.http.post(`${this.apiUrl}/auth/logout`, null);
   }
 
   isLogged(): boolean {
