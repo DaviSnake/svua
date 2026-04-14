@@ -1,0 +1,76 @@
+.header {
+  height: 70px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* BOTÓN */
+.toggle {
+  font-size: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* RIGHT */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* SEARCH */
+.search {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* USER */
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* AVATAR */
+.avatar {
+  width: 35px;
+  height: 35px;
+  background: linear-gradient(135deg, #00a8ff, #0097e6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* DROPDOWN */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  width: 180px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.dropdown-item {
+  padding: 12px;
+}
+
+.dropdown-item:hover {
+  background: #f1f2f6;
+}
+
+.logout {
+  color: red;
+}

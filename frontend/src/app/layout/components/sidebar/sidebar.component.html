@@ -1,0 +1,109 @@
+<div class="menu-btn sidebar-btn" #sidebarBtn (click)="toggleBodySidebar();">
+        <i class='bx  bx-menu'  ></i> 
+        <i class='bx  bx-x'  ></i> 
+    </div>
+    
+    <div class="sidebar" #sidebar>
+        <div class="header">
+            <div class="menu-btn" #menuBtn (click)="menuBtnClick();">
+                <i class='bx  bx-chevron-left'  ></i> 
+            </div>
+            <div class="brand">
+                <img src="/img/logo.png" alt="logo">
+                <span>SVUA</span>
+            </div>
+        </div>
+        <div class="menu-container">
+          <ul class="menu">
+              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <a routerLink="/inicio/dashboard" class="menu-link">
+                      <i class="bx bx-bar-chart"></i>  
+                      <span>Dashboard</span>
+                  </a>
+              </li>
+              <li class="menu-item menu-item-dropdown" #menuItemDropdownGestion>
+                  <a class="menu-link" (click)="activarSubMenuGestion();">
+                      <i class="bx bx-package"></i> 
+                      <span>Gestón de Activos</span>
+                      <i class='bx  bx-chevron-down'  ></i>
+                  </a>
+                  <ul class="sub-menu" #subMenuGestion>
+                    <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                        <a routerLink="/inicio/activo" class="sub-menu-link">Activos</a>
+                    </li>
+                      <li><a routerLink="/inicio/tipoActivo"class="sub-menu-link">Tipos de Activo</a></li>
+                      <li><a class="sub-menu-link">Depreciación</a></li>
+                      <li><a routerLink="/inicio/repuesto"class="sub-menu-link">Repuestos</a></li>
+                      <li><a class="sub-menu-link">Órdenes</a></li>
+                  </ul>
+              </li>
+              <li class="menu-item menu-item-dropdown" #menuItemDropdownOrganizacion>
+                  <a class="menu-link" (click)="activarSubMenuOrganizacion();">
+                      <i class="bx bx-sitemap"></i> 
+                      <span>Organización</span>
+                      <i class='bx  bx-chevron-down'  ></i>
+                  </a>
+                  <ul class="sub-menu" #subMenuOrganizacion>
+                    @if (esAdmin) {
+                        <li><a routerLink="/inicio/empresa" class="sub-menu-link">Empresa</a></li>
+                    }
+                      <li><a routerLink="/inicio/ubicacion" class="sub-menu-link">Ubicaciones</a></li>
+                      <li><a routerLink="/inicio/bodega" class="sub-menu-link">Bodegas</a></li>
+                      <li><a class="sub-menu-link">Responsables</a></li>
+                      <li><a routerLink="/inicio/proveedor" class="sub-menu-link">Proveedores</a></li>
+                  </ul>
+              </li>
+              <li class="menu-item menu-item-dropdown" #menuItemDropdownAnalisis>
+                  <a class="menu-link" (click)="activarSubMenuAnalisis();">
+                      <i class="bx bx-analyse"></i>
+                      <span>Análisis</span>
+                      <i class='bx  bx-chevron-down'  ></i>
+                  </a>
+                  <ul class="sub-menu" #subMenuAnalisis>
+                      <li><a routerLink="/inicio/activo" class="sub-menu-link">Reportes</a></li>
+                      <li><a class="sub-menu-link">Auditoría</a></li>
+                  </ul>
+              </li>
+              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                  <a routerLink="/inicio/calendario" class="menu-link">
+                      <i class="bx bx-calendar"></i>
+                      <span>Calendario</span>
+                  </a>
+              </li>
+          </ul>
+        </div>
+        <div class="footer">
+            <ul class="menu">
+                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <a href="#" class="menu-link">
+                        <i class='bx  bx-user'></i> 
+                        <span>Perfil</span>
+                    </a>
+                </li>
+                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <a routerLink="/inicio/usuario" class="menu-link">
+                        <i class='bx  bx-user-check'></i> 
+                        <span>Usuarios</span>
+                    </a>
+                </li>
+                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <a href="#" class="menu-link">
+                        <i class='bx  bx-cog'  ></i>  
+                        <span>Configuración</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="user">
+                <div class="user-img">
+                    <!--<img src="/img/user.jpg" alt="user">-->
+                </div>
+                <div class="user-data">
+                    <span class="name">{{ usuario?.userName }}</span>
+                    
+                </div>
+                <div class="user-icon" #salirBtn (click)="logout();">
+                    <i class='bx  bx-exit'  ></i>
+                </div>
+            </div>
+        </div>
+    </div>

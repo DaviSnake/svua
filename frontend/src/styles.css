@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+:root {
+  --color-bg: #0f172a;
+  --color-surface: #111827;
+  --color-card: #1e293b;
+  --color-border: rgba(255,255,255,0.08);
+  --color-text-primary: #e5e7eb;
+  --color-text-secondary: #94a3b8;
+
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.25);
+  --radius: 14px;
+}

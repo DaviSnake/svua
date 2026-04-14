@@ -1,0 +1,70 @@
+<div class="dashboard">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <span>📦</span>
+      <h4>Total Activos</h4>
+      <p>{{ data?.totalActivos }}</p>
+    </div>
+
+    <div class="kpi-card ok">
+      <span>⚙️</span>
+      <h4>Operativos</h4>
+      <p>{{ data?.activosOperativos }}</p>
+    </div>
+
+    <div class="kpi-card critico">
+      <span>❌</span>
+      <h4>Fuera Servicio</h4>
+      <p>{{ data?.activosFueraServicio }}</p>
+    </div>
+
+    <div class="kpi-card">
+      <span>💰</span>
+      <h4>Valor Total</h4>
+      <p>{{ data?.valorTotal | currency:'CLP' }}</p>
+    </div>
+
+    <div class="kpi-card">
+      <span>📉</span>
+      <h4>Depreciación</h4>
+      <p>{{ data?.depreciacionAcumulada | currency:'CLP' }}</p>
+    </div>
+
+    <div class="kpi-card medio">
+      <span>🛠️</span>
+      <h4>Órdenes</h4>
+      <p>{{ data?.ordenesAbiertas }}</p>
+    </div>
+
+    <div class="kpi-card critico">
+      <span>🚨</span>
+      <h4>Vencidos</h4>
+      <p>{{ data?.mantenimientosVencidos }}</p>
+    </div>
+
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="charts-grid">
+
+    <div class="card">
+      <h3>Estado Activos</h3>
+      <canvas baseChart [data]="doughnutData" [type]="'doughnut'"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Depreciación Mensual</h3>
+      <canvas baseChart [data]="lineData" [type]="'line'"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Órdenes Mantenimiento</h3>
+      <canvas baseChart [data]="barData" [type]="'bar'"></canvas>
+    </div>
+
+  </div>
+
+</div>

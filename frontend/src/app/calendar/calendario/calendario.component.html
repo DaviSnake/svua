@@ -1,0 +1,41 @@
+<div class="calendar-container">
+  <full-calendar [options]="calendarOptions"></full-calendar>
+</div>
+<div *ngIf="mostrarModal" class="modal-backdrop">
+  <div class="modal">
+
+    <h2>Nueva Orden</h2>
+
+    <form [formGroup]="ordenMantencionForm">
+
+      <input type="text" formControlName="titulo" placeholder="Título" />
+
+      <textarea formControlName="observaciones" placeholder="Descripción"></textarea>
+
+      <input type="text" formControlName="lugar" placeholder="Lugar" />
+
+      <select formControlName="activoId">
+        <option [ngValue]="null" disabled>Seleccione un Activo</option>
+        <option *ngFor="let activo of activos" [value]="activo.id">
+          {{ activo.nombre }}
+        </option>
+      </select>
+
+      <input type="time" formControlName="hora" />
+
+      <div class="acciones">
+        <button type="button" (click)="cerrar()">Cancelar</button>
+
+        <button *ngIf="modoEdicion" type="button" (click)="eliminar()">
+          Eliminar
+        </button>
+
+        <button type="button" (click)="guardar()" [disabled]="ordenMantencionForm.invalid">
+          {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>

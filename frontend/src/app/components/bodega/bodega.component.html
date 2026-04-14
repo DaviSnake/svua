@@ -1,0 +1,81 @@
+<div class="container">
+  @if (esSuperAdmin || esAdminEmpresa) {
+    <h2>{{ editando ? 'Editar Bodega' : 'Crear Bodega' }}</h2>
+    <form [formGroup]="bodegaForm" (ngSubmit)="guardar()" class="form-container">
+      <div class="card-section">
+        <div class="form-grid">
+          <div class="form-group">
+            <input type="text" placeholder="Nombre" formControlName="nombre" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Ubicacion fisica" formControlName="ubicacionFisica" />
+          </div>
+          <div class="form-group">
+            <select formControlName="empresaId">
+              <option [ngValue]="null" disabled>Seleccione una empresa</option>
+              <option *ngFor="let empresa of empresas" [value]="empresa.id">
+                {{ empresa.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit">
+          {{ editando ? 'Actualizar' : 'Guardar' }}
+        </button>
+        @if (mostrarNuevo) {
+          <button (click)="nuevo()">
+            Nuevo
+          </button>
+        }
+      </div>
+    </form>
+  }
+
+  <hr />
+
+  <!-- TABLA -->
+  <h2>Bodegas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Ubicacion fisica</th>
+        <th>Empresa</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let bodega of bodegas">
+        <td>{{ bodega.id }}</td>
+        <td>{{ bodega.nombre }}</td>
+        <td>{{ bodega.ubicacionFisica }}</td>
+        <td>{{ bodega.empresa.nombre }}</td>
+        <td>
+          <button class="btn-editar" (click)="editar(bodega)">Editar</button>
+          <button class="btn-eliminar" (click)="confirmarEliminar(bodega.id!)" [disabled]="!bodega.activo">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="paginacion">
+    <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+      ⬅ Anterior
+    </button>
+
+    <button 
+      *ngFor="let p of [].constructor(totalPages); let i = index"
+      (click)="cambiarPagina(i)"
+      [class.activa]="i === page">
+      {{ i + 1 }}
+    </button>
+
+    <button (click)="cambiarPagina(page + 1)" 
+            [disabled]="page + 1 >= totalPages">
+      Siguiente ➡
+    </button>
+  </div>
+</div>

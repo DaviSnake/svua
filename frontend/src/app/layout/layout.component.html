@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>SVUA</title>
+</head>
+<body>
+    <div>
+        <!-- <app-header /> --> 
+    </div>
+    <div class="sidebar-padre" #sidebarPadre>
+        <app-sidebar (datoEmitido)="recibirDato($event)" />  
+    </div>
+    <main>
+      <router-outlet />
+    </main>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<div class="container">
+    @if (esSuperAdmin || esAdminEmpresa) {
+      <h2>{{ editando ? 'Editar Usuario' : 'Crear Usuario' }}</h2>
+      <form [formGroup]="usuarioForm" (ngSubmit)="guardar()" class="form-container">        
+          <div class="card-section">
+              <input type="text" placeholder="Nombre" formControlName="nombre" />
+              <select formControlName="empresaId">
+                <option [ngValue]="null" disabled>Seleccione una empresa</option>
+                <option *ngFor="let empresa of empresas" [value]="empresa.id">
+                  {{ empresa.nombre }}
+                </option>
+              </select>
+              <input type="email" placeholder="Email" formControlName="email" />
+              @if (!editando) {
+                  <input type="password" placeholder="Password" formControlName="password" />
+              }
+            
+              <select formControlName="rol">
+                <option *ngFor="let rol of rolesFiltrados" [value]="rol">
+                  {{ rol }}
+                </option>
+              </select>
+              <label class="checkbox">
+                  <input type="checkbox" formControlName="activo" />
+                  Usuario activo
+              </label>       
+          </div>
+      
+          <div class="acciones">
+              <button type="submit">
+                {{ editando ? 'Actualizar' : 'Guardar' }}
+              </button>
+              @if (editando) {
+                <button (click)="abrirModalPassword(usuarioSeleccionado)">
+                  Cambiar Password
+                </button>
+              }
+              @if (mostrarNuevo) {
+                <button (click)="nuevo()">
+                  Nuevo
+                </button>
+              }
+          </div>    
+      </form>
+    }
+    
+    <hr />
+    
+    <!-- TABLA -->
+    <h2>Usuarios</h2>
+    <table>
+    
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Empresa</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+        <tr *ngFor="let usuario of usuarios">
+    
+          <td>{{ usuario.nombre }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.empresaNombre }}</td>
+          <td>
+            <span [ngClass]="{
+              'badge-admin': usuario.rol === 'SUPER_ADMIN',
+              'badge-user': usuario.rol === 'USUARIO'
+            }">
+              {{ usuario.rol }}
+            </span>
+          </td>
+          <td>{{ usuario.activo ? "Activo" : "Inactivo"}}</td>
+    
+          <td>
+            <button (click)="editar(usuario)">Editar</button>
+            <button (click)="confirmarEliminar(usuario.id!)" [disabled]="!usuario.activo">Eliminar</button>
+          </td>
+    
+        </tr>
+      </tbody>
+    
+    </table>
+</div>
+
+<div class="paginacion">
+  <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+    ⬅ Anterior
+  </button>
+
+  <button 
+    *ngFor="let p of [].constructor(totalPages); let i = index"
+    (click)="cambiarPagina(i)"
+    [class.activa]="i === page">
+    {{ i + 1 }}
+  </button>
+
+  <button (click)="cambiarPagina(page + 1)" 
+          [disabled]="page + 1 >= totalPages">
+    Siguiente ➡
+  </button>
+</div>
+
+<div class="modal" *ngIf="mostrarModalPassword">
+
+  <div class="modal-content" [formGroup]="passwordForm">
+
+    <h3>Cambiar Password</h3>
+
+    <input type="password" placeholder="Antigua contraseña" formControlName="currentPassword" />
+    
+    <input type="password" placeholder="Nueva contraseña" formControlName="password" />
+
+    <input type="password" placeholder="Confirmar contraseña" formControlName="confirmPassword" />
+
+    <small *ngIf="!passwordsIguales()">
+      Las contraseñas no coinciden
+    </small>
+
+    <div class="modal-actions">
+      <button (click)="guardarPassword()">Guardar</button>
+      <button type="button" (click)="cerrarModal()">Cancelar</button>
+    </div>
+
+  </div>
+
+</div>

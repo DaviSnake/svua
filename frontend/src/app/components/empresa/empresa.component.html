@@ -1,0 +1,114 @@
+<div class="container">
+
+  <h2>🏢 Gestión de Empresas</h2>
+
+  <!-- FORM -->
+  <form [formGroup]="empresaForm" (ngSubmit)="guardar()">
+
+    <!-- ========================= -->
+    <!-- DATOS EMPRESA -->
+    <!-- ========================= -->
+    <div class="card-section">
+      <h3>Datos de la Empresa</h3>
+
+      <input placeholder="Nombre" formControlName="nombre">
+      <input placeholder="RUT" formControlName="rut">
+      <input placeholder="Email contacto" formControlName="emailContacto">
+      <input placeholder="Teléfono" formControlName="telefono">
+      <div *ngIf="empresaForm.get('telefono')?.touched && empresaForm.get('telefono')?.invalid">  
+        <small *ngIf="empresaForm.get('telefono')?.errors?.['pattern']">
+          Solo se permiten números
+        </small>
+      </div>
+      <input placeholder="Dirección" formControlName="direccion">
+
+      <select formControlName="tipoPlan">
+        <option value="FREE">FREE</option>
+        <option value="BASIC">BASIC</option>
+        <option value="PRO">PRO</option>
+      </select>
+    </div>
+
+    <!-- ========================= -->
+    <!-- ADMIN (OCULTO) -->
+    <!-- ========================= -->
+    <div class="card-section admin-section">
+
+      <div class="admin-header" (click)="mostrarAdmin = !mostrarAdmin">
+        <h3>👤 Administrador</h3>
+        <span>{{ mostrarAdmin ? '▲' : '▼' }}</span>
+      </div>
+
+      <div *ngIf="mostrarAdmin" class="admin-body">
+
+        <input placeholder="Nombre Administrador" formControlName="adminNombre">
+        <input placeholder="Email Administrador" formControlName="adminEmail">
+        <div class="input-group password-group">
+          <input [type]="showPassword ? 'text' : 'password'"  type="password" placeholder="Password" formControlName="adminPassword">
+          <!-- 👁 toggle -->
+          <span class="eye" (click)="togglePassword()">
+            {{ showPassword ? '🙈' : '👁' }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="acciones">
+      <button type="submit">
+        {{ editando ? 'Actualizar' : 'Crear' }}
+      </button>
+
+      <button type="button" (click)="resetForm()" *ngIf="editando">
+        Cancelar
+      </button>
+    </div>
+
+  </form>
+
+  <!-- ========================= -->
+  <!-- FILTRO -->
+  <!-- ========================= -->
+  <input
+    class="filtro"
+    type="text"
+    placeholder="🔍 Buscar empresa..."
+    [(ngModel)]="filtro"
+    (input)="filtrar()"
+  />
+
+  <!-- ========================= -->
+  <!-- TABLA -->
+  <!-- ========================= -->
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>RUT</th>
+        <th>Email</th>
+        <th>Plan</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let e of empresasFiltradas">
+        <td>{{ e.nombre }}</td>
+        <td>{{ e.rut }}</td>
+        <td>{{ e.emailContacto }}</td>
+        <td>
+          <span class="badge" [ngClass]="e.tipoPlan">
+            {{ e.tipoPlan }}
+          </span>
+        </td>
+
+        <td>
+          <button (click)="editar(e)">Editar</button>
+          <button (click)="eliminar(e.id!)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>

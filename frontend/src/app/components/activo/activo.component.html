@@ -1,0 +1,182 @@
+<div class="container">
+  @if (esSuperAdmin || esAdminEmpresa) {
+    <h2>{{ editando ? 'Editar Activo' : 'Crear Activo' }}</h2>
+    <form [formGroup]="activoForm" (ngSubmit)="guardar()" class="form-container">
+      <div class="card-section">
+        <div class="form-grid">
+          <div class="form-group">
+            <input type="text" placeholder="Código" formControlName="codigoInterno" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Nombre" formControlName="nombre" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Descripcion" formControlName="descripcion" />
+          </div>
+          <div class="form-group">
+            <select formControlName="tipoActivoId">
+              <option [ngValue]="null" disabled>Seleccione un Tipo Activo</option>
+              <option *ngFor="let tipoActivo of tipoActivos" [value]="tipoActivo.id">
+                {{ tipoActivo.nombre }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Marca" formControlName="marca" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Modelo" formControlName="modelo" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Número Serie" formControlName="numeroSerie" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Fecha Adquisición" formControlName="fechaAdquisicion" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Valor Adquisición" formControlName="valorAdquisicion" />
+            <div *ngIf="activoForm.get('valorAdquisicion')?.touched && activoForm.get('valorAdquisicion')?.invalid">  
+              <small *ngIf="activoForm.get('valorAdquisicion')?.errors?.['pattern']">
+                Solo se permiten números
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Valor Residual" formControlName="valorResidual" />
+            <div *ngIf="activoForm.get('valorResidual')?.touched && activoForm.get('valorResidual')?.invalid">  
+              <small *ngIf="activoForm.get('valorResidual')?.errors?.['pattern']">
+                Solo se permiten números
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Vida Util Meses" formControlName="vidaUtilMeses" />
+            <div *ngIf="activoForm.get('vidaUtilMeses')?.touched && activoForm.get('vidaUtilMeses')?.invalid">  
+              <small *ngIf="activoForm.get('vidaUtilMeses')?.errors?.['pattern']">
+                Solo se permiten números
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <select formControlName="ubicacionId">
+              <option [ngValue]="null" disabled>Seleccione una ubicación</option>
+              <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.id">
+                {{ ubicacion.nombre }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select formControlName="proveedorId">
+              <option [ngValue]="null" disabled>Seleccione un proveedor</option>
+              <option *ngFor="let proveedor of proveedores" [value]="proveedor.id">
+                {{ proveedor.nombre }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select formControlName="empresaId">
+              <option [ngValue]="null" disabled>Seleccione una empresa</option>
+              <option *ngFor="let empresa of empresas" [value]="empresa.id">
+                {{ empresa.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div> 
+      
+      <div class="acciones">
+        <button type="submit">
+          {{ editando ? 'Actualizar' : 'Guardar' }}
+        </button>
+        @if (mostrarNuevo) {
+          <button type="button" (click)="nuevo()">
+            Nuevo
+          </button>
+        }
+      </div>
+    </form>
+  }
+  <hr />
+    
+  <!-- TABLA -->
+  <h2>Activos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Descripcion</th>
+        <th>Tipo Activo</th>
+        <th>Marca</th>
+        <th>Modelo</th>
+        <th>Ubicación</th>
+        <th>Proveedor</th>
+        <th>Empresa</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let activo of activos">
+        <td>{{ activo.codigoInterno }}</td>
+        <td>{{ activo.nombre }}</td>
+        <td>{{ activo.descripcion }}</td>
+        <td>{{ activo.tipoActivo.nombre }}</td>
+        <td>{{ activo.marca }}</td>
+        <td>{{ activo.modelo }}</td>
+        <td>{{ activo.ubicacion.nombre }}</td>
+        <td>{{ activo.proveedor.nombre }}</td>
+        <td>{{ activo.empresa.nombre }}</td>
+        <td>
+          <button class="btn-editar" (click)="editar(activo)">Editar</button>
+          <button class="btn-eliminar" (click)="confirmarEliminar(activo.id!)" [disabled]="!activo.activo">Eliminar</button>
+          <button class="btn-ver" (click)="abrirModalActivo(activo)">Ver</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="paginacion">
+    <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+      ⬅ Anterior
+    </button>
+
+    <button 
+      *ngFor="let p of [].constructor(totalPages); let i = index"
+      (click)="cambiarPagina(i)"
+      [class.activa]="i === page">
+      {{ i + 1 }}
+    </button>
+
+    <button (click)="cambiarPagina(page + 1)" 
+            [disabled]="page + 1 >= totalPages">
+      Siguiente ➡
+    </button>
+  </div>
+
+  <div class="modal" *ngIf="mostrarModalActivo">
+
+    <div class="modal-content" [formGroup]="activoForm">
+
+      <h3>Activo</h3>
+
+      <input type="text" formControlName="codigoInterno" />      
+      <input type="text" formControlName="nombre" />
+      <input type="text" formControlName="descripcion" />
+      <input type="text" formControlName="tipoActivoNombre" />
+      <input type="text" formControlName="marca" />
+      <input type="text" formControlName="modelo" />
+      <input type="text" formControlName="numeroSerie" />
+      <input type="text" formControlName="fechaAdquisicion" />
+      <input type="text" formControlName="valorAdquisicion" />
+      <input type="text" formControlName="valorResidual" />
+      <input type="text" formControlName="vidaUtilMeses" />
+      <input type="text" formControlName="ubicacionNombre" />
+      <input type="text" formControlName="proveedorNombre" />
+
+      <div class="modal-actions">
+        <button type="button" (click)="cerrarModal()">Cancelar</button>
+      </div>
+
+    </div>
+  </div>
+</div>

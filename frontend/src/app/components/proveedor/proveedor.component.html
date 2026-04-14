@@ -1,0 +1,104 @@
+<div class="container">
+  @if (esSuperAdmin || esAdminEmpresa) {
+    <h2>{{ editando ? 'Editar Proveedor' : 'Crear Proveedor' }}</h2>
+    <form [formGroup]="proveedorForm" (ngSubmit)="guardar()" class="form-container">
+      <div class="card-section">
+        <div class="form-grid">
+          <div class="form-group">
+            <input type="text" placeholder="Nombre" formControlName="nombre" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Rut" formControlName="rut" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Contacto" formControlName="contacto" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Télefono" formControlName="telefono" />
+            <div *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.invalid">  
+              <small *ngIf="proveedorForm.get('telefono')?.errors?.['required']">
+                Teléfono obligatorio
+              </small>
+              <small *ngIf="proveedorForm.get('telefono')?.errors?.['pattern']">
+                Solo se permiten números
+              </small>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="email" placeholder="Email" formControlName="email" />
+          </div>
+          <div class="form-group">
+            <select formControlName="empresaId">
+              <option [ngValue]="null" disabled>Seleccione una empresa</option>
+              <option *ngFor="let empresa of empresas" [value]="empresa.id">
+                {{ empresa.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit">
+          {{ editando ? 'Actualizar' : 'Guardar' }}
+        </button>
+        @if (mostrarNuevo) {
+          <button (click)="nuevo()">
+            Nuevo
+          </button>
+        }
+      </div>
+    </form>
+  }
+
+  <hr />
+
+  <!-- TABLA -->
+  <h2>Proveedores</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Rut</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Empresa</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let proveedor of proveedores">
+        <td>{{ proveedor.id }}</td>
+        <td>{{ proveedor.nombre }}</td>
+        <td>{{ proveedor.rut }}</td>
+        <td>{{ proveedor.contacto }}</td>
+        <td>{{ proveedor.telefono }}</td>
+        <td>{{ proveedor.email }}</td>
+        <td>{{ proveedor.empresa.nombre }}</td>
+        <td>
+          <button class="btn-editar" (click)="editar(proveedor)">Editar</button>
+          <button class="btn-eliminar" (click)="confirmarEliminar(proveedor.id!)" [disabled]="!proveedor.activo">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="paginacion">
+    <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+      ⬅ Anterior
+    </button>
+
+    <button 
+      *ngFor="let p of [].constructor(totalPages); let i = index"
+      (click)="cambiarPagina(i)"
+      [class.activa]="i === page">
+      {{ i + 1 }}
+    </button>
+
+    <button (click)="cambiarPagina(page + 1)" 
+            [disabled]="page + 1 >= totalPages">
+      Siguiente ➡
+    </button>
+  </div>
+</div>

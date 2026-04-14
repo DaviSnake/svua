@@ -1,0 +1,37 @@
+<div class="auth-container">
+
+  <div class="auth-card">
+
+    <h2>Iniciar sesión</h2>
+
+    <div class="input-group">
+      <input 
+        type="email" 
+        required 
+        [(ngModel)]="loginData.email"
+        name="email"
+      >
+      <label>Correo</label>
+    </div>
+
+    <div class="input-group password-group">
+      <input 
+        [type]="showPassword ? 'text' : 'password'" 
+        required 
+        [(ngModel)]="loginData.password"
+        name="password"
+      >
+      <label>Contraseña</label>
+
+      <!-- 👁 toggle -->
+      <span class="eye" (click)="togglePassword()">
+        {{ showPassword ? '🙈' : '👁' }}
+      </span>
+    </div>
+
+    <button (click)="login()">Entrar</button>
+
+
+  </div>
+
+</div>

@@ -1,0 +1,34 @@
+<header class="header">
+
+  <!-- TOGGLE -->
+  <button class="toggle" (click)="toggleSidebar()">☰</button>
+
+  <h2>SVUA</h2>
+
+  <div class="right">
+
+    <!-- BUSCADOR -->
+    <input type="text" placeholder="Buscar..." class="search">
+
+    <!-- USUARIO -->
+    <div class="user-menu" (click)="toggleMenu()">
+
+      <div class="avatar">
+        {{ usuario?.userName?.charAt(0) }}
+      </div>
+
+      <span>{{ usuario?.userName }}</span>
+
+      @if (menuOpen) {
+        <div class="dropdown">
+          <div class="dropdown-item">👤 Perfil</div>
+          <div class="dropdown-item">⚙️ Configuración</div>
+          <div class="dropdown-item logout" (click)="logout()">🚪 Salir</div>
+        </div>
+      }
+
+    </div>
+
+  </div>
+
+</header>
