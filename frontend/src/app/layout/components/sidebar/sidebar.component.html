@@ -1,115 +1,137 @@
-<div class="menu-btn sidebar-btn" #sidebarBtn (click)="toggleBodySidebar();">
-        <i class='bx  bx-menu'  ></i> 
-        <i class='bx  bx-x'  ></i> 
+
+<div class="sidebar" [class.collapsed]="isCollapsed">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <img src="/img/logo.png" alt="logo">
+      <span *ngIf="!isCollapsed">SVUA</span>
     </div>
-    
-    <div class="sidebar" #sidebar>
-        <div class="header">
-            <div class="menu-btn" #menuBtn (click)="menuBtnClick();">
-                <i class='bx  bx-chevron-left'  ></i> 
-            </div>
-            <div class="brand">
-                <img src="/img/logo.png" alt="logo">
-                <span>SVUA</span>
-            </div>
-        </div>
-        <div class="menu-container">
-          <ul class="menu">
-              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                <a routerLink="/inicio/dashboard" class="menu-link">
-                      <i class="bx bx-bar-chart"></i>  
-                      <span>Dashboard</span>
-                  </a>
-              </li>
-              <li class="menu-item menu-item-dropdown" #menuItemDropdownGestion>
-                  <a class="menu-link" (click)="activarSubMenuGestion();">
-                      <i class="bx bx-package"></i> 
-                      <span>Gestón de Activos</span>
-                      <i class='bx  bx-chevron-down'  ></i>
-                  </a>
-                  <ul class="sub-menu" #subMenuGestion>
-                    <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                        <a routerLink="/inicio/activo" class="sub-menu-link">Activos</a>
-                    </li>
-                      <li><a routerLink="/inicio/tipoActivo"class="sub-menu-link">Tipos de Activo</a></li>
-                      <li><a class="sub-menu-link">Depreciación</a></li>
-                      <li><a routerLink="/inicio/repuesto"class="sub-menu-link">Repuestos</a></li>
-                      <li><a class="sub-menu-link">Órdenes</a></li>
-                  </ul>
-              </li>
-              <li class="menu-item menu-item-dropdown" #menuItemDropdownOrganizacion>
-                  <a class="menu-link" (click)="activarSubMenuOrganizacion();">
-                      <i class="bx bx-sitemap"></i> 
-                      <span>Organización</span>
-                      <i class='bx  bx-chevron-down'  ></i>
-                  </a>
-                  <ul class="sub-menu" #subMenuOrganizacion>
-                    @if (esAdmin) {
-                        <li><a routerLink="/inicio/empresa" class="sub-menu-link">Empresa</a></li>
-                    }
-                      <li><a routerLink="/inicio/ubicacion" class="sub-menu-link">Ubicaciones</a></li>
-                      <li><a routerLink="/inicio/bodega" class="sub-menu-link">Bodegas</a></li>
-                      <li><a class="sub-menu-link">Responsables</a></li>
-                      <li><a routerLink="/inicio/proveedor" class="sub-menu-link">Proveedores</a></li>
-                  </ul>
-              </li>
-              <li class="menu-item menu-item-dropdown" #menuItemDropdownAnalisis>
-                  <a class="menu-link" (click)="activarSubMenuAnalisis();">
-                      <i class="bx bx-analyse"></i>
-                      <span>Análisis</span>
-                      <i class='bx  bx-chevron-down'  ></i>
-                  </a>
-                  <ul class="sub-menu" #subMenuAnalisis>
-                      <li><a routerLink="/inicio/activo" class="sub-menu-link">Reportes</a></li>
-                      <li><a class="sub-menu-link">Auditoría</a></li>
-                  </ul>
-              </li>
-              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                  <a routerLink="/inicio/calendario" class="menu-link">
-                      <i class="bx bx-calendar"></i>
-                      <span>Calendario</span>
-                  </a>
-              </li>
-              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                  <a routerLink="/inicio/cargaMasiva" class="menu-link">
-                      <i class="bx bx-cloud-upload"></i>
-                      <span>Carga Masiva</span>
-                  </a>
-              </li>
-          </ul>
-        </div>
-        <div class="footer">
-            <ul class="menu">
-                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <a routerLink="/inicio/perfilUsuario" class="menu-link">
-                        <i class='bx  bx-user'></i> 
-                        <span>Perfil</span>
-                    </a>
-                </li>
-                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <a routerLink="/inicio/usuario" class="menu-link">
-                        <i class='bx  bx-user-check'></i> 
-                        <span>Usuarios</span>
-                    </a>
-                </li>
-                <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <a routerLink="/inicio/configuracion" class="menu-link">
-                        <i class='bx  bx-cog'  ></i>  
-                        <span>Configuración</span>
-                    </a>
-                </li>
-            </ul>
-            <div class="user">
-                <div class="user-img">
-                    <!--<img src="/img/user.jpg" alt="user">-->
-                </div>
-                <div class="user-data">
-                    <span class="name">{{ usuario?.userName }}</span>
-                    
-                </div>
-                <div class="user-icon" #salirBtn (click)="logout();">
-                    <i class='bx  bx-exit'  ></i>
-                </div>
-            </div>
-        </div>
+  </div>
+
+  <!-- MENU -->
+  <ul class="menu">
+
+    <!-- DASHBOARD -->
+    <li routerLinkActive="active" class="menu-item">
+      <a routerLink="/inicio/dashboard" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class="bx bx-bar-chart"></i>
+        <span *ngIf="!isCollapsed">Dashboard</span>
+      </a>
+      <span class="tooltip">Dashboard</span>
+    </li>
+
+    <!-- GESTION -->
+    <li class="menu-item">
+      <div class="menu-parent" (click)="toggleMenu('gestion')">
+        <i class="bx bx-package"></i>
+        <span *ngIf="!isCollapsed">Gestión Activos</span>
+        <i class="bx bx-chevron-down arrow" [class.rotate]="openMenus.gestion"></i>
+      </div>
+
+      <ul class="submenu" [class.open]="openMenus.gestion && !isCollapsed">
+        <li><a routerLink="/inicio/activo">Activos</a></li>
+        <li><a routerLink="/inicio/tipoActivo">Tipos</a></li>
+        <li><a routerLink="/inicio/repuesto">Repuestos</a></li>
+      </ul>
+
+      <span class="tooltip">Gestión Activos</span>
+    </li>
+
+    <!-- ORGANIZACION -->
+    <li class="menu-item">
+      <div class="menu-parent" (click)="toggleMenu('organizacion')">
+        <i class="bx bx-sitemap"></i>
+        <span *ngIf="!isCollapsed">Organización</span>
+        <i class="bx bx-chevron-down arrow" [class.rotate]="openMenus.organizacion"></i>
+      </div>
+
+      <ul class="submenu" [class.open]="openMenus.organizacion && !isCollapsed">
+        <li *ngIf="esAdmin"><a routerLink="/inicio/empresa">Empresa</a></li>
+        <li><a routerLink="/inicio/ubicacion">Ubicaciones</a></li>
+        <li><a routerLink="/inicio/bodega">Bodegas</a></li>
+        <li><a routerLink="/inicio/proveedor">Proveedores</a></li>
+      </ul>
+
+      <span class="tooltip">Organización</span>
+    </li>
+
+    <!-- ANALISIS -->
+    <li class="menu-item">
+      <div class="menu-parent" (click)="toggleMenu('analisis')">
+        <i class="bx bx-analyse"></i>
+        <span *ngIf="!isCollapsed">Análisis</span>
+        <i class="bx bx-chevron-down arrow" [class.rotate]="openMenus.analisis"></i>
+      </div>
+
+      <ul class="submenu" [class.open]="openMenus.analisis && !isCollapsed">
+        <li><a>Reportes</a></li>
+        <li><a>Auditoría</a></li>
+      </ul>
+
+      <span class="tooltip">Análisis</span>
+    </li>
+
+    <!-- CALENDARIO -->
+    <li class="menu-item" routerLinkActive="active">
+      <a routerLink="/inicio/calendario" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class="bx bx-calendar"></i>
+        <span *ngIf="!isCollapsed">Calendario</span>
+      </a>
+      <span class="tooltip">Calendario</span>
+    </li>
+
+    <!-- CARGA MASIVA -->
+    <li class="menu-item" routerLinkActive="active">
+      <a routerLink="/inicio/cargaMasiva" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class="bx bx-cloud-upload"></i>
+        <span *ngIf="!isCollapsed">Carga Masiva</span>
+      </a>
+      <span class="tooltip">Carga Masiva</span>
+    </li>
+
+  </ul>
+
+  <!-- FOOTER -->
+  <div class="footer">
+
+    <ul class="menu">
+
+      <li class="menu-item" routerLinkActive="active">
+        <a routerLink="/inicio/perfilUsuario" (click)="closeAllMenus()">
+          <i class="bx bx-user"></i>
+          <span *ngIf="!isCollapsed">Perfil</span>
+        </a>
+        <span class="tooltip">Perfil</span>
+      </li>
+
+      <li class="menu-item" routerLinkActive="active">
+        <a routerLink="/inicio/usuario" (click)="closeAllMenus()">
+          <i class="bx bx-user-check"></i>
+          <span *ngIf="!isCollapsed">Usuarios</span>
+        </a>
+        <span class="tooltip">Usuarios</span>
+      </li>
+
+      <li class="menu-item" routerLinkActive="active">
+        <a routerLink="/inicio/configuracion" (click)="closeAllMenus()">
+          <i class="bx bx-cog"></i>
+          <span *ngIf="!isCollapsed">Configuración</span>
+        </a>
+        <span class="tooltip">Configuración</span>
+      </li>
+
+    </ul>
+
+    <!-- USER -->
+    <div class="user">
+      <span *ngIf="!isCollapsed">{{ usuario?.userName }}</span>
+      <div class="tooltip-container">
+          <i class="bx bx-exit" (click)="logout()"></i>
+          <span class="tooltip-text">Salir</span>
+      </div>
     </div>
+
+  </div>
+
+</div>

@@ -2,22 +2,27 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { HeaderComponent } from "./components/header/header.component";
 import { SidebarComponent } from "./components/sidebar/sidebar.component";
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [SidebarComponent, RouterOutlet],
+  imports: [SidebarComponent, RouterOutlet, CommonModule],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
 export class LayoutComponent {
 
   @ViewChild('sidebarPadre') sidebarPadre!: ElementRef;
-  mensaje = '';
-  
-  recibirDato(dato: string) {
-    this.mensaje = dato;
-    this.menuBtnClick(this.mensaje);
+
+  sidebarOpen = false;
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar() {
+    this.sidebarOpen = false;
   }
   
   menuBtnClick(flag: string): void {

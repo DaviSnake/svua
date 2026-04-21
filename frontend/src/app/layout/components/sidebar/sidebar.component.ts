@@ -1,117 +1,115 @@
-import { Component, ElementRef, EventEmitter, inject, OnInit, Output, ViewChild } from '@angular/core';
-import { Router, RouterLink, RouterModule, RouterOutlet } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, RouterLink, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
+
+type MenuKey = 'gestion' | 'organizacion' | 'analisis';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterModule],
+  imports: [RouterLink, RouterModule, CommonModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
 export class SidebarComponent implements OnInit {
 
-  @ViewChild('sidebar') sidebar!: ElementRef;
-  @ViewChild('menuBtn') menuBtn!: ElementRef;
-  @ViewChild('sidebarBtn') sidebarBtn!: ElementRef;
-  @ViewChild('menuItemDropdownGestion') menuItemDropdownGestion!: ElementRef;
-  @ViewChild('menuItemDropdownOrganizacion') menuItemDropdownOrganizacion!: ElementRef;
-  @ViewChild('menuItemDropdownAnalisis') menuItemDropdownAnalisis!: ElementRef;
-  @ViewChild('subMenuGestion') subMenuGestion!: ElementRef;
-  @ViewChild('subMenuOrganizacion') subMenuOrganizacion!: ElementRef;
-  @ViewChild('subMenuAnalisis') subMenuAnalisis!: ElementRef;
-  @ViewChild('salirBtn') salirBtn!: ElementRef;
-
-  @Output() datoEmitido = new EventEmitter<string>();
-
   authService = inject(AuthService);
   router = inject(Router);
+
   usuario: any;
 
+  // 🔥 estado sidebar
+  isCollapsed = false;
+
+  // 🔥 estado menús
+  openMenus: Record<MenuKey, boolean> = {
+    gestion: false,
+    organizacion: false,
+    analisis: false
+  };
+
+  // roles
   esAdmin = false;
   esAdminEmpresa = false;
-  esUser = false;
-  
-  ngOnInit() {
-      this.authService.user$.subscribe(user => {
-      this.usuario = user;
 
+  ngOnInit() {
+
+    // usuario
+    this.authService.user$.subscribe(user => {
+      this.usuario = user;
       this.esAdmin = this.authService.isAdmin();
       this.esAdminEmpresa = this.authService.isAdminEmpresa();
     });
+
+    // 🔥 abrir menú según ruta
+    this.detectarRuta(this.router.url);
+
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.detectarRuta(event.url);
+      });
   }
 
-  menuBtnClick(): void {
-    let mensaje = "0";
-    if (this.sidebar.nativeElement.classList.contains('minimize')) {
-      this.sidebar.nativeElement.classList.remove('minimize');
-    } else {
-      this.sidebar.nativeElement.classList.add('minimize');
-      mensaje = "1";
-    }
-    this.datoEmitido.emit(mensaje);
-  }
+  // 🔥 detectar menú activo por URL
+  detectarRuta(url: string) {
 
-  toggleBodySidebar() {
-    let mensaje = "0";
-    if (this.sidebar.nativeElement.classList.contains('sidebar-hidden')) {
-      this.sidebar.nativeElement.classList.remove('sidebar-hidden');
-    } else {
-      this.sidebar.nativeElement.classList.add('sidebar-hidden');
+    this.openMenus = {
+      gestion: false,
+      organizacion: false,
+      analisis: false
+    };
+
+    if (
+      url.includes('/activo') ||
+      url.includes('/tipoActivo') ||
+      url.includes('/repuesto')
+    ) {
+      this.openMenus.gestion = true;
     }
 
-    if (this.sidebarBtn.nativeElement.classList.contains('sidebar-btn-hidden')) {
-      this.sidebarBtn.nativeElement.classList.remove('sidebar-btn-hidden');
-    } else {
-      this.sidebarBtn.nativeElement.classList.add('sidebar-btn-hidden');
-      mensaje = "1";
+    if (
+      url.includes('/empresa') ||
+      url.includes('/ubicacion') ||
+      url.includes('/bodega') ||
+      url.includes('/proveedor')
+    ) {
+      this.openMenus.organizacion = true;
     }
-    this.datoEmitido.emit(mensaje);
-  }
 
-  activarSubMenuGestion(){
-    if (!this.menuItemDropdownGestion.nativeElement.classList.contains('sub-menu-toggle')) {
-      this.subMenuGestion.nativeElement.style.height = `${this.subMenuGestion.nativeElement.scrollHeight + 6}px`;
-      this.subMenuGestion.nativeElement.style.padding = '0.2rem 0';
-      this.menuItemDropdownGestion.nativeElement.classList.add('sub-menu-toggle');
-    }else{
-      this.subMenuGestion.nativeElement.style.height = '0';
-      this.subMenuGestion.nativeElement.style.padding = '0';
-      this.menuItemDropdownGestion.nativeElement.classList.remove('sub-menu-toggle');
-    }
-  }
-
-  activarSubMenuOrganizacion(){
-    if (!this.menuItemDropdownOrganizacion.nativeElement.classList.contains('sub-menu-toggle')) {
-      this.subMenuOrganizacion.nativeElement.style.height = `${this.subMenuOrganizacion.nativeElement.scrollHeight + 6}px`;
-      this.subMenuOrganizacion.nativeElement.style.padding = '0.2rem 0';
-      this.menuItemDropdownOrganizacion.nativeElement.classList.add('sub-menu-toggle');
-    }else{
-      this.subMenuOrganizacion.nativeElement.style.height = '0';
-      this.subMenuOrganizacion.nativeElement.style.padding = '0';
-      this.menuItemDropdownOrganizacion.nativeElement.classList.remove('sub-menu-toggle');
+    if (
+      url.includes('/analisis') ||
+      url.includes('/reportes')
+    ) {
+      this.openMenus.analisis = true;
     }
   }
 
-  activarSubMenuAnalisis(){
-    if (!this.menuItemDropdownAnalisis.nativeElement.classList.contains('sub-menu-toggle')) {
-      this.subMenuAnalisis.nativeElement.style.height = `${this.subMenuAnalisis.nativeElement.scrollHeight + 6}px`;
-      this.subMenuAnalisis.nativeElement.style.padding = '0.2rem 0';
-      this.menuItemDropdownAnalisis.nativeElement.classList.add('sub-menu-toggle');
-    }else{
-      this.subMenuAnalisis.nativeElement.style.height = '0';
-      this.subMenuAnalisis.nativeElement.style.padding = '0';
-      this.menuItemDropdownAnalisis.nativeElement.classList.remove('sub-menu-toggle');
-    }
+  // 🔒 cerrar todo
+  closeAllMenus() {
+    this.openMenus = {
+      gestion: false,
+      organizacion: false,
+      analisis: false
+    };
   }
 
-  onMenuEnter(){
-    if (!this.sidebar.nativeElement.classList.contains('minimize')) return;
-    if (this.menuItemDropdownGestion.nativeElement.classList.contains('sub-menu-toggle')) {
-      this.subMenuGestion.nativeElement.style.height = '0';
-      this.subMenuGestion.nativeElement.style.padding = '0';
-      this.menuItemDropdownGestion.nativeElement.classList.remove('sub-menu-toggle');
-    }
+  // 🔥 toggle menú (BLOQUEADO si está colapsado)
+  toggleMenu(menu: MenuKey) {
+
+    if (this.isCollapsed) return; // 🔥 CLAVE
+
+    Object.keys(this.openMenus).forEach((key) => {
+      const k = key as MenuKey;
+      this.openMenus[k] = k === menu ? !this.openMenus[k] : false;
+    });
+  }
+
+  // 🔥 toggle sidebar
+  toggleSidebar() {
+    this.isCollapsed = !this.isCollapsed;
   }
 
   logout() {
@@ -120,9 +118,4 @@ export class SidebarComponent implements OnInit {
       this.router.navigate(['/login']);
     });
   }
-
-  enviar(data: string) {
-    //this.productService.sendData(data);
-  }
-
 }
