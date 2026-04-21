@@ -30,9 +30,9 @@
       </div>
 
       <ul class="submenu" [class.open]="openMenus.gestion && !isCollapsed">
-        <li><a routerLink="/inicio/activo">Activos</a></li>
-        <li><a routerLink="/inicio/tipoActivo">Tipos</a></li>
-        <li><a routerLink="/inicio/repuesto">Repuestos</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/activo">Activos</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/tipoActivo">Tipos</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/repuesto">Repuestos</a></li>
       </ul>
 
       <span class="tooltip">Gestión Activos</span>
@@ -47,10 +47,10 @@
       </div>
 
       <ul class="submenu" [class.open]="openMenus.organizacion && !isCollapsed">
-        <li *ngIf="esAdmin"><a routerLink="/inicio/empresa">Empresa</a></li>
-        <li><a routerLink="/inicio/ubicacion">Ubicaciones</a></li>
-        <li><a routerLink="/inicio/bodega">Bodegas</a></li>
-        <li><a routerLink="/inicio/proveedor">Proveedores</a></li>
+        <li routerLinkActive="active" *ngIf="esAdmin"><a routerLink="/inicio/empresa">Empresa</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/ubicacion">Ubicaciones</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/bodega">Bodegas</a></li>
+        <li routerLinkActive="active"><a routerLink="/inicio/proveedor">Proveedores</a></li>
       </ul>
 
       <span class="tooltip">Organización</span>
@@ -65,8 +65,8 @@
       </div>
 
       <ul class="submenu" [class.open]="openMenus.analisis && !isCollapsed">
-        <li><a>Reportes</a></li>
-        <li><a>Auditoría</a></li>
+        <li routerLinkActive="active"><a>Reportes</a></li>
+        <li routerLinkActive="active"><a>Auditoría</a></li>
       </ul>
 
       <span class="tooltip">Análisis</span>

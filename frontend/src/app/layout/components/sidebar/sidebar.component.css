@@ -254,3 +254,44 @@ i.bx-exit:hover {
 .tooltip-container:hover .tooltip-text {
   opacity: 1;
 }
+
+/* ===== 🌳 EFECTO RAMAS (TREE) ===== */
+
+/* contenedor submenu */
+.submenu {
+  position: relative;
+  margin-left: 10px;
+  padding-left: 15px;
+}
+
+/* línea vertical (tronco) */
+.submenu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: 1px;
+  height: 100%;
+  background: rgba(255,255,255,0.15);
+}
+
+/* cada item del submenu */
+.submenu li {
+  position: relative;
+}
+
+/* línea horizontal (rama) */
+.submenu li::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 8px;
+  width: 12px;
+  height: 1px;
+  background: rgba(255,255,255,0.2);
+}
+
+/* mejora visual del link */
+.submenu li a {
+  padding-left: 18px; /* separa del "tronco" */
+}
