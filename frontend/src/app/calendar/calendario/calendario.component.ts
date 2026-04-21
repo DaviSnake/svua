@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { FormUtils } from '../../shared/form-utils';
 import { ActivoService } from '../../services/activo.service';
 import { Activo } from '../../model/activo';
+import { OrdenResponse } from '../../model/ordenResponse';
 
 @Component({
   selector: 'app-calendario',
@@ -30,11 +31,15 @@ export class CalendarioComponent implements OnInit {
 
   activos: Activo[] = [];
 
+  estadoOrden: string = 'PENDIENTE';
+
+  orden!: OrdenResponse;
+
   // 🔹 CALENDARIO (inicializado desde el inicio 🔥)
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
-    initialDate: '2026-04-10', // 🔥 importante para pruebas
+    initialDate: new Date(), // ✅ semana actual
     editable: true,
     locale: esLocale,
     events: [],
@@ -65,6 +70,7 @@ export class CalendarioComponent implements OnInit {
       titulo: ['', Validators.required],
       observaciones: [''],
       lugar: [''],
+      estado: [''],
       hora: ['', Validators.required],
       activoId: [null, Validators.required],
     });
@@ -122,15 +128,19 @@ export class CalendarioComponent implements OnInit {
   onEventDrop(info: any) {
     if (!info.event.start) return;
 
+    const id = info.event.id;
     const fecha = info.event.start;
 
-    const evento = {
-      titulo: info.event.title,
-      fechaProgramada: FormUtils.formatearFechaLocal(fecha)
-    };
+    this.ordenMantencionService.reprogramar(id, fecha).subscribe({
+      next: () => {
+        console.log('Reprogramado OK');
+      },
+      error: () => {
+        info.revert(); // 🔥 vuelve atrás si falla
+        alert('No se pudo reprogramar');
+      }
+    });
 
-    this.ordenMantencionService.actualizar(Number(info.event.id), evento)
-      .subscribe();
   }
 
   // 🔵 CLICK EN EVENTO (EDITAR)
@@ -142,6 +152,8 @@ export class CalendarioComponent implements OnInit {
     const fechaISO = fecha.toISOString().split('T')[0];
     const hora = fecha.toTimeString().slice(0, 5);
 
+    this.estadoOrden = info.event.extendedProps?.estado;
+
     this.fechaSeleccionada = fechaISO;
     this.eventoSeleccionadoId = Number(info.event.id);
     this.modoEdicion = true;
@@ -149,6 +161,7 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.patchValue({
       titulo: info.event.title,
       observaciones: info.event.extendedProps?.observaciones || '',
+      estado: this.estadoOrden,
       lugar: '',
       hora: hora
     });
@@ -238,6 +251,52 @@ export class CalendarioComponent implements OnInit {
         console.log("error");
       }
     });
+  }
+
+  toggleMantencion() {
+    const id = this.eventoSeleccionadoId;
+    if (this.estadoOrden === 'EN_EJECUCION') {
+      this.detenerMantencion(id);
+    } else {
+      this.iniciarMantencion(id);
+    }
+
+  }
+
+  iniciarMantencion(id: number) {
+    // 🔥 aquí llamas backend
+    this.ordenMantencionService.iniciar(id).subscribe({
+      next: (orden) => {
+        this.estadoOrden = orden.estado; // o COMPLETADA si aplica
+        console.log('Iniciado OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: () => {
+        alert('No se pudo iniciar');
+      }
+    });
+  }
+
+  detenerMantencion(id: number) {    
+    // 🔥 backend
+    this.ordenMantencionService.detener(id).subscribe({
+      next: (orden) => {
+        this.estadoOrden = orden.estado; // o COMPLETADA si aplica
+        console.log('Detenido OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: () => {
+        alert('No se pudo detener');
+      }
+    });
+  }
+
+  get titulo(): string {
+    if (this.estadoOrden === 'COMPLETADA') return 'Orden';
+    if (this.modoEdicion) return 'Actualizar Orden';
+    return 'Nueva Orden';
   }
 }
 

@@ -1,0 +1,23 @@
+name: Deploy App
+
+on:
+  push:
+    branches:
+      - master   # o main si usas esa
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conectarse al VPS y desplegar
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/tuusuario/app
+            git pull origin main
+            docker compose down
+            docker compose up -d --build

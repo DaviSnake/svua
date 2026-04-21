@@ -23,6 +23,7 @@ import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
+import cl.aracridav.svua.shared.util.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -43,9 +44,11 @@ public class ActivoServiceImpl implements ActivoService {
     private final GeneralMapper generalMapper;
 
     @Override
-    public ActivoResponse crearActivo(Long empresaId, ActivoCreateRequest activoCreateRequest) {
+    public ActivoResponse crearActivo(ActivoCreateRequest activoCreateRequest) {
 
-         if (activoRepository.existsByCodigoInterno(activoCreateRequest.getCodigoInterno())) {
+        Long empresaId = SecurityUtils.getEmpresaId();
+
+        if (activoRepository.existsByCodigoInterno(activoCreateRequest.getCodigoInterno())) {
             throw new BusinessException("El código interno ya existe");
         }
 
@@ -69,7 +72,7 @@ public class ActivoServiceImpl implements ActivoService {
         }
 
         activoCreateRequest.setEstadoActual(EstadoActivo.OPERATIVO);
-        activoCreateRequest.setFechaAdquisicion(LocalDate.now());
+        //activoCreateRequest.setFechaAdquisicion(LocalDate.now());
 
         Activo activo = new Activo();
         activo.setCodigoInterno(activoCreateRequest.getCodigoInterno());       

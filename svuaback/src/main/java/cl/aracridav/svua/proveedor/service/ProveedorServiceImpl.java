@@ -42,8 +42,8 @@ public class ProveedorServiceImpl implements ProveedorService {
         }
 
         Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() ->
-                    new BusinessException("Empresa no encontrado"));
+            .orElseThrow(() ->
+                new BusinessException("Empresa no encontrado"));
 
         Proveedor proveedor = new Proveedor();
         proveedor.setNombre(request.getNombre());

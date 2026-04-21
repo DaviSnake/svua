@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { OrdenMantencion } from '../model/ordenMantencion';
 import { of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { OrdenResponse } from '../model/ordenResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -21,12 +22,34 @@ export class OrdenMantencionService {
     return this.http.post<OrdenMantencion>(`${this.apiUrl}/ordenes-mantenimiento`, ordenMantencion);
   }
 
+  iniciar(id: number) {
+    return this.http.put<OrdenResponse>(`${this.apiUrl}/ordenes-mantenimiento/${id}/ejecutar`, {});
+  }
+
+  detener(id: number) {
+    return this.http.put<OrdenResponse>(`${this.apiUrl}/ordenes-mantenimiento/${id}/detener`, {});
+  }
+
   actualizar(id: number, ordenMantencion: OrdenMantencion) {
     return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}`, ordenMantencion);
   }
 
+  reprogramar(id: number, fecha: Date) {
+    const body = {
+      nuevaFecha: this.formatLocalDateTime(fecha)
+    };
+    return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}/reprogramar`, body);
+  }
+
   eliminar(id: number) {
     return this.http.delete(`${this.apiUrl}/ordenes-mantenimiento/${id}`);
+  }
+
+  private formatLocalDateTime(date: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+          `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
 }

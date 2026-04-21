@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import cl.aracridav.svua.auth.dto.request.ChangePasswordRequest;
 import cl.aracridav.svua.usuario.dto.request.RegisterRequest;
 import cl.aracridav.svua.usuario.dto.request.UpdateUsuarioRequest;
+import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
 import cl.aracridav.svua.usuario.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -90,5 +91,15 @@ public class UsuarioController {
     public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(Pageable pegable) {
 
         return ResponseEntity.ok(usuarioService.listarUsuarios(pegable));
+    }
+
+    @PreAuthorize(
+        "hasRole('SUPER_ADMIN') or " +
+        "(hasAuthority('USUARIO_VIEW'))"
+    )
+    @GetMapping("/perfilUsuario")
+    public ResponseEntity<PerfilUsuarioDTO> perfilUsuario() {
+
+        return ResponseEntity.ok(usuarioService.perfilUsuario());
     }
 }

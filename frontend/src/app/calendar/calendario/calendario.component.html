@@ -1,41 +1,101 @@
-<div class="calendar-container">
-  <full-calendar [options]="calendarOptions"></full-calendar>
-</div>
+<div class="calendar-wrapper">
+  <!-- 🔹 Header -->
+  <div class="header">
+    <div>
+      <h1>Calendario</h1>
+      <p>Gestión de orden de mantención y programación</p>
+    </div>
+  </div>
+  <!-- 🔹 Calendario -->
+  <div class="calendar-container">
+    <full-calendar [options]="calendarOptions"></full-calendar>
+  </div>
+  <!-- 🔹 Modal -->
 <div *ngIf="mostrarModal" class="modal-backdrop">
   <div class="modal">
 
-    <h2>Nueva Orden</h2>
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>{{ titulo }}</h2>
+      <button class="close-btn" (click)="cerrar()">✕</button>
+    </div>
 
-    <form [formGroup]="ordenMantencionForm">
+    <!-- Form -->
+    <form [formGroup]="ordenMantencionForm" class="form">
 
-      <input type="text" formControlName="titulo" placeholder="Título" />
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" formControlName="titulo" placeholder="Ej: Mantención preventiva" />
+      </div>
 
-      <textarea formControlName="observaciones" placeholder="Descripción"></textarea>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea formControlName="observaciones" placeholder="Detalle de la mantención"></textarea>
+      </div>
 
-      <input type="text" formControlName="lugar" placeholder="Lugar" />
+      <div class="form-group">
+        <label>Lugar</label>
+        <input type="text" formControlName="lugar" />
+      </div>
 
-      <select formControlName="activoId">
-        <option [ngValue]="null" disabled>Seleccione un Activo</option>
-        <option *ngFor="let activo of activos" [value]="activo.id">
-          {{ activo.nombre }}
-        </option>
-      </select>
+      <div class="form-group">
+        <label>Activo</label>
+        <select formControlName="activoId">
+          <option [ngValue]="null" disabled>Seleccione un activo</option>
+          <option *ngFor="let activo of activos" [value]="activo.id">
+            {{ activo.nombre }}
+          </option>
+        </select>
+      </div>
 
-      <input type="time" formControlName="hora" />
+      <div class="form-group">
+        <label>Hora</label>
+        <input type="time" formControlName="hora" />
+      </div>
 
+      <!-- Acciones -->
       <div class="acciones">
-        <button type="button" (click)="cerrar()">Cancelar</button>
 
-        <button *ngIf="modoEdicion" type="button" (click)="eliminar()">
-          Eliminar
+        <button class="btn ghost" type="button" (click)="cerrar()">
+          Cancelar
         </button>
 
-        <button type="button" (click)="guardar()" [disabled]="ordenMantencionForm.invalid">
-          {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-        </button>
+        <ng-container *ngIf="estadoOrden !== 'COMPLETADA'">
+          <button 
+            *ngIf="modoEdicion"
+            class="btn danger"
+            type="button"
+            (click)="eliminar()">
+            Eliminar
+          </button>
+  
+          <!-- 🔥 NUEVO BOTÓN -->
+          <button 
+            *ngIf="modoEdicion" 
+            class="btn"
+            [ngClass]="estadoOrden === 'EN_EJECUCION' ? 'danger' : 'success'"
+            type="button"
+            (click)="toggleMantencion()">
+  
+            {{ estadoOrden === 'EN_EJECUCION' 
+                ? '⏹ Terminar mantención' 
+                : '▶ Iniciar mantención' }}
+          </button>
+  
+          <button 
+            class="btn primary"
+            type="button"
+            (click)="guardar()"
+            [disabled]="ordenMantencionForm.invalid">
+            {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+          </button>
+
+        </ng-container>
+
       </div>
 
     </form>
 
   </div>
+</div>
 </div>

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.request.ReprogramarOrdenRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.service.OrdenMantenimientoService;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +58,32 @@ public class OrdenMantenimientoController {
         @PathVariable Long ordenId,
         @RequestBody OrdenMantenimientoRequest request) {
         return ResponseEntity.ok(service.actualizarOrden(ordenId, request));
+    }
+
+    @PutMapping("/{id}/ejecutar")
+    public ResponseEntity<OrdenEjecucionResponse> ejecutarOrden(@PathVariable Long id) {
+
+        OrdenEjecucionResponse orden = service.ejecutarOrden(id);
+
+        return ResponseEntity.ok(orden);
+    }
+
+    @PutMapping("/{id}/detener")
+    public ResponseEntity<OrdenEjecucionResponse> detenerOrden(@PathVariable Long id) {
+
+        OrdenEjecucionResponse orden = service.detenerOrden(id);
+
+        return ResponseEntity.ok(orden);
+    }
+
+    @PutMapping("/{id}/reprogramar")
+    public ResponseEntity<OrdenMantenimientoResponse> reprogramarOrden(
+            @PathVariable Long id,
+            @RequestBody ReprogramarOrdenRequest request
+    ) {
+        return ResponseEntity.ok(
+            service.reprogramarOrden(id, request.getNuevaFecha())
+        );
     }
 
 }

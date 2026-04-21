@@ -21,6 +21,7 @@ import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import cl.aracridav.svua.usuario.dto.request.RegisterRequest;
 import cl.aracridav.svua.usuario.dto.request.UpdateUsuarioRequest;
+import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
@@ -259,5 +260,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         return usuarios.map(generalMapper::mapUsuarioToResponse);
+    }
+
+    public PerfilUsuarioDTO perfilUsuario(){
+
+        Long usuarioId = SecurityUtils.getUsuarioId();
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return generalMapper.mapUsuariotoPerfilDTO(usuario);
+
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoCreateRequest;
 import cl.aracridav.svua.inventario.activo.dto.response.ActivoResponse;
 import cl.aracridav.svua.inventario.activo.service.ActivoService;
-import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -32,9 +31,7 @@ public class ActivoController {
     public ResponseEntity<ActivoResponse> registrarActivo(
             @RequestBody ActivoCreateRequest request) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        ActivoResponse response = activoService.crearActivo(empresaId, request);
+        ActivoResponse response = activoService.crearActivo(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

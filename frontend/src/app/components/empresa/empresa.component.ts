@@ -56,7 +56,7 @@ export class EmpresaComponent implements OnInit {
       rut: ['', Validators.required],
       //rut: ['', [Validators.required, rutValidator]],
       emailContacto: ['', [Validators.required, Validators.email]],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      telefono: ['', [Validators.required, Validators.pattern('^[+0-9]+$')]],
       direccion: ['', Validators.required],
       tipoPlan: ['FREE', Validators.required],
 
@@ -112,7 +112,6 @@ export class EmpresaComponent implements OnInit {
     adminPassword?.updateValueAndValidity();
 
     this.loading = true;
-    console.log(empresa);
 
     if (this.editando && this.empresaEditandoId !== null) {
       // EDITAR
@@ -183,6 +182,7 @@ export class EmpresaComponent implements OnInit {
   editar(emp: Empresa) {
     this.editando = true;
     this.empresaId = emp.id!;
+    this.empresaEditandoId = emp.id!
     this.empresaForm.patchValue(emp);
   }
 

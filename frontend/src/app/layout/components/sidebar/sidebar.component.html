@@ -70,12 +70,18 @@
                       <span>Calendario</span>
                   </a>
               </li>
+              <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                  <a routerLink="/inicio/cargaMasiva" class="menu-link">
+                      <i class="bx bx-cloud-upload"></i>
+                      <span>Carga Masiva</span>
+                  </a>
+              </li>
           </ul>
         </div>
         <div class="footer">
             <ul class="menu">
                 <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <a href="#" class="menu-link">
+                    <a routerLink="/inicio/perfilUsuario" class="menu-link">
                         <i class='bx  bx-user'></i> 
                         <span>Perfil</span>
                     </a>
@@ -87,7 +93,7 @@
                     </a>
                 </li>
                 <li class="menu-item menu-item-static" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <a href="#" class="menu-link">
+                    <a routerLink="/inicio/configuracion" class="menu-link">
                         <i class='bx  bx-cog'  ></i>  
                         <span>Configuración</span>
                     </a>

@@ -1,0 +1,111 @@
+.perfil-container {
+  display: grid;
+  padding: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card {
+  background: #1e1e2f;
+  padding: 20px;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.rol {
+  background: #3b82f6;
+}
+
+.estado.activo {
+  background: #10b981;
+}
+
+.estado {
+  background: #ef4444;
+}
+
+.plan {
+  margin-top: 10px;
+  padding: 10px;
+  background: #2a2a40;
+  border-radius: 8px;
+}
+
+.perfil-wrapper {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-back {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background: #334155;
+  border-color: #475569;
+}
+
+.header h1 {
+  color: black;
+  font-size: 26px;
+  margin: 0;
+}
+
+.header p {
+  color: #94a3b8;
+  margin-top: 5px;
+}
+
+.usuario {
+  padding: 20px;
+}
+
+/* 🔥 layout horizontal tipo SaaS */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 2px solid #3b82f6;
+}
+
+/* Info */
+.info h2 {
+  margin: 0;
+  color: white;
+}
+
+.info p {
+  margin: 2px 0 8px 0;
+  color: #94a3b8;
+}
+
+/* badges */
+.badges {
+  display: flex;
+  gap: 8px;
+}

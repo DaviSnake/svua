@@ -83,8 +83,8 @@ public class Activo extends BaseEntity {
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
     private List<PlanMantenimiento> planesMantenimiento;
 
-    @OneToOne(mappedBy = "activo", cascade = CascadeType.ALL)
-    private Depreciacion depreciacion;
+    @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
+    private List<Depreciacion> depreciaciones;
 
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
     private List<HistorialEstadoActivo> historialEstados;

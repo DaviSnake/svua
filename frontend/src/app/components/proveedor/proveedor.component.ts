@@ -58,7 +58,7 @@ export class ProveedorComponent implements OnInit {
       rut: ['', Validators.required],
       //rut: ['', [Validators.required, rutValidator]],
       contacto: ['', Validators.required],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      telefono: ['', [Validators.required, Validators.pattern('^[+0-9]+$')]],
       email: ['', [Validators.required, Validators.email]],
       empresa: [''],
       empresaId: [null, Validators.required],

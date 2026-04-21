@@ -19,6 +19,7 @@ import cl.aracridav.svua.inventario.tipoactivo.dto.response.TipoActivoResponse;
 import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.ubicacion.dto.response.UbicacionResponse;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.response.OrdenRepuestoResponse;
@@ -30,6 +31,7 @@ import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.proveedor.dto.response.ProveedorResponse;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.dto.response.EmpresaDTO;
+import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import lombok.*;
@@ -271,6 +273,41 @@ public class GeneralMapper {
     }
 
     return dto;
+  }
+
+  public PerfilUsuarioDTO mapUsuariotoPerfilDTO(Usuario u) {
+      PerfilUsuarioDTO dto = new PerfilUsuarioDTO();
+
+      dto.setId(u.getId());
+      dto.setNombre(u.getNombre());
+      dto.setEmail(u.getEmail());
+      dto.setRol(u.getRol().name());
+      dto.setActivo(u.getActivo());
+
+      dto.setEmpresaNombre(u.getEmpresa().getNombre());
+      dto.setEmpresaRut(u.getEmpresa().getRut());
+      dto.setPlan(u.getEmpresa().getTipoPlan().name());
+      dto.setFechaFinPlan(u.getEmpresa().getFechaFinPlan());
+
+      return dto;
+  }
+
+  public OrdenEjecucionResponse mapOrdenEjecucionResponse(OrdenMantenimiento o) {
+
+      OrdenEjecucionResponse dto = new OrdenEjecucionResponse();
+
+      dto.setId(o.getId());
+      dto.setEstado(o.getEstado().name());
+      dto.setFechaEjecucion(o.getFechaEjecucion());
+      dto.setFechaFinEjecucion(o.getFechaFinEjecucion());
+      dto.setDuracionSegundos(o.getDuracionSegundos());
+      dto.setTitulo(o.getTitulo());
+
+      if (o.getActivo() != null) {
+          dto.setActivoNombre(o.getActivo().getNombre());
+      }
+
+      return dto;
   }
 
 }

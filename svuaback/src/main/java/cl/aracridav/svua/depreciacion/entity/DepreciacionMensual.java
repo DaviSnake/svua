@@ -1,6 +1,7 @@
 package cl.aracridav.svua.depreciacion.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.shared.entity.BaseEntity;
@@ -34,6 +35,9 @@ public class DepreciacionMensual extends BaseEntity {
 
     @Column(nullable = false)
     private int mes;
+
+    @Column(name = "fecha", nullable = false)
+    private LocalDate fecha;
 
     @Column(nullable = false)
     private BigDecimal depreciacionMensual;

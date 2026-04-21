@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.activo.repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,4 +45,8 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
         WHERE a.empresa.id = :empresaId
     """)
     BigDecimal sumValorByEmpresa(@Param("empresaId") Long empresaId);
+
+    Optional<Activo> findFirstByNombre(String nombre);
+
+    Optional<Activo> findByNombreContainingIgnoreCase(String nombre);
 }

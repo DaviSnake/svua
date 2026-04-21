@@ -139,6 +139,39 @@ public class EmpresaServiceImpl implements EmpresaService {
             empresa.setActiva(request.getActiva());
         }
 
+        // 🔹 Configuración SaaS
+        empresa.setTipoPlan(request.getTipoPlan());
+
+        // 🔥 Lógica automática por plan
+        switch (request.getTipoPlan()) {
+
+            case FREE -> {
+                empresa.setMaxUsuarios(2);
+                empresa.setMaxActivos(20);
+                empresa.setFechaFinPlan(LocalDate.now().plusDays(15));
+            }
+
+            case BASICO -> {
+                empresa.setMaxUsuarios(5);
+                empresa.setMaxActivos(100);
+                empresa.setFechaFinPlan(LocalDate.now().plusMonths(1));
+            }
+
+            case PROFESIONAL -> {
+                empresa.setMaxUsuarios(10);
+                empresa.setMaxActivos(150);
+                empresa.setFechaFinPlan(LocalDate.now().plusMonths(6));
+            }
+
+            case ENTERPRISE -> {
+                empresa.setMaxUsuarios(50);
+                empresa.setMaxActivos(1000);
+                empresa.setFechaFinPlan(LocalDate.now().plusYears(1));
+            }
+
+            default -> throw new BusinessException("Plan no válido");
+        }
+
         empresaRepository.save(empresa);
 
         return EmpresaResponse.builder()
@@ -157,8 +190,8 @@ public class EmpresaServiceImpl implements EmpresaService {
         UpdatePlanEmpresaRequest request) {
 
         Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() ->
-                        new BusinessException("Empresa no encontrada"));
+            .orElseThrow(() ->
+                new BusinessException("Empresa no encontrada"));
 
         // 🔹 Configuración SaaS
         empresa.setTipoPlan(request.getTipoPlan());

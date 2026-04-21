@@ -10,7 +10,7 @@ import cl.aracridav.svua.shared.enums.EstadoActivo;
 
 public interface ActivoService {
 
-    ActivoResponse crearActivo(Long empresaId, ActivoCreateRequest nuevoEstado);
+    ActivoResponse crearActivo(ActivoCreateRequest nuevoEstado);
     Page<ActivoResponse> mostrarActivos(Pageable pageable);
     Activo darDeBaja(Long idActivo, String motivo);
     void actualizarEstado(Long idActivo, EstadoActivo estado);

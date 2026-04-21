@@ -2,6 +2,7 @@ package cl.aracridav.svua.depreciacion.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,9 @@ public class DepreciacionServiceImpl implements DepreciacionService {
         BigDecimal depreciacionAcumulada = BigDecimal.valueOf(0);
         BigDecimal valorContable = costo;
 
+        LocalDate fechaBase = activo.getFechaAdquisicion()
+            .withDayOfMonth(1); // 🔥 clave
+
         for (int mes = 1; mes <= vidaUtilMeses; mes++) {
 
             depreciacionAcumulada = depreciacionAcumulada.add(depreciacionMensual); // ✅
@@ -56,9 +60,12 @@ public class DepreciacionServiceImpl implements DepreciacionService {
                 valorContable = valorResidual;
             }
 
+            LocalDate fecha = fechaBase.plusMonths(mes - 1); // 👈 clave
+
             DepreciacionMensual dep = new DepreciacionMensual();
             dep.setActivo(activo);
             dep.setMes(mes);
+            dep.setFecha(fecha);
             dep.setDepreciacionMensual(depreciacionMensual);
             dep.setDepreciacionAcumulada(depreciacionAcumulada);
             dep.setValorContable(valorContable);

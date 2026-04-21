@@ -1,0 +1,218 @@
+<div class="upload-wrapper">
+
+  <!-- 🔥 Título principal -->
+  <div class="header">
+    <div>
+      <h1>Carga masiva de datos</h1>
+      <p>Importa información desde archivos Excel para distintos módulos del sistema</p>
+    </div>
+  </div>
+
+  <!-- 🔹 BLOQUES -->
+  <div class="upload-grid">
+
+    <!-- Activos -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Activos</h2>
+    
+      <div class="file-box">
+        <label for="fileInputActivo" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputActivo
+            id="fileInputActivo"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('activo')"
+            (change)="onFileSelected($event, 'activo')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameActivo">
+          📄 {{ fileNameActivo }}
+        </p>
+      </div>
+    
+      @if (mensajeActivo) {
+        <div class="alert">
+            {{ mensajeActivo }}
+        </div>
+        }
+    
+      <div *ngIf="progressActivo > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressActivo}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressActivo">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoActivo}}
+        </p>
+    
+      </div>
+    
+    </div>
+
+    <!-- Proveedores -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Proveedores</h2>
+    
+      <div class="file-box">
+        <label for="fileInputProveedor" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputProveedor
+            id="fileInputProveedor"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('proveedor')"
+            (change)="onFileSelected($event, 'proveedor')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameProveedor">
+          📄 {{ fileNameProveedor }}
+        </p>
+      </div>
+    
+      @if (mensajeProveedor) {
+        <div class="alert">
+            {{ mensajeProveedor }}
+        </div>
+        }
+    
+      <div *ngIf="progressProveedor > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressProveedor}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressProveedor">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoProveedor}}
+        </p>
+    
+      </div>
+    
+    </div>
+
+    <!-- Orden -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Orden de Mantención</h2>
+    
+      <div class="file-box">
+        <label for="fileInputOrden" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputOrden
+            id="fileInputOrden"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('orden')"
+            (change)="onFileSelected($event, 'orden')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameOrden">
+          📄 {{ fileNameOrden }}
+        </p>
+      </div>
+    
+      @if (mensajeOrden) {
+        <div class="alert">
+            {{ mensajeOrden }}
+        </div>
+        }
+    
+      <div *ngIf="progressOrden > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressOrden}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressOrden">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoOrden}}
+        </p>
+    
+      </div>
+    
+    </div>
+
+    <!-- Repuestos -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Repuestos</h2>
+    
+      <div class="file-box">
+        <label for="fileInputRepuesto" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputRepuesto
+            id="fileInputRepuesto"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('repuesto')"
+            (change)="onFileSelected($event, 'repuesto')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameRepuesto">
+          📄 {{ fileNameRepuesto }}
+        </p>
+      </div>
+    
+      @if (mensajeRepuesto) {
+        <div class="alert">
+            {{ mensajeRepuesto }}
+        </div>
+        }
+    
+      <div *ngIf="progressRepuesto > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressRepuesto}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressRepuesto">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoRepuesto}}
+        </p>
+    
+      </div>
+    
+    </div>
+  </div>
+</div>
