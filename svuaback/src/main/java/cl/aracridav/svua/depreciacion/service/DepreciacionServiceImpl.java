@@ -79,6 +79,53 @@ public class DepreciacionServiceImpl implements DepreciacionService {
     }
 
     @Override
+    public void calcularYGuardarDepreciacionMensual(Activo activo, Long empresaId) {
+        List<DepreciacionMensual> lista = new ArrayList<>();
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+
+        BigDecimal costo = activo.getValorAdquisicion();
+        BigDecimal valorResidual = activo.getValorResidual();
+        int vidaUtilMeses = activo.getVidaUtilMeses();
+
+        BigDecimal depreciacionMensual = (costo.subtract(valorResidual)).divide(BigDecimal.valueOf(vidaUtilMeses), RoundingMode.HALF_UP);
+        BigDecimal depreciacionAcumulada = BigDecimal.valueOf(0);
+        BigDecimal valorContable = costo;
+
+        LocalDate fechaBase = activo.getFechaAdquisicion()
+            .withDayOfMonth(1); // 🔥 clave
+
+        for (int mes = 1; mes <= vidaUtilMeses; mes++) {
+
+            depreciacionAcumulada = depreciacionAcumulada.add(depreciacionMensual); // ✅
+
+            valorContable = valorContable.subtract(depreciacionMensual); // ✅
+
+            if (valorContable.compareTo(valorResidual) < 0) { // ✅
+                valorContable = valorResidual;
+            }
+
+            LocalDate fecha = fechaBase.plusMonths(mes - 1); // 👈 clave
+
+            DepreciacionMensual dep = new DepreciacionMensual();
+            dep.setActivo(activo);
+            dep.setMes(mes);
+            dep.setFecha(fecha);
+            dep.setDepreciacionMensual(depreciacionMensual);
+            dep.setDepreciacionAcumulada(depreciacionAcumulada);
+            dep.setValorContable(valorContable);
+            dep.setEmpresa(empresa);
+
+            lista.add(dep);
+        }
+
+        // Guardar todas las depreciaciones en la base de datos
+        depreciacionMensualRepository.saveAll(lista);
+    }
+
+
+    @Override
     public void guardarDepreciacion(Activo activo){
         
         Depreciacion dep = new Depreciacion();

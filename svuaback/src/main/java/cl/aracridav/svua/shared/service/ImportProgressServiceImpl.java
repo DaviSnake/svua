@@ -38,6 +38,8 @@ public class ImportProgressServiceImpl implements ImportProgressService {
             p.getErroresDetalle().add(
                 new ErrorFilaDTO(fila, mensaje, contenido)
             );
+
+            p.setEstado("ERROR");
         }
     }
 

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
+import cl.aracridav.svua.depreciacion.service.DepreciacionService;
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
@@ -59,6 +61,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final OrdenMantenimientoRepository oMantenimientoRepository;
     private final RepuestoRepository repuestoRepository;
     private final ActivoRepository activoRepository;
+    private final DepreciacionService depreciacionService;
     private final UsuarioRepository usuarioRepository;
     private final PlanMantenimientoRepository planRepository;
     private final TipoActivoRepository tipoActivoRepository;
@@ -102,7 +105,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchActivo.add(activo);
 
                             if (batchActivo.size() == BATCH_SIZE) {
-                                guardarActivo(batchActivo);
+                                guardarActivo(batchActivo, empresaId);
                                 batchActivo.clear();
                             }
                         }
@@ -168,7 +171,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             // 🔚 Guardar lo restante
             switch (archivo) {
                 case "activo" -> {
-                    if (!batchActivo.isEmpty()) guardarActivo(batchActivo);
+                    if (!batchActivo.isEmpty()) guardarActivo(batchActivo, empresaId);
                 }
                 case "proveedor" -> {
                     if (!batchProveedor.isEmpty()) guardarProveedor(batchProveedor);
@@ -221,8 +224,9 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return sb.toString();
     }
     
-    private void guardarActivo(List<Activo> batch) {
-        activoRepository.saveAll(batch);
+    private void guardarActivo(List<Activo> batch, Long empresaId) {
+        List<Activo> activos = activoRepository.saveAll(batch);
+        calcularYGuardarDepreciacionMensual(activos, empresaId);
         em.flush();
         em.clear();
     }
@@ -482,9 +486,16 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
     private LocalDate getLocalDate(Row row, int index) {
         try {
-            return LocalDate.parse(getString(row, index));
+            String valor = getString(row, index);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+            return LocalDate.parse(valor, formatter);
+
+        } catch (DateTimeParseException e) {
+            throw new BusinessException("Fecha inválida en columna " + index + ". Formato esperado: dd-MM-yyyy");
         } catch (Exception e) {
-            throw new BusinessException("Fecha inválida en columna " + index);
+            throw new BusinessException("Error al leer fecha en columna " + index);
         }
     }
 
@@ -618,6 +629,12 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
         } catch (Exception e) {
             throw new BusinessException(mensaje + " (columnas " + colFecha + ", " + colHora + ")");
+        }
+    }
+
+    private void calcularYGuardarDepreciacionMensual(List<Activo> activos, Long empresaId) {
+        for (Activo activo : activos) {
+            depreciacionService.calcularYGuardarDepreciacionMensual(activo, empresaId);
         }
     }
 

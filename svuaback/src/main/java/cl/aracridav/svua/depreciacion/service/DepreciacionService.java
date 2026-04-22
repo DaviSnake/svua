@@ -10,6 +10,8 @@ public interface DepreciacionService {
     public void guardarDepreciacion(Activo activo);
     
     public void calcularYGuardarDepreciacionMensual(Activo activo);
+    
+    public void calcularYGuardarDepreciacionMensual(Activo activo, Long empresaId);
 
     public List<DepreciacionMensual> obtenerDepreciacionesPorActivo(Activo activo);
 
