@@ -149,6 +149,78 @@ textarea {
   color: white;
 }
 
+/* 🔥 AUTOCOMPLETE COMO INPUT NORMAL */
+.custom-autocomplete {
+  width: 100%;
+  max-width: 100%; /* puedes cambiar a 250px si lo quieres más angosto */
+}
+
+/* 🔥 wrapper principal */
+.custom-autocomplete .mat-mdc-text-field-wrapper {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  height: 38px !important;
+  padding: 0 8px !important;
+  display: flex;
+  align-items: center;
+}
+
+/* 🔥 eliminar estilos Material internos */
+.custom-autocomplete .mdc-text-field {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* 🔥 input interno */
+.custom-autocomplete input {
+  color: white !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  font-size: 13px;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 🔥 outline completo */
+.custom-autocomplete .mdc-notched-outline {
+  height: 100% !important;
+}
+
+.custom-autocomplete .mdc-notched-outline__leading,
+.custom-autocomplete .mdc-notched-outline__notch,
+.custom-autocomplete .mdc-notched-outline__trailing {
+  border-color: #334155 !important;
+}
+
+/* 🔥 hover */
+.custom-autocomplete:hover .mdc-notched-outline__leading,
+.custom-autocomplete:hover .mdc-notched-outline__notch,
+.custom-autocomplete:hover .mdc-notched-outline__trailing {
+  border-color: #3b82f6 !important;
+}
+
+/* 🔥 quitar label flotante (como input normal) */
+.custom-autocomplete .mdc-floating-label {
+  display: none !important;
+}
+
+/* 🔥 PANEL AUTOCOMPLETE */
+.mat-mdc-autocomplete-panel {
+  background: #0f172a !important;
+  color: black !important;
+  border: 1px solid #334155 !important;
+}
+
+/* 🔥 OPCIONES */
+.mat-mdc-option {
+  color: black !important;
+}
+
+.mat-mdc-option:hover {
+  background: #1e293b !important;
+}
+
 /* Animación */
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }

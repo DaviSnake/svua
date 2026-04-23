@@ -19,9 +19,12 @@ import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
+import cl.aracridav.svua.mantenimiento.orden.entity.OrdenReprogramacion;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
+import cl.aracridav.svua.mantenimiento.orden.repository.OrdenReprogramacionRepository;
 import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
+import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
@@ -35,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService {
 
     private final OrdenMantenimientoRepository ordenRepository;
+    private final OrdenReprogramacionRepository ordenReprogramacionRepository;
     private final ActivoRepository activoRepository;
     private final UsuarioRepository usuarioRepository;
     private final PlanMantenimientoRepository planRepository;
@@ -71,6 +75,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         OrdenMantenimiento orden = construirOrden(request, empresa, activo, usuario, plan);
 
         OrdenMantenimiento guardada = ordenRepository.save(orden);
+
 
         return generalMapper.mapOrdenMantenimientoResponse(guardada);
     }
@@ -215,13 +220,33 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
      * REPROGRAMAR ORDEN
      * =========================================
      */
-    public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha) {
+    public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha, String motivo) {
 
+        Long empresaId = SecurityUtils.getEmpresaId();
+        Long usuarioId = SecurityUtils.getUsuarioId();
+        
         OrdenMantenimiento orden = ordenRepository.findById(ordenId)
             .orElseThrow(() -> new BusinessException("Orden no existe"));
 
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+
         validarEstadoReprogramacion(orden.getEstado());
         validarFechaReprogramacion(nuevaFecha);
+
+        // 🔥 Guardar historial
+        OrdenReprogramacion r = new OrdenReprogramacion();
+        r.setOrden(orden);
+        r.setFechaAnterior(orden.getFechaProgramada());
+        r.setFechaNueva(nuevaFecha);
+        r.setUsuario(usuario);
+        r.setMotivo(motivo);
+        r.setEmpresa(empresa);
+
+        ordenReprogramacionRepository.save(r);
 
         orden.setFechaProgramada(nuevaFecha);
 
@@ -234,6 +259,8 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         EstadoOrden actual = orden.getEstado();
 
+        EstadoActivo estadoActivo = EstadoActivo.FUERA_SERVICIO;
+
         if (!actual.puedePasarA(nuevoEstado)) {
             throw new BusinessException(
                 "Transición inválida: " + actual + " → " + nuevoEstado
@@ -245,6 +272,16 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setEstado(nuevoEstado);
 
         OrdenMantenimiento guardada = ordenRepository.save(orden);
+
+        Activo activo = obtenerActivoDeOrden(guardada.getId());
+
+        if (nuevoEstado == EstadoOrden.COMPLETADA){
+            estadoActivo = EstadoActivo.OPERATIVO;
+        }
+
+        activo.setEstadoActual(estadoActivo);
+
+        activoRepository.save(activo);
 
         return generalMapper.mapOrdenEjecucionResponse(guardada);
 
@@ -335,6 +372,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return planRepository.findById(planId)
             .orElseThrow(() -> new BusinessException("Plan mantenimiento no encontrado"));
     }
+
+    public Activo obtenerActivoDeOrden(Long ordenId) {
+    return ordenRepository.findActivoByOrdenId(ordenId)
+        .orElseThrow(() -> new RuntimeException("Activo no encontrado"));
+}
 
     private void validarNoExisteOrdenPendiente(Long activoId) {
 

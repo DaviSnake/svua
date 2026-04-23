@@ -8,4 +8,5 @@ import lombok.Data;
 public class ReprogramarOrdenRequest {
     
     private LocalDateTime nuevaFecha;
+    private String motivo;
 }

@@ -2,12 +2,14 @@ package cl.aracridav.svua.mantenimiento.orden.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 
@@ -86,5 +88,12 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         GROUP BY o.estado
     """)
     List<Object[]> countOrdenesPorEstado(Long empresaId);
+
+    @Query("""
+        SELECT o.activo 
+        FROM OrdenMantenimiento o
+        WHERE o.id = :ordenId
+    """)
+    Optional<Activo> findActivoByOrdenId(@Param("ordenId") Long ordenId);
 
 }

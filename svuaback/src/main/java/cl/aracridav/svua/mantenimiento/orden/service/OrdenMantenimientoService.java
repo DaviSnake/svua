@@ -33,5 +33,5 @@ public interface OrdenMantenimientoService {
     
     public OrdenMantenimientoResponse actualizarOrden(Long ordenId, OrdenMantenimientoRequest request);
 
-    public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha);
+    public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha, String motivo);
 }

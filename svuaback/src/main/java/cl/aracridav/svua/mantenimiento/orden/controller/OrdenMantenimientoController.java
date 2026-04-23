@@ -82,7 +82,7 @@ public class OrdenMantenimientoController {
             @RequestBody ReprogramarOrdenRequest request
     ) {
         return ResponseEntity.ok(
-            service.reprogramarOrden(id, request.getNuevaFecha())
+            service.reprogramarOrden(id, request.getNuevaFecha(), request.getMotivo())
         );
     }
 

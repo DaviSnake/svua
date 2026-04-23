@@ -8,7 +8,7 @@
   </div>
   <!-- 🔹 Calendario -->
   <div class="calendar-container">
-    <full-calendar [options]="calendarOptions"></full-calendar>
+    <full-calendar #calendar [options]="calendarOptions"></full-calendar>
   </div>
   <!-- 🔹 Modal -->
 <div *ngIf="mostrarModal" class="modal-backdrop">
@@ -34,23 +34,42 @@
       </div>
 
       <div class="form-group">
-        <label>Lugar</label>
-        <input type="text" formControlName="lugar" />
-      </div>
-
-      <div class="form-group">
-        <label>Activo</label>
-        <select formControlName="activoId">
-          <option [ngValue]="null" disabled>Seleccione un activo</option>
-          <option *ngFor="let activo of activos" [value]="activo.id">
-            {{ activo.nombre }}
-          </option>
+        <label>Tipo de Mantenimiento</label>
+        <select formControlName="tipoMantenimiento">
+          <option value="null" disabled>Seleccione tipo</option>
+          <option value ="PREVENTIVO">PREVENTIVO</option>
+          <option value ="CORRECTIVO">CORRECTIVO</option>
+          <option value ="PREDICTIVO">PREDICTIVO</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Hora</label>
-        <input type="time" formControlName="hora" />
+        <label>Activo</label>
+
+        <mat-form-field appearance="outline" class="full-width custom-autocomplete">
+
+          <input 
+            type="text"
+            matInput
+            [matAutocomplete]="auto"
+            #trigger="matAutocompleteTrigger"
+            [formControl]="activoControl"
+            (focus)="onFocusActivo()"
+            placeholder="Seleccione un activo">
+
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
+            <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
+              {{ activo.nombre }}
+            </mat-option>
+          </mat-autocomplete>
+
+        </mat-form-field>
+
+      </div>
+
+      <div class="form-group">
+        <label>Fecha y Hora</label>
+        <input type="datetime-local" formControlName="fechaHora" />
       </div>
 
       <!-- Acciones -->
@@ -81,14 +100,15 @@
                 ? '⏹ Terminar mantención' 
                 : '▶ Iniciar mantención' }}
           </button>
-  
-          <button 
-            class="btn primary"
-            type="button"
-            (click)="guardar()"
-            [disabled]="ordenMantencionForm.invalid">
-            {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-          </button>
+          <ng-container *ngIf="estadoOrden !== 'EN_EJECUCION'">
+            <button 
+              class="btn primary"
+              type="button"
+              (click)="guardar()"
+              [disabled]="ordenMantencionForm.invalid">
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+            </button>
+          </ng-container>
 
         </ng-container>
 

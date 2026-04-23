@@ -68,6 +68,12 @@ public class OrdenMantenimiento extends BaseEntity {
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
     private List<OrdenRepuesto> repuestosUtilizados;
 
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Archivo> archivos;
+
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<OrdenReprogramacion> reprogramaciones;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_activo", nullable = false, updatable = false)
     private Activo activo;

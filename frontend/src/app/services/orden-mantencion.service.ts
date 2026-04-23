@@ -34,9 +34,10 @@ export class OrdenMantencionService {
     return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}`, ordenMantencion);
   }
 
-  reprogramar(id: number, fecha: Date) {
+  reprogramar(id: number, fecha: Date, motivo: String) {
     const body = {
-      nuevaFecha: this.formatLocalDateTime(fecha)
+      nuevaFecha: this.formatLocalDateTime(fecha),
+      motivo: motivo
     };
     return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}/reprogramar`, body);
   }
