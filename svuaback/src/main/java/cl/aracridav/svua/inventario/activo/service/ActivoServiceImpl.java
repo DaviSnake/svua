@@ -1,6 +1,9 @@
 package cl.aracridav.svua.inventario.activo.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,8 @@ import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.tipoactivo.repository.TipoActivoRepository;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
 import cl.aracridav.svua.inventario.ubicacion.repository.UbicacionRepository;
+import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
+import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
@@ -37,6 +42,7 @@ public class ActivoServiceImpl implements ActivoService {
     private final UbicacionRepository ubicacionRepository;
     private final ProveedorRepository proveedorRepository;
     private final EmpresaRepository empresaRepository;
+    private final OrdenMantenimientoRepository ordenMantenimientoRepository;
 
     private final HistorialEstadoActivoService hEstadoActivoService;
     private final DepreciacionService depreciacionService;
@@ -138,6 +144,44 @@ public class ActivoServiceImpl implements ActivoService {
             nuevoEstado,
             "Cambio automático de estado"
         );
+    }
+
+    /*
+     * =========================================
+     * CALCULO RIESGO ACTIVO
+     * =========================================
+     */
+    public double calcularRiesgo(Long activoId) {
+
+        List<OrdenMantenimiento> ordenes =
+            ordenMantenimientoRepository.findByActivoIdOrderByFechaProgramadaDesc(activoId);
+
+        if (ordenes.isEmpty()) return 0;
+
+        // 🔥 tomar últimas 10 (para no ensuciar con datos antiguos)
+        List<OrdenMantenimiento> recientes =
+            ordenes.stream().limit(10).toList();
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime primera = recientes.get(recientes.size() - 1).getFechaProgramada();
+
+        long dias = ChronoUnit.DAYS.between(primera, ahora);
+        dias = dias == 0 ? 1 : dias;
+
+        int total = recientes.size();
+
+        double frecuencia = (double) total / dias;
+
+        // 🔥 normalizar a %
+        double riesgo = Math.min(frecuencia * 100, 100);
+
+        return Math.round(riesgo);
+    }
+
+    public String nivelRiesgo(double riesgo) {
+        if (riesgo < 30) return "BAJO";
+        if (riesgo < 70) return "MEDIO";
+        return "ALTO";
     }
 
 }

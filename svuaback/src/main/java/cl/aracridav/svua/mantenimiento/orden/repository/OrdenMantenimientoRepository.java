@@ -96,4 +96,6 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
     """)
     Optional<Activo> findActivoByOrdenId(@Param("ordenId") Long ordenId);
 
+    List<OrdenMantenimiento> findByActivoIdOrderByFechaProgramadaDesc(Long activoId);
+
 }

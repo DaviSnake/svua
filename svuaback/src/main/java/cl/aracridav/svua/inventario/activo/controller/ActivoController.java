@@ -1,11 +1,15 @@
 package cl.aracridav.svua.inventario.activo.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +54,18 @@ public class ActivoController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @GetMapping("/{id}/riesgo")
+    public Map<String, Object> getRiesgo(@PathVariable Long id) {
+
+        double riesgo = activoService.calcularRiesgo(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("riesgo", riesgo);
+        response.put("nivel", activoService.nivelRiesgo(riesgo));
+
+        return response;
     }
 
 }

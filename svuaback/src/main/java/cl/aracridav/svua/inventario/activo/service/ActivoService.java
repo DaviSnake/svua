@@ -14,5 +14,7 @@ public interface ActivoService {
     Page<ActivoResponse> mostrarActivos(Pageable pageable);
     Activo darDeBaja(Long idActivo, String motivo);
     void actualizarEstado(Long idActivo, EstadoActivo estado);
+    public double calcularRiesgo(Long activoId);
+    public String nivelRiesgo(double riesgo);
 
 }

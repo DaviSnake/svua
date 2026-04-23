@@ -44,6 +44,9 @@ export class CalendarioComponent implements OnInit {
 
   estadoOrden: string = 'PENDIENTE';
 
+  riesgo!: number;
+  nivel!: string;
+
   orden!: OrdenResponse;
 
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
@@ -281,6 +284,12 @@ export class CalendarioComponent implements OnInit {
     const fecha = info.event.start;
     if (!fecha) return;
 
+    const activoId = info.event.extendedProps?.activoId;
+
+    if (activoId) {
+      this.cargarRiesgo(activoId);
+    }
+
      const fechaLocal = this.formatFechaLocal(fecha);
 
     this.estadoOrden = info.event.extendedProps?.estado;
@@ -298,7 +307,6 @@ export class CalendarioComponent implements OnInit {
     });
 
     // 🔥 AQUÍ LA MAGIA
-    const activoId = info.event.extendedProps?.activoId;
     this.setActivoSeleccionado(activoId);
 
     this.aplicarEstadoFormulario();
@@ -549,6 +557,14 @@ export class CalendarioComponent implements OnInit {
       this.ordenMantencionForm.disable();
       this.activoControl.disable();
     }
+  }
+
+  cargarRiesgo(activoId: number) {
+    this.ordenMantencionService.getRiesgo(activoId)
+      .subscribe((res: any) => {
+        this.riesgo = res.riesgo;
+        this.nivel = res.nivel;
+      });
   }
 
   formatFechaLocal(date: Date): string {

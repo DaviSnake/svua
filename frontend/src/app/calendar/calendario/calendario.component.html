@@ -20,6 +20,13 @@
       <button class="close-btn" (click)="cerrar()">✕</button>
     </div>
 
+    <!-- 🔥 RIESGO -->
+    <div *ngIf="modoEdicion && riesgo !== undefined" 
+        class="riesgo-box" 
+        [ngClass]="nivel">
+      ⚠ Riesgo: {{ riesgo }}% ({{ nivel }})
+    </div>
+
     <!-- Form -->
     <form [formGroup]="ordenMantencionForm" class="form">
 

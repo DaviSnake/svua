@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,118 +42,35 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     private final UsuarioRepository usuarioRepository;
     private final PlanMantenimientoRepository planRepository;
     private final EmpresaRepository empresaRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
 
     /*
      * =========================================
-     * EJECUTAR ORDEN
+     * ESTADOS
      * =========================================
      */
+
+    @Override
     public OrdenEjecucionResponse ejecutarOrden(Long idOrden) {
-
-        OrdenMantenimiento orden = ordenRepository.findById(idOrden)
-            .orElseThrow(() -> new BusinessException("Orden no existe"));
-
-        return cambiarEstado(orden, EstadoOrden.EN_EJECUCION);
+        return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.EN_EJECUCION);
     }
 
-    /*
-     * =========================================
-     * CREAR ORDEN MANUAL
-     * =========================================
-     */
-    public OrdenMantenimientoResponse crearOrden(OrdenMantenimientoRequest request) {
-
-        Empresa empresa = obtenerEmpresaActual();
-        Activo activo = obtenerActivo(request.getActivoId());
-        Usuario usuario = obtenerUsuario(request.getUsuarioId());
-        PlanMantenimiento plan = obtenerPlan(request.getPlanMantenimientoId());
-
-        validarNoExisteOrdenPendiente(activo.getId());
-
-        OrdenMantenimiento orden = construirOrden(request, empresa, activo, usuario, plan);
-
-        OrdenMantenimiento guardada = ordenRepository.save(orden);
-
-
-        return generalMapper.mapOrdenMantenimientoResponse(guardada);
-    }
-
-    /*
-     * =========================================
-     * GENERAR ORDEN DESDE PLAN PREVENTIVO
-     * =========================================
-     */
-    public OrdenMantenimiento generarDesdePlan(Long planId, Long usuarioId) {
-
-        PlanMantenimiento plan = planRepository.findById(planId)
-                .orElseThrow(() -> new BusinessException("Plan no existe"));
-
-        if (!plan.getEstaActivo()) {
-            throw new BusinessException("El plan no está activo");
-        }
-
-        Long activoId = plan.getActivo().getId();
-
-        boolean existePendiente = ordenRepository
-                .existsByActivoIdAndEstado(activoId, EstadoOrden.PENDIENTE);
-
-        if (existePendiente) {
-            throw new BusinessException("Ya existe orden pendiente para este activo");
-        }
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new BusinessException("Usuario no existe"));
-
-        OrdenMantenimiento orden = new OrdenMantenimiento();
-        orden.setActivo(plan.getActivo());
-        orden.setUsuario(usuario);
-        orden.setTipoMantenimiento(plan.getTipoMantenimiento());
-        orden.setFechaProgramada(plan.getProximaEjecucion());
-        orden.setEstado(EstadoOrden.PENDIENTE);
-        orden.setPlanMantenimiento(plan);
-
-        return ordenRepository.save(orden);
-    }
-
-    /*
-     * =========================================
-     * CERRAR ORDEN
-     * =========================================
-     */
-    public OrdenEjecucionResponse cerrarOrden(Long ordenId, BigDecimal costo, String observacionesFinales) {
-
-        OrdenMantenimiento orden = ordenRepository.findById(ordenId)
-            .orElseThrow(() -> new BusinessException("Orden no existe"));
-
+    @Override
+    public OrdenEjecucionResponse cerrarOrden(Long id, BigDecimal costo, String obs) {
+        OrdenMantenimiento orden = obtenerOrden(id);
         orden.setCosto(costo);
-        orden.setObservaciones(observacionesFinales);
-
+        orden.setObservaciones(obs);
         return cambiarEstado(orden, EstadoOrden.COMPLETADA);
     }
 
-    /*
-     * =========================================
-     * DETENER ORDEN
-     * =========================================
-     */
+    @Override
     public OrdenEjecucionResponse detenerOrden(Long idOrden) {
-
-        OrdenMantenimiento orden = ordenRepository.findById(idOrden)
-            .orElseThrow(() -> new BusinessException("Orden no existe"));
-
-        return cambiarEstado(orden, EstadoOrden.COMPLETADA);
+        return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.COMPLETADA);
     }
 
-    /*
-     * =========================================
-     * CANCELAR ORDEN
-     * =========================================
-     */
-    public OrdenMantenimiento cancelarOrden(Long ordenId, String motivo) {
-
-        OrdenMantenimiento orden = ordenRepository.findById(ordenId)
-                .orElseThrow(() -> new BusinessException("Orden no existe"));
+    @Override
+    public OrdenMantenimiento cancelarOrden(Long id, String motivo) {
+        OrdenMantenimiento orden = obtenerOrden(id);
 
         if (orden.getEstado() == EstadoOrden.COMPLETADA) {
             throw new BusinessException("No se puede cancelar una orden cerrada");
@@ -168,104 +84,111 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     /*
      * =========================================
-     * LISTAR ÓRDENES VENCIDAS
+     * CREACIÓN
      * =========================================
      */
+
+    @Override
+    public OrdenMantenimientoResponse crearOrden(OrdenMantenimientoRequest req) {
+
+        Activo activo = obtenerActivo(req.getActivoId());
+        validarNoExisteOrdenPendiente(activo.getId());
+
+        OrdenMantenimiento orden = construirOrden(
+                req,
+                obtenerEmpresaActual(),
+                activo,
+                obtenerUsuario(req.getUsuarioId()),
+                obtenerPlan(req.getPlanMantenimientoId())
+        );
+
+        return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+    }
+
+    @Override
+    public OrdenMantenimiento generarDesdePlan(Long planId, Long usuarioId) {
+
+        PlanMantenimiento plan = obtenerPlan(planId);
+        validarPlanActivo(plan);
+
+        validarNoExisteOrdenPendiente(plan.getActivo().getId());
+
+        OrdenMantenimiento orden = new OrdenMantenimiento();
+        orden.setActivo(plan.getActivo());
+        orden.setUsuario(obtenerUsuario(usuarioId));
+        orden.setTipoMantenimiento(plan.getTipoMantenimiento());
+        orden.setFechaProgramada(plan.getProximaEjecucion());
+        orden.setEstado(EstadoOrden.PENDIENTE);
+        orden.setPlanMantenimiento(plan);
+
+        return ordenRepository.save(orden);
+    }
+
+    /*
+     * =========================================
+     * ACTUALIZACIÓN
+     * =========================================
+     */
+
+    @Override
+    public OrdenMantenimientoResponse actualizarOrden(Long id, OrdenMantenimientoRequest req) {
+
+        OrdenMantenimiento orden = obtenerOrden(id);
+
+        orden.setTitulo(req.getTitulo());
+        orden.setFechaProgramada(req.getFechaProgramada());
+
+        return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+    }
+
+    @Override
+    public OrdenMantenimientoResponse reprogramarOrden(Long id, LocalDateTime nuevaFecha, String motivo) {
+
+        OrdenMantenimiento orden = obtenerOrden(id);
+
+        validarEstadoReprogramacion(orden.getEstado());
+        validarFechaReprogramacion(nuevaFecha);
+
+        guardarHistorialReprogramacion(orden, nuevaFecha, motivo);
+
+        orden.setFechaProgramada(nuevaFecha);
+
+        return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+    }
+
+    /*
+     * =========================================
+     * CONSULTAS
+     * =========================================
+     */
+
+    @Override
     @Transactional(readOnly = true)
     public List<OrdenMantenimiento> obtenerOrdenesVencidas() {
         return ordenRepository.findOrdenesVencidas(LocalDate.now());
     }
 
-    /*
-     * =========================================
-     * LISTAR ÓRDENES EMPRESAS
-     * =========================================
-     */
+    @Override
     @Transactional(readOnly = true)
     public List<OrdenMantenimientoResponse> listarOrdenesEmpresa() {
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        return ordenRepository.findByEmpresaId(empresa.getId())
+        return ordenRepository.findByEmpresaId(empresaId)
                 .stream()
-                .map(generalMapper::mapOrdenMantenimientoResponse)
-                .collect(Collectors.toList());
+                .map(mapper::mapOrdenMantenimientoResponse)
+                .toList();
     }
 
     /*
      * =========================================
-     * ACTUALIZAR ORDEN MANUAL
+     * CORE
      * =========================================
      */
-    public OrdenMantenimientoResponse actualizarOrden(Long ordenId, OrdenMantenimientoRequest request) {
-
-        OrdenMantenimiento orden = ordenRepository.findById(ordenId)
-                .orElseThrow(() -> new BusinessException("Orden no existe"));
-
-
-        orden.setTitulo(request.getTitulo());
-        orden.setFechaProgramada(request.getFechaProgramada());
-        
-
-        OrdenMantenimiento ordenMantenimientoGuardada = ordenRepository.save(orden);
-
-        return generalMapper.mapOrdenMantenimientoResponse(ordenMantenimientoGuardada);
-    }
-
-    /*
-     * =========================================
-     * REPROGRAMAR ORDEN
-     * =========================================
-     */
-    public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha, String motivo) {
-
-        Long empresaId = SecurityUtils.getEmpresaId();
-        Long usuarioId = SecurityUtils.getUsuarioId();
-        
-        OrdenMantenimiento orden = ordenRepository.findById(ordenId)
-            .orElseThrow(() -> new BusinessException("Orden no existe"));
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        validarEstadoReprogramacion(orden.getEstado());
-        validarFechaReprogramacion(nuevaFecha);
-
-        // 🔥 Guardar historial
-        OrdenReprogramacion r = new OrdenReprogramacion();
-        r.setOrden(orden);
-        r.setFechaAnterior(orden.getFechaProgramada());
-        r.setFechaNueva(nuevaFecha);
-        r.setUsuario(usuario);
-        r.setMotivo(motivo);
-        r.setEmpresa(empresa);
-
-        ordenReprogramacionRepository.save(r);
-
-        orden.setFechaProgramada(nuevaFecha);
-
-        OrdenMantenimiento ordenMantenimientoGuardada = ordenRepository.save(orden);
-
-        return generalMapper.mapOrdenMantenimientoResponse(ordenMantenimientoGuardada);
-    }
 
     private OrdenEjecucionResponse cambiarEstado(OrdenMantenimiento orden, EstadoOrden nuevoEstado) {
 
-        EstadoOrden actual = orden.getEstado();
-
-        EstadoActivo estadoActivo = EstadoActivo.FUERA_SERVICIO;
-
-        if (!actual.puedePasarA(nuevoEstado)) {
-            throw new BusinessException(
-                "Transición inválida: " + actual + " → " + nuevoEstado
-            );
-        }
+        validarTransicion(orden.getEstado(), nuevoEstado);
 
         aplicarReglas(orden, nuevoEstado);
 
@@ -273,139 +196,175 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         OrdenMantenimiento guardada = ordenRepository.save(orden);
 
-        Activo activo = obtenerActivoDeOrden(guardada.getId());
+        actualizarEstadoActivo(guardada, nuevoEstado);
 
-        if (nuevoEstado == EstadoOrden.COMPLETADA){
-            estadoActivo = EstadoActivo.OPERATIVO;
-        }
+        return mapper.mapOrdenEjecucionResponse(guardada);
+    }
 
-        activo.setEstadoActual(estadoActivo);
+    private void actualizarEstadoActivo(OrdenMantenimiento orden, EstadoOrden estado) {
+
+        Activo activo = obtenerActivoDeOrden(orden.getId());
+
+        EstadoActivo nuevoEstado = (estado == EstadoOrden.COMPLETADA)
+                ? EstadoActivo.OPERATIVO
+                : EstadoActivo.FUERA_SERVICIO;
+
+        activo.setEstadoActual(nuevoEstado);
 
         activoRepository.save(activo);
-
-        return generalMapper.mapOrdenEjecucionResponse(guardada);
-
     }
 
-    private void aplicarReglas(OrdenMantenimiento orden, EstadoOrden nuevoEstado) {
+    private void aplicarReglas(OrdenMantenimiento orden, EstadoOrden estado) {
 
-        switch (nuevoEstado) {
+        switch (estado) {
 
-            case EN_EJECUCION -> {
+            case EN_EJECUCION -> iniciarOrden(orden);
+            case COMPLETADA -> finalizarOrden(orden);
+            case CANCELADA -> cancelarOrdenInterno(orden);
+            default -> throw new IllegalArgumentException("Unexpected value: " + estado);
 
-                if ("BAJA".equals(orden.getActivo().getEstadoActual().toString())) {
-                    throw new BusinessException("Activo dado de baja");
-                }
-
-                orden.setFechaEjecucion(LocalDateTime.now());
-                orden.setUsuarioEjecucion(getUsuarioActual());
-            }
-
-            case COMPLETADA -> {
-
-                if (orden.getFechaEjecucion() == null) {
-                    throw new BusinessException(
-                        "No se puede completar sin haber iniciado la orden"
-                    );
-                }
-
-                LocalDateTime ahora = LocalDateTime.now();
-
-                orden.setFechaFinEjecucion(ahora);
-
-                long duracion = Duration.between(
-                    orden.getFechaEjecucion(),
-                    ahora
-                ).getSeconds();
-
-                orden.setDuracionSegundos(duracion);
-                orden.setUsuarioFinalizacion(getUsuarioActual());
-            }
-
-            case CANCELADA -> {
-
-                LocalDateTime ahora = LocalDateTime.now();
-
-                orden.setFechaFinEjecucion(ahora);
-
-                if (orden.getFechaEjecucion() != null) {
-                    long duracion = Duration.between(
-                        orden.getFechaEjecucion(),
-                        ahora
-                    ).getSeconds();
-
-                    orden.setDuracionSegundos(duracion);
-                }
-
-                orden.setUsuarioFinalizacion(getUsuarioActual());
-            }
-
-            default -> {}
         }
     }
 
-    private Usuario getUsuarioActual() {
-        Long usuarioId = SecurityUtils.getUsuarioId();
+    private void iniciarOrden(OrdenMantenimiento orden) {
 
-        return usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (orden.getActivo().getEstadoActual() == EstadoActivo.BAJA) {
+            throw new BusinessException("Activo dado de baja");
+        }
+
+        orden.setFechaEjecucion(LocalDateTime.now());
+        orden.setUsuarioEjecucion(getUsuarioActual());
+    }
+
+    private void finalizarOrden(OrdenMantenimiento orden) {
+
+        if (orden.getFechaEjecucion() == null) {
+            throw new BusinessException("Debe iniciar la orden primero");
+        }
+
+        calcularDuracion(orden);
+        orden.setUsuarioFinalizacion(getUsuarioActual());
+    }
+
+    private void cancelarOrdenInterno(OrdenMantenimiento orden) {
+
+        if (orden.getFechaEjecucion() != null) {
+            calcularDuracion(orden);
+        }
+
+        orden.setUsuarioFinalizacion(getUsuarioActual());
+    }
+
+    private void calcularDuracion(OrdenMantenimiento orden) {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        orden.setFechaFinEjecucion(ahora);
+
+        long duracion = Duration
+                .between(orden.getFechaEjecucion(), ahora)
+                .getSeconds();
+
+        orden.setDuracionSegundos(duracion);
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private OrdenMantenimiento obtenerOrden(Long id) {
+        return ordenRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Orden no existe"));
+    }
+
+    private Activo obtenerActivo(Long id) {
+        return activoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Activo no existe"));
+    }
+
+    private Usuario obtenerUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Usuario no existe"));
+    }
+
+    private PlanMantenimiento obtenerPlan(Long id) {
+        return planRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Plan no existe"));
     }
 
     private Empresa obtenerEmpresaActual() {
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        return empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
-    private Activo obtenerActivo(Long activoId) {
-        return activoRepository.findById(activoId)
-            .orElseThrow(() -> new BusinessException("Activo no existe"));
+    private Usuario getUsuarioActual() {
+        return obtenerUsuario(SecurityUtils.getUsuarioId());
     }
 
-    private Usuario obtenerUsuario(Long usuarioId) {
-        return usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no existe"));
+    private Activo obtenerActivoDeOrden(Long ordenId) {
+        return ordenRepository.findActivoByOrdenId(ordenId)
+                .orElseThrow(() -> new RuntimeException("Activo no encontrado"));
     }
 
-    private PlanMantenimiento obtenerPlan(Long planId) {
-        return planRepository.findById(planId)
-            .orElseThrow(() -> new BusinessException("Plan mantenimiento no encontrado"));
-    }
+    /*
+     * =========================================
+     * VALIDACIONES
+     * =========================================
+     */
 
-    public Activo obtenerActivoDeOrden(Long ordenId) {
-    return ordenRepository.findActivoByOrdenId(ordenId)
-        .orElseThrow(() -> new RuntimeException("Activo no encontrado"));
-}
-
-    private void validarNoExisteOrdenPendiente(Long activoId) {
-
-        boolean existePendiente = ordenRepository
-            .existsByActivoIdAndEstado(activoId, EstadoOrden.PENDIENTE);
-
-        if (existePendiente) {
-            throw new BusinessException(
-                "Ya existe una orden pendiente para este activo"
-            );
+    private void validarTransicion(EstadoOrden actual, EstadoOrden nuevo) {
+        if (!actual.puedePasarA(nuevo)) {
+            throw new BusinessException("Transición inválida: " + actual + " → " + nuevo);
         }
     }
 
+    private void validarPlanActivo(PlanMantenimiento plan) {
+        if (!plan.getEstaActivo()) {
+            throw new BusinessException("El plan no está activo");
+        }
+    }
+
+    private void validarNoExisteOrdenPendiente(Long activoId) {
+        if (ordenRepository.existsByActivoIdAndEstado(activoId, EstadoOrden.PENDIENTE)) {
+            throw new BusinessException("Ya existe una orden pendiente para este activo");
+        }
+    }
+
+    private void validarEstadoReprogramacion(EstadoOrden estado) {
+        if (estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA) {
+            throw new BusinessException("Solo se puede reprogramar en estado PENDIENTE o PROGRAMADA");
+        }
+    }
+
+    private void validarFechaReprogramacion(LocalDateTime fecha) {
+        if (fecha == null || fecha.isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Fecha inválida");
+        }
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+
     private OrdenMantenimiento construirOrden(
-        OrdenMantenimientoRequest request,
-        Empresa empresa,
-        Activo activo,
-        Usuario usuario,
-        PlanMantenimiento plan
-    ) {
+            OrdenMantenimientoRequest req,
+            Empresa empresa,
+            Activo activo,
+            Usuario usuario,
+            PlanMantenimiento plan) {
 
         OrdenMantenimiento orden = new OrdenMantenimiento();
 
-        orden.setTitulo(request.getTitulo());
-        orden.setFechaProgramada(request.getFechaProgramada());
-        orden.setTipoMantenimiento(request.getTipoMantenimiento());
+        orden.setTitulo(req.getTitulo());
+        orden.setFechaProgramada(req.getFechaProgramada());
+        orden.setTipoMantenimiento(req.getTipoMantenimiento());
         orden.setEstado(EstadoOrden.PROGRAMADA);
-        orden.setCosto(request.getCosto());
-        orden.setObservaciones(request.getObservaciones());
+        orden.setCosto(req.getCosto());
+        orden.setObservaciones(req.getObservaciones());
 
         orden.setActivo(activo);
         orden.setUsuario(usuario);
@@ -415,27 +374,16 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return orden;
     }
 
-    private void validarEstadoReprogramacion(EstadoOrden estado) {
+    private void guardarHistorialReprogramacion(OrdenMantenimiento orden, LocalDateTime nuevaFecha, String motivo) {
 
-        if (estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA) {
-            throw new BusinessException(
-                "Solo se pueden reprogramar órdenes en estado PENDIENTE o PROGRAMADA"
-            );
-        }
+        OrdenReprogramacion r = new OrdenReprogramacion();
+        r.setOrden(orden);
+        r.setFechaAnterior(orden.getFechaProgramada());
+        r.setFechaNueva(nuevaFecha);
+        r.setUsuario(getUsuarioActual());
+        r.setEmpresa(obtenerEmpresaActual());
+        r.setMotivo(motivo);
+
+        ordenReprogramacionRepository.save(r);
     }
-
-    private void validarFechaReprogramacion(LocalDateTime nuevaFecha) {
-
-        if (nuevaFecha == null) {
-            throw new BusinessException("La nueva fecha es obligatoria");
-        }
-
-        if (nuevaFecha.isBefore(LocalDateTime.now())) {
-            throw new BusinessException(
-                "La fecha de programación no puede ser inferior a la fecha actual"
-            );
-        }
-    }
-
-
 }

@@ -53,4 +53,8 @@ export class OrdenMantencionService {
           `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
+  getRiesgo(id: number) {
+    return this.http.get(`${this.apiUrl}/activos/${id}/riesgo`);
+  }
+
 }
