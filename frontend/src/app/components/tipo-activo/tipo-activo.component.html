@@ -33,7 +33,7 @@
           {{ editando ? 'Actualizar' : 'Guardar' }}
         </button>
         @if (mostrarNuevo) {
-          <button (click)="nuevo()">
+          <button type="button" (click)="nuevo()">
             Nuevo
           </button>
         }
@@ -65,7 +65,7 @@
         <td>{{ tipoActivo.empresa.nombre }}</td>
         <td>
           <button class="btn-editar" (click)="editar(tipoActivo)">Editar</button>
-          <button class="btn-eliminar" (click)="confirmarEliminar(tipoActivo.id!)" [disabled]="!tipoActivo.activo">Eliminar</button>
+          <button *ngIf="tipoActivo.activo" class="btn-eliminar" (click)="eliminar(tipoActivo.id!)">Eliminar</button>
         </td>
       </tr>
     </tbody>

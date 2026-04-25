@@ -27,107 +27,30 @@ import lombok.RequiredArgsConstructor;
 public class DepreciacionServiceImpl implements DepreciacionService {
 
     private final DepreciacionRepository depreciacionRepository;
-    private final DepreciacionMensualRepository depreciacionMensualRepository;
+    private final DepreciacionMensualRepository mensualRepository;
     private final EmpresaRepository empresaRepository;
+
+    /*
+     * =========================================
+     * PUBLIC API
+     * =========================================
+     */
 
     @Override
     public void calcularYGuardarDepreciacionMensual(Activo activo) {
-        List<DepreciacionMensual> lista = new ArrayList<>();
-
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        BigDecimal costo = activo.getValorAdquisicion();
-        BigDecimal valorResidual = activo.getValorResidual();
-        int vidaUtilMeses = activo.getVidaUtilMeses();
-
-        BigDecimal depreciacionMensual = (costo.subtract(valorResidual)).divide(BigDecimal.valueOf(vidaUtilMeses), RoundingMode.HALF_UP);
-        BigDecimal depreciacionAcumulada = BigDecimal.valueOf(0);
-        BigDecimal valorContable = costo;
-
-        LocalDate fechaBase = activo.getFechaAdquisicion()
-            .withDayOfMonth(1); // 🔥 clave
-
-        for (int mes = 1; mes <= vidaUtilMeses; mes++) {
-
-            depreciacionAcumulada = depreciacionAcumulada.add(depreciacionMensual); // ✅
-
-            valorContable = valorContable.subtract(depreciacionMensual); // ✅
-
-            if (valorContable.compareTo(valorResidual) < 0) { // ✅
-                valorContable = valorResidual;
-            }
-
-            LocalDate fecha = fechaBase.plusMonths(mes - 1); // 👈 clave
-
-            DepreciacionMensual dep = new DepreciacionMensual();
-            dep.setActivo(activo);
-            dep.setMes(mes);
-            dep.setFecha(fecha);
-            dep.setDepreciacionMensual(depreciacionMensual);
-            dep.setDepreciacionAcumulada(depreciacionAcumulada);
-            dep.setValorContable(valorContable);
-            dep.setEmpresa(empresa);
-
-            lista.add(dep);
-        }
-
-        // Guardar todas las depreciaciones en la base de datos
-        depreciacionMensualRepository.saveAll(lista);
+        Empresa empresa = obtenerEmpresaActual();
+        guardarDepreciaciones(activo, empresa);
     }
 
     @Override
     public void calcularYGuardarDepreciacionMensual(Activo activo, Long empresaId) {
-        List<DepreciacionMensual> lista = new ArrayList<>();
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        BigDecimal costo = activo.getValorAdquisicion();
-        BigDecimal valorResidual = activo.getValorResidual();
-        int vidaUtilMeses = activo.getVidaUtilMeses();
-
-        BigDecimal depreciacionMensual = (costo.subtract(valorResidual)).divide(BigDecimal.valueOf(vidaUtilMeses), RoundingMode.HALF_UP);
-        BigDecimal depreciacionAcumulada = BigDecimal.valueOf(0);
-        BigDecimal valorContable = costo;
-
-        LocalDate fechaBase = activo.getFechaAdquisicion()
-            .withDayOfMonth(1); // 🔥 clave
-
-        for (int mes = 1; mes <= vidaUtilMeses; mes++) {
-
-            depreciacionAcumulada = depreciacionAcumulada.add(depreciacionMensual); // ✅
-
-            valorContable = valorContable.subtract(depreciacionMensual); // ✅
-
-            if (valorContable.compareTo(valorResidual) < 0) { // ✅
-                valorContable = valorResidual;
-            }
-
-            LocalDate fecha = fechaBase.plusMonths(mes - 1); // 👈 clave
-
-            DepreciacionMensual dep = new DepreciacionMensual();
-            dep.setActivo(activo);
-            dep.setMes(mes);
-            dep.setFecha(fecha);
-            dep.setDepreciacionMensual(depreciacionMensual);
-            dep.setDepreciacionAcumulada(depreciacionAcumulada);
-            dep.setValorContable(valorContable);
-            dep.setEmpresa(empresa);
-
-            lista.add(dep);
-        }
-
-        // Guardar todas las depreciaciones en la base de datos
-        depreciacionMensualRepository.saveAll(lista);
+        Empresa empresa = obtenerEmpresa(empresaId);
+        guardarDepreciaciones(activo, empresa);
     }
 
-
     @Override
-    public void guardarDepreciacion(Activo activo){
-        
+    public void guardarDepreciacion(Activo activo) {
+
         Depreciacion dep = new Depreciacion();
         dep.setActivo(activo);
         dep.setEmpresa(activo.getEmpresa());
@@ -138,12 +61,117 @@ public class DepreciacionServiceImpl implements DepreciacionService {
         dep.setVidaUtilMeses(activo.getVidaUtilMeses());
 
         depreciacionRepository.save(dep);
-
     }
-    
+
     @Override
     public List<DepreciacionMensual> obtenerDepreciacionesPorActivo(Activo activo) {
-        return depreciacionMensualRepository.findByActivoOrderByMesAsc(activo);
+        return mensualRepository.findByActivoOrderByMesAsc(activo);
     }
-   
+
+    /*
+     * =========================================
+     * CORE
+     * =========================================
+     */
+
+    private void guardarDepreciaciones(Activo activo, Empresa empresa) {
+        List<DepreciacionMensual> lista = calcularDepreciaciones(activo, empresa);
+        mensualRepository.saveAll(lista);
+    }
+
+    private List<DepreciacionMensual> calcularDepreciaciones(Activo activo, Empresa empresa) {
+
+        List<DepreciacionMensual> lista = new ArrayList<>();
+
+        BigDecimal costo = activo.getValorAdquisicion();
+        BigDecimal residual = activo.getValorResidual();
+        int vida = activo.getVidaUtilMeses();
+
+        BigDecimal depMensual = calcularDepreciacionMensual(costo, residual, vida);
+
+        BigDecimal acumulada = BigDecimal.ZERO;
+        BigDecimal valorContable = costo;
+
+        LocalDate fechaBase = obtenerFechaBase(activo);
+
+        for (int mes = 1; mes <= vida; mes++) {
+
+            acumulada = acumulada.add(depMensual);
+            valorContable = calcularValorContable(valorContable, depMensual, residual);
+
+            lista.add(construirDepreciacionMensual(
+                    activo, empresa, mes, fechaBase.plusMonths(mes - 1),
+                    depMensual, acumulada, valorContable
+            ));
+        }
+
+        return lista;
+    }
+
+    /*
+     * =========================================
+     * HELPERS CÁLCULO
+     * =========================================
+     */
+
+    private BigDecimal calcularDepreciacionMensual(BigDecimal costo, BigDecimal residual, int vida) {
+        return costo.subtract(residual)
+                .divide(BigDecimal.valueOf(vida), RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calcularValorContable(BigDecimal actual, BigDecimal depMensual, BigDecimal residual) {
+
+        BigDecimal nuevo = actual.subtract(depMensual);
+
+        return (nuevo.compareTo(residual) < 0)
+                ? residual
+                : nuevo;
+    }
+
+    private LocalDate obtenerFechaBase(Activo activo) {
+        return activo.getFechaAdquisicion().withDayOfMonth(1);
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+
+    private DepreciacionMensual construirDepreciacionMensual(
+            Activo activo,
+            Empresa empresa,
+            int mes,
+            LocalDate fecha,
+            BigDecimal depMensual,
+            BigDecimal acumulada,
+            BigDecimal valorContable) {
+
+        DepreciacionMensual d = new DepreciacionMensual();
+
+        d.setActivo(activo);
+        d.setEmpresa(empresa);
+        d.setMes(mes);
+        d.setFecha(fecha);
+        d.setDepreciacionMensual(depMensual);
+        d.setDepreciacionAcumulada(acumulada);
+        d.setValorContable(valorContable);
+
+        return d;
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Empresa obtenerEmpresaActual() {
+        return obtenerEmpresa(SecurityUtils.getEmpresaId());
+    }
+
+    private Empresa obtenerEmpresa(Long id) {
+        return empresaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
 }

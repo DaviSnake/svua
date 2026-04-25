@@ -13,11 +13,9 @@ public interface PlanMantenimientoService {
 
     void desactivar(Long id);
 
-    public PlanMantenimientoReponse obtener(Long id);
-
     public List<PlanMantenimientoReponse> listar();
 
-    List<PlanMantenimientoReponse> obtenerPlanesVencidos();
+    List<PlanMantenimientoReponse> obtenerPlanesVencidosEntity();
 
     void procesarPlanesVencidos(); // Para scheduler
 

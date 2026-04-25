@@ -2,12 +2,10 @@ package cl.aracridav.svua.inventario.movimientoinventario.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
-import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.bodega.entity.Bodega;
 import cl.aracridav.svua.inventario.bodega.repository.BodegaRepository;
 import cl.aracridav.svua.inventario.movimientoinventario.dto.request.MovimientoInventarioRequest;
@@ -35,131 +33,190 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
     private final RepuestoRepository repuestoRepository;
     private final UsuarioRepository usuarioRepository;
     private final BodegaRepository bodegaRepository;
-    private final StockRepuestoRepository stockRepuestoRepository;
-    private final EmpresaRepository empresaRepository;
-    private final GeneralMapper generalMapper;
+    private final StockRepuestoRepository stockRepository;
+    private final GeneralMapper mapper;
 
+    /*
+     * =========================================
+     * CREAR MOVIMIENTO
+     * =========================================
+     */
+    @Override
     public MovimientoInventarioResponse crear(MovimientoInventarioRequest request) {
 
-        Long usuarioId = SecurityUtils.getUsuarioId();
+        Usuario usuario = obtenerUsuarioActual();
+        Empresa empresa = usuario.getEmpresa();
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        TipoMovimiento tipo = parseTipo(request.getTipo());
 
-        Empresa empresa = empresaRepository.findById(usuario.getEmpresa().getId())
-            .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+        StockRepuesto stock = obtenerStock(
+                request.getRepuestoId(),
+                request.getBodegaId(),
+                empresa
+        );
 
-        Repuesto repuesto = repuestoRepository.findById(request.getRepuestoId())
-                .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+        int stockAnterior = stock.getCantidad();
+        int stockPosterior = calcularStock(stockAnterior, request.getCantidad(), tipo);
 
-         Bodega bodega = bodegaRepository.findById(request.getBodegaId())
-            .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
+        actualizarStock(stock, stockPosterior);
 
-        StockRepuesto stock = stockRepuestoRepository
-            .findByRepuestoAndBodegaAndEmpresa(repuesto, bodega, empresa)
-            .orElseThrow(() -> new BusinessException("Stock no encontrado"));
+        MovimientoInventario movimiento = construirMovimiento(
+                stock,
+                usuario,
+                empresa,
+                tipo,
+                request.getCantidad(),
+                stockAnterior,
+                stockPosterior,
+                request.getReferencia(),
+                request.getMotovo()
+        );
 
-        //Calculo de los stock
-        Integer stockAnterior = stock.getCantidad();
-        Integer stockPosterior;
-
-        if (request.getTipo() == TipoMovimiento.ENTRADA.toString()) {
-
-            stockPosterior = stockAnterior + request.getCantidad();
-
-        } else if (request.getTipo() == TipoMovimiento.SALIDA.toString()) {
-
-            if (stockAnterior < request.getCantidad()) {
-                throw new BusinessException("Stock insuficiente");
-            }
-
-            stockPosterior = stockAnterior - request.getCantidad();
-
-        } else {
-            throw new BusinessException("Tipo de movimiento inválido");
-        }
-
-        // actualizar stock
-        stock.setCantidad(stockPosterior);
-        stockRepuestoRepository.save(stock);
-
-        MovimientoInventario movimiento = new MovimientoInventario();
-
-        movimiento.setEmpresa(usuario.getEmpresa());
-        movimiento.setRepuesto(repuesto);
-        movimiento.setTipo(TipoMovimiento.valueOf(request.getTipo()));
-        movimiento.setCantidad(request.getCantidad());
-        movimiento.setStockAnterior(stockAnterior);
-        movimiento.setStockPosterior(stockPosterior);
-        movimiento.setReferencia(request.getReferencia());
-        movimiento.setMotivo(request.getMotovo());
-        movimiento.setFecha(LocalDateTime.now());
-        movimiento.setBodega(bodega);
-        movimiento.setUsuario(usuario);
-
-        MovimientoInventario mInventario = repository.save(movimiento);
-
-        return generalMapper.mapMovimientoInventarioResponse(mInventario);
+        return mapper.mapMovimientoInventarioResponse(repository.save(movimiento));
     }
 
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
+    @Override
     public List<MovimientoInventarioResponse> listar() {
 
-        Long usuarioId = SecurityUtils.getUsuarioId();
+        Empresa empresa = obtenerUsuarioActual().getEmpresa();
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
-
-        return repository.findByEmpresaId(usuario.getEmpresa().getId())
+        return repository.findByEmpresaId(empresa.getId())
                 .stream()
-                .map(generalMapper::mapMovimientoInventarioResponse)
-                .collect(Collectors.toList());
+                .map(mapper::mapMovimientoInventarioResponse)
+                .toList();
     }
 
+    /*
+     * =========================================
+     * SALIDA POR MANTENIMIENTO
+     * =========================================
+     */
+    @Override
     @Transactional
     public void salidaPorMantenimiento(Long repuestoId, Integer cantidad, String referencia) {
 
-        Long usuarioId = SecurityUtils.getUsuarioId();
+        Usuario usuario = obtenerUsuarioActual();
+        Empresa empresa = usuario.getEmpresa();
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
-
-        Empresa empresa = empresaRepository.findById(usuario.getEmpresa().getId())
-            .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
-
-        // Buscar stock del repuesto
-        StockRepuesto stock = stockRepuestoRepository
+        StockRepuesto stock = stockRepository
                 .findByRepuestoIdAndEmpresaId(repuestoId, empresa.getId())
-                .orElseThrow(() -> 
-                    new BusinessException("No existe stock para el repuesto"));
+                .orElseThrow(() -> new BusinessException("No existe stock para el repuesto"));
 
-        Integer stockAnterior = stock.getCantidad();
+        int stockAnterior = stock.getCantidad();
+        int stockPosterior = calcularStock(stockAnterior, cantidad, TipoMovimiento.SALIDA);
 
-        // Validar stock
-        if (stockAnterior < cantidad) {
-            throw new BusinessException("Stock insuficiente para el repuesto");
-        }
+        actualizarStock(stock, stockPosterior);
 
-        // Calcular nuevo stock
-        Integer stockPosterior = stockAnterior - cantidad;
-
-        // Actualizar stock
-        stock.setCantidad(stockPosterior);
-        stockRepuestoRepository.save(stock);
-
-        // Crear movimiento inventario
-        MovimientoInventario movimiento = new MovimientoInventario();
-        movimiento.setRepuesto(stock.getRepuesto());
-        movimiento.setTipo(TipoMovimiento.SALIDA);
-        movimiento.setCantidad(cantidad);
-        movimiento.setStockAnterior(stockAnterior);
-        movimiento.setStockPosterior(stockPosterior);
-        movimiento.setFecha(LocalDateTime.now());
-        movimiento.setReferencia(referencia);
-        movimiento.setMotivo("Consumo por mantenimiento");
-        movimiento.setUsuario(usuario);
-        movimiento.setBodega(stock.getBodega());
-        movimiento.setEmpresa(empresa);
+        MovimientoInventario movimiento = construirMovimiento(
+                stock,
+                usuario,
+                empresa,
+                TipoMovimiento.SALIDA,
+                cantidad,
+                stockAnterior,
+                stockPosterior,
+                referencia,
+                "Consumo por mantenimiento"
+        );
 
         repository.save(movimiento);
+    }
+
+    /*
+     * =========================================
+     * CORE
+     * =========================================
+     */
+
+    private int calcularStock(int actual, int cantidad, TipoMovimiento tipo) {
+
+        return switch (tipo) {
+            case ENTRADA -> actual + cantidad;
+            case SALIDA -> {
+                if (actual < cantidad) {
+                    throw new BusinessException("Stock insuficiente");
+                }
+                yield actual - cantidad;
+            }
+            default -> throw new IllegalArgumentException("Unexpected value: " + tipo);
+        };
+    }
+
+    private void actualizarStock(StockRepuesto stock, int nuevoStock) {
+        stock.setCantidad(nuevoStock);
+        stockRepository.save(stock);
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+
+    private MovimientoInventario construirMovimiento(
+            StockRepuesto stock,
+            Usuario usuario,
+            Empresa empresa,
+            TipoMovimiento tipo,
+            int cantidad,
+            int stockAnterior,
+            int stockPosterior,
+            String referencia,
+            String motivo) {
+
+        MovimientoInventario m = new MovimientoInventario();
+
+        m.setEmpresa(empresa);
+        m.setRepuesto(stock.getRepuesto());
+        m.setBodega(stock.getBodega());
+        m.setUsuario(usuario);
+
+        m.setTipo(tipo);
+        m.setCantidad(cantidad);
+        m.setStockAnterior(stockAnterior);
+        m.setStockPosterior(stockPosterior);
+
+        m.setReferencia(referencia);
+        m.setMotivo(motivo);
+        m.setFecha(LocalDateTime.now());
+
+        return m;
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Usuario obtenerUsuarioActual() {
+        return usuarioRepository.findById(SecurityUtils.getUsuarioId())
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+    }
+
+    private TipoMovimiento parseTipo(String tipo) {
+        try {
+            return TipoMovimiento.valueOf(tipo);
+        } catch (Exception e) {
+            throw new BusinessException("Tipo de movimiento inválido");
+        }
+    }
+
+    private StockRepuesto obtenerStock(Long repuestoId, Long bodegaId, Empresa empresa) {
+
+        Repuesto repuesto = repuestoRepository.findById(repuestoId)
+                .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+
+        Bodega bodega = bodegaRepository.findById(bodegaId)
+                .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
+
+        return stockRepository
+                .findByRepuestoAndBodegaAndEmpresa(repuesto, bodega, empresa)
+                .orElseThrow(() -> new BusinessException("Stock no encontrado"));
     }
 }

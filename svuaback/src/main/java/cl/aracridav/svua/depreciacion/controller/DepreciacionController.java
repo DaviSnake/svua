@@ -24,7 +24,7 @@ public class DepreciacionController {
 
     // Calcular y guardar depreciaciones
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('DEPRECIACION_CREATE')) "
     )
     @PostMapping("/mensual/guardar")
@@ -34,7 +34,7 @@ public class DepreciacionController {
 
     // Consultar depreciaciones ya calculadas de un activo
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('DEPRECIACION_VIEW')) "
     )
     @GetMapping("/mensual/{activoId}")

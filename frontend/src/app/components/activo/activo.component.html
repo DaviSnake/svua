@@ -128,7 +128,7 @@
         <td>{{ activo.empresa.nombre }}</td>
         <td>
           <button class="btn-editar" (click)="editar(activo)">Editar</button>
-          <button class="btn-eliminar" (click)="confirmarEliminar(activo.id!)" [disabled]="!activo.activo">Eliminar</button>
+          <button *ngIf="activo.estadoActual !== 'BAJA'" class="btn-eliminar" (click)="darDeBaja(activo.id!)">Dar Baja</button>
           <button class="btn-ver" (click)="abrirModalActivo(activo)">Ver</button>
         </td>
       </tr>
@@ -172,6 +172,7 @@
       <input type="text" formControlName="vidaUtilMeses" />
       <input type="text" formControlName="ubicacionNombre" />
       <input type="text" formControlName="proveedorNombre" />
+      <input type="text" formControlName="estadoActual" />
 
       <div class="modal-actions">
         <button type="button" (click)="cerrarModal()">Cancelar</button>

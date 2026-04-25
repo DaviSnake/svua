@@ -2,14 +2,10 @@ package cl.aracridav.svua.inventario.historial.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import cl.aracridav.svua.empresa.entity.Empresa;
-import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.inventario.historial.dto.response.HistorialEstadoActivoResponse;
@@ -29,84 +25,124 @@ import lombok.RequiredArgsConstructor;
 public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoService {
 
     private final HistorialEstadoActivoRepository historialRepository;
-    private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ActivoRepository activoRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
 
+    /*
+     * =========================================
+     * REGISTRAR CAMBIO
+     * =========================================
+     */
     @Override
-    public void registrarCambioEstado(
-            Long activoId,
-            EstadoActivo nuevoEstado,
-            String comentario) {
+    public void registrarCambioEstado(Long activoId, EstadoActivo nuevoEstado, String comentario) {
 
-        Long usuarioId = SecurityUtils.getUsuarioId();
+        Usuario usuario = obtenerUsuarioActual();
+        Activo activo = obtenerActivo(activoId);
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        validarCambioEstado(activoId, nuevoEstado);
 
-        Empresa empresa = empresaRepository.findById(usuario.getEmpresa().getId())
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        Activo activo = activoRepository.findById(activoId)
-                .orElseThrow(() -> 
-                    new BusinessException("Activo no encontrado"));
-
-        // 🔎 Verificar último estado
-        Optional<HistorialEstadoActivo> ultimoOpt =
-                historialRepository
-                        .findTopByActivoIdOrderByFechaDesc(activoId);
-
-        if (ultimoOpt.isPresent() &&
-            ultimoOpt.get().getEstado() == nuevoEstado) {
-
-            throw new BusinessException(
-                    "El activo ya se encuentra en ese estado");
-        }
-
-        HistorialEstadoActivo historial = new HistorialEstadoActivo();
-        historial.setActivo(activo);
-        historial.setEstado(nuevoEstado);
-        historial.setFecha(LocalDateTime.now());
-        historial.setComentario(comentario);
-        historial.setUsuario(usuario);
-        historial.setEmpresa(empresa);
+        HistorialEstadoActivo historial = construirHistorial(
+                activo,
+                nuevoEstado,
+                comentario,
+                usuario
+        );
 
         historialRepository.save(historial);
     }
 
+    /*
+     * =========================================
+     * CONSULTAS
+     * =========================================
+     */
+
     @Override
     @Transactional(readOnly = true)
-    public List<HistorialEstadoActivoResponse> 
-        obtenerHistorial(Long activoId) {
+    public List<HistorialEstadoActivoResponse> obtenerHistorial(Long activoId) {
 
         return historialRepository.findByActivoIdOrderByFechaAsc(activoId)
                 .stream()
-                .map(generalMapper::mapHistorialEstadoActivoResponse)
-                .collect(Collectors.toList());
+                .map(mapper::mapHistorialEstadoActivoResponse)
+                .toList();
     }
-
 
     @Override
     @Transactional(readOnly = true)
     public HistorialEstadoActivoResponse obtenerUltimoEstado(Long activoId) {
 
-    HistorialEstadoActivo historial = historialRepository
-            .findTopByActivoIdOrderByFechaDesc(activoId)
-            .orElseThrow(() ->
-                    new BusinessException("No existe historial para el activo"));
+        HistorialEstadoActivo historial = historialRepository
+                .findTopByActivoIdOrderByFechaDesc(activoId)
+                .orElseThrow(() ->
+                        new BusinessException("No existe historial para el activo"));
 
-    return generalMapper.mapHistorialEstadoActivoResponse(historial);
-}
+        return mapper.mapHistorialEstadoActivoResponse(historial);
+    }
 
     @Override
     @Transactional(readOnly = true)
-    public List<HistorialEstadoActivoResponse> 
-        obtenerPorEstado(Long activoId, EstadoActivo estado) {
+    public List<HistorialEstadoActivoResponse> obtenerPorEstado(Long activoId, EstadoActivo estado) {
 
         return historialRepository.findByActivoIdAndEstado(activoId, estado)
                 .stream()
-                .map(generalMapper::mapHistorialEstadoActivoResponse)
-                .collect(Collectors.toList());
+                .map(mapper::mapHistorialEstadoActivoResponse)
+                .toList();
+    }
+
+    /*
+     * =========================================
+     * VALIDACIONES
+     * =========================================
+     */
+
+    private void validarCambioEstado(Long activoId, EstadoActivo nuevoEstado) {
+
+        historialRepository
+                .findTopByActivoIdOrderByFechaDesc(activoId)
+                .filter(h -> h.getEstado() == nuevoEstado)
+                .ifPresent(h -> {
+                    throw new BusinessException("El activo ya se encuentra en ese estado");
+                });
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+
+    private HistorialEstadoActivo construirHistorial(
+            Activo activo,
+            EstadoActivo estado,
+            String comentario,
+            Usuario usuario) {
+
+        HistorialEstadoActivo h = new HistorialEstadoActivo();
+
+        h.setActivo(activo);
+        h.setEstado(estado);
+        h.setFecha(LocalDateTime.now());
+        h.setComentario(comentario);
+        h.setUsuario(usuario);
+        h.setEmpresa(usuario.getEmpresa()); // 🔥 más limpio
+
+        return h;
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Usuario obtenerUsuarioActual() {
+        return usuarioRepository.findById(SecurityUtils.getUsuarioId())
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+    }
+
+    private Activo obtenerActivo(Long id) {
+        return activoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Activo no encontrado"));
     }
 }

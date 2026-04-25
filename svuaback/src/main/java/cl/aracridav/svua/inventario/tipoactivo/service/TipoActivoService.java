@@ -8,7 +8,10 @@ import cl.aracridav.svua.inventario.tipoactivo.dto.response.TipoActivoResponse;
 
 public interface TipoActivoService {
 
-    public TipoActivoResponse crear(Long empresaId, TipoActivoCreateRequest tipoActivoCreateRequest);
+    public TipoActivoResponse crear(TipoActivoCreateRequest request);
+    public TipoActivoResponse actualizar(Long id, TipoActivoCreateRequest request);
+    public void eliminar(Long id);
+    public TipoActivoResponse obtener(Long id);
     public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable);
 
 }

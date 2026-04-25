@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.bodega.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import cl.aracridav.svua.inventario.bodega.dto.request.BodegaRequest;
 import cl.aracridav.svua.inventario.bodega.dto.response.BodegaResponse;
 import cl.aracridav.svua.inventario.bodega.service.BodegaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,60 +25,90 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BodegaController {
 
-    private final BodegaService service;
+    private final BodegaService bodegaService;
 
+    /*
+     * =========================================
+     * CREAR
+     * =========================================
+     */
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
-        "(hasAuthority('BODEGA_CREATE')) "
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_CREATE')"
     )
     @PostMapping
-    public ResponseEntity<BodegaResponse> crear(@RequestBody BodegaRequest request) {
+    public ResponseEntity<BodegaResponse> crear(
+            @Valid @RequestBody BodegaRequest request) {
 
-        return ResponseEntity.ok(service.crear(request));
+        BodegaResponse response = bodegaService.crear(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
-        "(hasAuthority('BODEGA_VIEW')) "
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_VIEW')"
     )
     @GetMapping
-    public ResponseEntity<Page<BodegaResponse>> listar(Pageable pegable) {
+    public ResponseEntity<Page<BodegaResponse>> listar(Pageable pageable) {
 
-        return ResponseEntity.ok(service.listar(pegable));
+        Page<BodegaResponse> response = bodegaService.listar(pageable);
+
+        return ResponseEntity.ok(response);
     }
 
+    /*
+     * =========================================
+     * OBTENER
+     * =========================================
+     */
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
-        "(hasAuthority('BODEGA_VIEW')) "
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_VIEW')"
     )
     @GetMapping("/{id}")
     public ResponseEntity<BodegaResponse> obtener(@PathVariable Long id) {
 
-        return ResponseEntity.ok(service.obtener(id));
+        BodegaResponse response = bodegaService.obtener(id);
+
+        return ResponseEntity.ok(response);
     }
 
+    /*
+     * =========================================
+     * ACTUALIZAR
+     * =========================================
+     */
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
-        "(hasAuthority('BODEGA_UPDATE')) "
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_UPDATE')"
     )
     @PutMapping("/{id}")
     public ResponseEntity<BodegaResponse> actualizar(
             @PathVariable Long id,
-            @RequestBody BodegaRequest request) {
+            @Valid @RequestBody BodegaRequest request) {
 
-        return ResponseEntity.ok(service.actualizar(id, request));
+        BodegaResponse response = bodegaService.actualizar(id, request);
+
+        return ResponseEntity.ok(response);
     }
 
+    /*
+     * =========================================
+     * ELIMINAR (SOFT DELETE)
+     * =========================================
+     */
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
-        "(hasAuthority('BODEGA_DELETE')) "
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_DELETE')"
     )
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 
-        service.eliminar(id);
+        bodegaService.eliminar(id);
 
         return ResponseEntity.noContent().build();
     }
-
 }

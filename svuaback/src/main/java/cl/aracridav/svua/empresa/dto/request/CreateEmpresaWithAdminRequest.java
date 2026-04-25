@@ -1,18 +1,10 @@
 package cl.aracridav.svua.empresa.dto.request;
 
-import cl.aracridav.svua.empresa.entity.TipoPlan;
-import lombok.Data;
+import lombok.*;
 
 @Data
-public class CreateEmpresaWithAdminRequest {
-
-    // Empresa
-    private String nombre;
-    private String rut;
-    private String emailContacto;
-    private String telefono;
-    private String direccion;
-    private TipoPlan tipoPlan;
+@EqualsAndHashCode(callSuper = true)
+public class CreateEmpresaWithAdminRequest extends CreateEmpresaRequest {
 
     // Admin inicial
     private String adminNombre;

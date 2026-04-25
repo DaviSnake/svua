@@ -18,4 +18,6 @@ public interface UbicacionRepository extends JpaRepository<Ubicacion, Long> {
 
     Optional<Ubicacion> findFirstByNombre(String nombre);
 
+    boolean existsByNombreIgnoreCaseAndEmpresaId(String nombre, Long empresaId);
+
 }

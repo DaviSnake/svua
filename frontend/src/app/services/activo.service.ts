@@ -25,7 +25,10 @@ export class ActivoService {
     return this.http.put(`${this.apiUrl}/activos/${id}`, data);
   }
 
-  delete(id: number) {
-    return this.http.delete(`${this.apiUrl}/activos/${id}`);
+  darDeBaja(id: number, motivo: String) {
+    const body = {
+      motivo: motivo
+    };
+    return this.http.patch(`${this.apiUrl}/activos/${id}/baja`, body);
   }
 }

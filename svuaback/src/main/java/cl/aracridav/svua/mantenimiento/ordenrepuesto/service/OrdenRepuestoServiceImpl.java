@@ -2,13 +2,13 @@ package cl.aracridav.svua.mantenimiento.ordenrepuesto.service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
-import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.movimientoinventario.service.MovimientoInventarioService;
+import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
@@ -22,7 +22,6 @@ import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -32,63 +31,144 @@ public class OrdenRepuestoServiceImpl implements OrdenRepuestoService {
     private final OrdenRepuestoRepository repository;
     private final OrdenMantenimientoRepository ordenRepository;
     private final RepuestoRepository repuestoRepository;
-    private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
+    private final MovimientoInventarioService movimientoService;
 
-    private final MovimientoInventarioService movimientoInventarioService;
-
+    /*
+     * =========================================
+     * AGREGAR REPUESTO
+     * =========================================
+     */
+    @Override
     @Transactional
     public OrdenRepuestoResponse agregarRepuesto(OrdenRepuestoRequest request) {
 
-        Long usuarioId = SecurityUtils.getUsuarioId();
+        Usuario usuario = obtenerUsuarioActual();
+        Empresa empresa = usuario.getEmpresa();
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        OrdenMantenimiento orden = obtenerOrden(request.getOrdenId());
+        Repuesto repuesto = obtenerRepuesto(request.getRepuestoId());
 
-        Empresa empresa = empresaRepository.findById(usuario.getEmpresa().getId())
-            .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+        validarOrden(orden);
 
-        OrdenMantenimiento orden = ordenRepository.findById(request.getOrdenId())
-                .orElseThrow(() -> new BusinessException("Orden no encontrada"));
+        BigDecimal costoTotal = calcularCostoTotal(
+                request.getCostoUnitario(),
+                request.getCantidad()
+        );
 
-        Repuesto repuesto = repuestoRepository.findById(request.getRepuestoId())
-                .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+        OrdenRepuesto entity = construirOrdenRepuesto(
+                request,
+                orden,
+                repuesto,
+                usuario,
+                empresa,
+                costoTotal
+        );
 
-        BigDecimal costoTotal =
-                request.getCostoUnitario()
-                        .multiply(BigDecimal.valueOf(request.getCantidad()));
+        OrdenRepuesto guardado = repository.save(entity);
 
-        OrdenRepuesto ordenRepuesto = new OrdenRepuesto();
+        // 🔥 movimiento de inventario desacoplado
+        registrarSalidaInventario(orden, repuesto, request.getCantidad());
 
-        ordenRepuesto.setOrden(orden);
-        ordenRepuesto.setRepuesto(repuesto);
-        ordenRepuesto.setCantidad(request.getCantidad());
-        ordenRepuesto.setCostoUnitario(request.getCostoUnitario());
-        ordenRepuesto.setCostoTotal(costoTotal);
-        ordenRepuesto.setUsuario(usuario);
-        ordenRepuesto.setEmpresa(empresa);
-
-         OrdenRepuesto ordenRepuestoGuardado = repository.save(ordenRepuesto);
-
-        // 🔥 Descontar stock
-        movimientoInventarioService.salidaPorMantenimiento(
-                repuesto.getId(),
-                request.getCantidad(),
-                "Orden mantenimiento #" + orden.getId()
-        ); 
-
-        return generalMapper.mapOrdenRepuestoResponse(ordenRepuestoGuardado);
+        return mapper.mapOrdenRepuestoResponse(guardado);
     }
 
-    @Transactional
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
+    @Override
+    @Transactional(readOnly = true)
     public List<OrdenRepuestoResponse> listarPorOrden(Long ordenId) {
 
         return repository.findByOrdenId(ordenId)
                 .stream()
-                .map(generalMapper::mapOrdenRepuestoResponse)
-                .collect(Collectors.toList());
+                .map(mapper::mapOrdenRepuestoResponse)
+                .toList();
     }
 
+    /*
+     * =========================================
+     * CORE
+     * =========================================
+     */
 
+    private BigDecimal calcularCostoTotal(BigDecimal unitario, Integer cantidad) {
+        return unitario.multiply(BigDecimal.valueOf(cantidad));
+    }
+
+    private void registrarSalidaInventario(
+            OrdenMantenimiento orden,
+            Repuesto repuesto,
+            Integer cantidad) {
+
+        movimientoService.salidaPorMantenimiento(
+                repuesto.getId(),
+                cantidad,
+                "Orden mantenimiento #" + orden.getId()
+        );
+    }
+
+    /*
+     * =========================================
+     * VALIDACIONES
+     * =========================================
+     */
+
+    private void validarOrden(OrdenMantenimiento orden) {
+
+        if (orden.getEstado() == EstadoOrden.COMPLETADA) {
+            throw new BusinessException("No se pueden agregar repuestos a una orden completada");
+        }
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+
+    private OrdenRepuesto construirOrdenRepuesto(
+            OrdenRepuestoRequest request,
+            OrdenMantenimiento orden,
+            Repuesto repuesto,
+            Usuario usuario,
+            Empresa empresa,
+            BigDecimal costoTotal) {
+
+        OrdenRepuesto o = new OrdenRepuesto();
+
+        o.setOrden(orden);
+        o.setRepuesto(repuesto);
+        o.setCantidad(request.getCantidad());
+        o.setCostoUnitario(request.getCostoUnitario());
+        o.setCostoTotal(costoTotal);
+        o.setUsuario(usuario);
+        o.setEmpresa(empresa);
+
+        return o;
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Usuario obtenerUsuarioActual() {
+        return usuarioRepository.findById(SecurityUtils.getUsuarioId())
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+    }
+
+    private OrdenMantenimiento obtenerOrden(Long id) {
+        return ordenRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Orden no encontrada"));
+    }
+
+    private Repuesto obtenerRepuesto(Long id) {
+        return repuestoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+    }
 }

@@ -13,6 +13,7 @@ public class ProveedorResponse {
     private String contacto;
     private String telefono;
     private String email;
+    private Boolean activo;
     private Empresa empresa;
 
 }

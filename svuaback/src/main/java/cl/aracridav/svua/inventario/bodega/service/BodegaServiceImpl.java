@@ -1,10 +1,13 @@
 package cl.aracridav.svua.inventario.bodega.service;
 
+import java.util.Arrays;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
@@ -15,7 +18,6 @@ import cl.aracridav.svua.inventario.bodega.repository.BodegaRepository;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,92 +26,192 @@ import lombok.RequiredArgsConstructor;
 public class BodegaServiceImpl implements BodegaService {
 
     private final BodegaRepository repository;
-    private final GeneralMapper generalMapper;
     private final EmpresaRepository empresaRepository;
+    private final GeneralMapper mapper;
 
-
+    /*
+     * =========================================
+     * CREAR
+     * =========================================
+     */
     @Override
     public BodegaResponse crear(BodegaRequest request) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        Empresa empresa = obtenerEmpresaActual();
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+        validarRequest(request);
+        validarDuplicado(request.getNombre(), empresa.getId());
 
-        Bodega bodega = new Bodega();
-        bodega.setNombre(request.getNombre());
-        bodega.setUbicacionFisica(request.getUbicacionFisica());
-        bodega.setActiva(true);
-        bodega.setEmpresa(empresa);
+        Bodega bodega = construirBodega(request, empresa);
 
-        Bodega bodegaGuardada = repository.save(bodega);
-
-        return generalMapper.mapBodegaResponse(bodegaGuardada);
+        return mapper.mapBodegaResponse(repository.save(bodega));
     }
 
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
     @Override
-    public Page<BodegaResponse> listar(Pageable pegeable) {
+    @Transactional(readOnly = true)
+    public Page<BodegaResponse> listar(Pageable pageable) {
 
-        Page<Bodega> bodegas = Page.empty();
-        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        Page<Bodega> bodegas;
+
+        if (tieneRol(auth, "ROLE_SUPER_ADMIN")) {
+            bodegas = repository.findAll(pageable);
+
+        } else if (tieneRol(auth, "ROLE_ADMIN_EMPRESA")) {
+            bodegas = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
+
+        } else {
+            throw new BusinessException("No tienes permisos para ver bodegas");
+        }
+
+        return bodegas.map(mapper::mapBodegaResponse);
+    }
+
+    /*
+     * =========================================
+     * OBTENER
+     * =========================================
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public BodegaResponse obtener(Long id) {
+
+        Bodega bodega = obtenerBodega(id);
+        validarEmpresa(bodega);
+
+        return mapper.mapBodegaResponse(bodega);
+    }
+
+    /*
+     * =========================================
+     * ACTUALIZAR
+     * =========================================
+     */
+    @Override
+    public BodegaResponse actualizar(Long id, BodegaRequest request) {
+
+        Bodega bodega = obtenerBodega(id);
+
+        validarEmpresa(bodega);
+        validarRequest(request);
+        validarDuplicadoUpdate(request.getNombre(), bodega);
+
+        actualizarCampos(bodega, request);
+
+        return mapper.mapBodegaResponse(repository.save(bodega));
+    }
+
+    /*
+     * =========================================
+     * ELIMINAR (SOFT DELETE)
+     * =========================================
+     */
+    @Override
+    public void eliminar(Long id) {
+
+        Bodega bodega = obtenerBodega(id);
+
+        validarEmpresa(bodega);
+
+        if (!bodega.getActiva()) {
+            throw new BusinessException("La bodega ya está inactiva");
+        }
+
+        bodega.setActiva(false);
+
+        repository.save(bodega);
+    }
+
+    /*
+     * =========================================
+     * VALIDACIONES
+     * =========================================
+     */
+
+    private void validarRequest(BodegaRequest request) {
+
+        if (request.getNombre() == null || request.getNombre().isBlank()) {
+            throw new BusinessException("El nombre de la bodega es obligatorio");
+        }
+    }
+
+    private void validarDuplicado(String nombre, Long empresaId) {
+
+        if (repository.existsByNombreIgnoreCaseAndEmpresaId(nombre, empresaId)) {
+            throw new BusinessException("Ya existe una bodega con ese nombre");
+        }
+    }
+
+    private void validarDuplicadoUpdate(String nombre, Bodega bodega) {
+
+        boolean existe = repository.existsByNombreIgnoreCaseAndEmpresaId(nombre, bodega.getEmpresa().getId());
+
+        if (existe && !bodega.getNombre().equalsIgnoreCase(nombre)) {
+            throw new BusinessException("Ya existe una bodega con ese nombre");
+        }
+    }
+
+    private void validarEmpresa(Bodega bodega) {
+
         Long empresaId = SecurityUtils.getEmpresaId();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        boolean esSuperAdmin = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
-        
-        boolean esAdminEmpresa = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA"));
+        boolean esSuperAdmin = tieneRol(auth, "ROLE_SUPER_ADMIN");
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        if (esSuperAdmin) {
-            bodegas = repository.findAll(pegeable);
+        if (!esSuperAdmin && !bodega.getEmpresa().getId().equals(empresaId)) {
+            throw new BusinessException("No pertenece a tu empresa");
         }
-
-        if (esAdminEmpresa) {
-            bodegas = repository.findByEmpresaId(empresa.getId(), pegeable);
-        }
-
-        return bodegas.map(generalMapper::mapBodegaResponse);
     }
 
-    @Override
-    public BodegaResponse obtener(Long id) {
+    /*
+     * =========================================
+     * BUILDER / UPDATE
+     * =========================================
+     */
 
-        Bodega bodega = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bodega no encontrada"));
+    private Bodega construirBodega(BodegaRequest request, Empresa empresa) {
 
-        return generalMapper.mapBodegaResponse(bodega);
+        Bodega b = new Bodega();
+
+        b.setNombre(request.getNombre());
+        b.setUbicacionFisica(request.getUbicacionFisica());
+        b.setActiva(true);
+        b.setEmpresa(empresa);
+
+        return b;
     }
 
-    @Override
-    public BodegaResponse actualizar(Long id, BodegaRequest request) {
-
-        Bodega bodega = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bodega no encontrada"));
+    private void actualizarCampos(Bodega bodega, BodegaRequest request) {
 
         bodega.setNombre(request.getNombre());
         bodega.setUbicacionFisica(request.getUbicacionFisica());
-
-        repository.save(bodega);
-
-        return generalMapper.mapBodegaResponse(bodega);
     }
 
-    @Override
-    public void eliminar(Long id) {
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
 
-        Bodega bodega = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bodega no encontrada"));
-
-        bodega.setActiva(false);
-
-        repository.delete(bodega);
-
+    private Bodega obtenerBodega(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
     }
 
+    private Empresa obtenerEmpresaActual() {
+        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
 
+    private boolean tieneRol(Authentication auth, String... roles) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> Arrays.asList(roles).contains(a.getAuthority()));
+    }
 }

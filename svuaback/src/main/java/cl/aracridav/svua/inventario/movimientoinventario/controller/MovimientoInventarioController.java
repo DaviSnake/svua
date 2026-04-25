@@ -22,7 +22,7 @@ public class MovimientoInventarioController {
     private final MovimientoInventarioService service;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('MOVIMIENTO_CREATE')) "
     )
     @PostMapping
@@ -33,7 +33,7 @@ public class MovimientoInventarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('MOVIMIENTO_VIEW')) "
     )
     @GetMapping

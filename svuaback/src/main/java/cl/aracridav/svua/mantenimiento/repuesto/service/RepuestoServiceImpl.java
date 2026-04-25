@@ -21,63 +21,132 @@ public class RepuestoServiceImpl implements RepuestoService {
 
     private final RepuestoRepository repository;
     private final EmpresaRepository empresaRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
 
+    /*
+     * =========================================
+     * CREAR
+     * =========================================
+     */
     @Override
     public RepuestoResponse crear(RepuestoRequest request) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
-        
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-        
-        if(repository.existsByCodigoAndEmpresa(request.getCodigo(), empresa)){
-            throw new BusinessException("El código ya existe");
-        }
+        Empresa empresa = obtenerEmpresaActual();
 
-        Repuesto repuesto = new Repuesto();
-        repuesto.setCodigo(request.getCodigo());
-        repuesto.setNombre(request.getNombre());
-        repuesto.setDescripcion(request.getDescripcion());
-        repuesto.setCostoUnitario(request.getCostoUnitario());
-        repuesto.setStockMinimo(request.getStockMinimo());
-        repuesto.setActivo(request.getActivo());
-        repuesto.setEmpresa(empresa);
+        validarCodigoUnico(request.getCodigo(), empresa, null);
 
-        Repuesto repuestoGuardado = repository.save(repuesto);
+        Repuesto repuesto = construirRepuesto(request, empresa);
 
-        return generalMapper.mapRepuestoResponse(repuestoGuardado);
+        return mapper.mapRepuestoResponse(repository.save(repuesto));
     }
 
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
     @Override
     public Page<RepuestoResponse> listarRepuestos(Pageable pageable) {
 
-        Page<Repuesto> repuestos = Page.empty();
+        Empresa empresa = obtenerEmpresaActual();
 
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        repuestos = repository.findByEmpresa(empresa, pageable);
-        
-        return repuestos.map(generalMapper::mapRepuestoResponse);
+        return repository.findByEmpresa(empresa, pageable)
+                .map(mapper::mapRepuestoResponse);
     }
 
+    /*
+     * =========================================
+     * OBTENER
+     * =========================================
+     */
     @Override
     public RepuestoResponse obtener(Long id) {
 
-        Repuesto repuesto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Repuesto no encontrado"));
-
-        return generalMapper.mapRepuestoResponse(repuesto);
+        return mapper.mapRepuestoResponse(obtenerRepuesto(id));
     }
 
+    /*
+     * =========================================
+     * ACTUALIZAR
+     * =========================================
+     */
     @Override
     public RepuestoResponse actualizar(Long id, RepuestoRequest request) {
 
-        Repuesto repuesto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Repuesto no encontrado"));
+        Repuesto repuesto = obtenerRepuesto(id);
+
+        validarCodigoUnico(request.getCodigo(), repuesto.getEmpresa(), id);
+
+        actualizarCampos(repuesto, request);
+
+        return mapper.mapRepuestoResponse(repository.save(repuesto));
+    }
+
+    /*
+     * =========================================
+     * ELIMINAR (SOFT DELETE)
+     * =========================================
+     */
+    @Override
+    public void eliminar(Long id) {
+
+        Repuesto repuesto = obtenerRepuesto(id);
+
+        repuesto.setActivo(false);
+
+        repository.save(repuesto);
+    }
+
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Empresa obtenerEmpresaActual() {
+        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
+
+    private Repuesto obtenerRepuesto(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+    }
+
+    private void validarCodigoUnico(String codigo, Empresa empresa, Long idActual) {
+
+        boolean existe = repository.existsByCodigoAndEmpresa(codigo, empresa);
+
+        if (existe) {
+            // 🔥 evita falso positivo en update
+            if (idActual == null || 
+               repository.findById(idActual)
+                    .map(r -> !r.getCodigo().equals(codigo))
+                    .orElse(true)) {
+
+                throw new BusinessException("El código ya existe");
+            }
+        }
+    }
+
+    private Repuesto construirRepuesto(RepuestoRequest request, Empresa empresa) {
+
+        Repuesto repuesto = new Repuesto();
+
+        repuesto.setCodigo(request.getCodigo());
+        repuesto.setNombre(request.getNombre());
+        repuesto.setDescripcion(request.getDescripcion());
+        repuesto.setCostoUnitario(request.getCostoUnitario());
+        repuesto.setStockMinimo(request.getStockMinimo());
+        repuesto.setActivo(
+            request.getActivo() != null ? request.getActivo() : true
+        );
+        repuesto.setEmpresa(empresa);
+
+        return repuesto;
+    }
+
+    private void actualizarCampos(Repuesto repuesto, RepuestoRequest request) {
 
         repuesto.setCodigo(request.getCodigo());
         repuesto.setNombre(request.getNombre());
@@ -85,22 +154,5 @@ public class RepuestoServiceImpl implements RepuestoService {
         repuesto.setCostoUnitario(request.getCostoUnitario());
         repuesto.setStockMinimo(request.getStockMinimo());
         repuesto.setActivo(request.getActivo());
-
-        Repuesto repuestoGuardado = repository.save(repuesto);
-
-        return generalMapper.mapRepuestoResponse(repuestoGuardado);
     }
-
-    @Override
-    public void eliminar(Long id) {
-
-        Repuesto repuesto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Repuesto no encontrado"));
-
-        repuesto.setActivo(false);
-        
-        repository.save(repuesto);
-
-    }
-
 }

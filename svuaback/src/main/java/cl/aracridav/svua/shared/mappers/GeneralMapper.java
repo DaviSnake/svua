@@ -81,6 +81,7 @@ public class GeneralMapper {
       .nombre(tipoActivo.getNombre())
       .descripcion(tipoActivo.getDescripcion())
       .vidaUtilReferencialMeses(tipoActivo.getVidaUtilReferencialMeses())
+      .activo(tipoActivo.getActivo())
       .empresa(tipoActivo.getEmpresa())
       .build();
   }
@@ -92,6 +93,7 @@ public class GeneralMapper {
       .nombre(ubicacion.getNombre())
       .descripcion(ubicacion.getDescripcion())
       .direccion(ubicacion.getDireccion())
+      .activo(ubicacion.getActivo())
       .empresa(ubicacion.getEmpresa())
       .build();
   }
@@ -105,6 +107,7 @@ public class GeneralMapper {
       .contacto(proveedor.getContacto())
       .telefono(proveedor.getTelefono())
       .email(proveedor.getEmail())
+      .activo(proveedor.getActivo())
       .empresa(proveedor.getEmpresa())
       .build();
   }
@@ -172,6 +175,7 @@ public class GeneralMapper {
       .id(bodega.getId())
       .nombre(bodega.getNombre())
       .ubicacionFisica(bodega.getUbicacionFisica())
+      .activo(bodega.getActiva())
       .empresa(empresaDTO)
       .build();
   }
@@ -206,6 +210,7 @@ public class GeneralMapper {
       .descripcion(repuesto.getDescripcion())
       .costoUnitario(repuesto.getCostoUnitario())
       .stockMinimo(repuesto.getStockMinimo())
+      .activo(repuesto.getActivo())
       .empresa(empresaDTO)
       .build();
 

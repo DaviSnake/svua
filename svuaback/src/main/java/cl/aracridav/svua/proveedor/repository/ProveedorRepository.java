@@ -16,4 +16,6 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
     boolean existsByRut(String rut);
 
     Page<Proveedor> findByEmpresaId(Long empresaId, Pageable pegable);
+
+    boolean existsByRutAndEmpresaId(String rut, Long empresaId);
 }

@@ -30,7 +30,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_CREATE')) "
     )
     @PostMapping
@@ -44,7 +44,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_DELETE'))"
     )
     @DeleteMapping("/{usuarioId}")
@@ -58,7 +58,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_UPDATE'))"
     )
     @PutMapping("/{usuarioId}")
@@ -84,7 +84,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_VIEW'))"
     )
     @GetMapping
@@ -94,7 +94,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_VIEW'))"
     )
     @GetMapping("/perfilUsuario")

@@ -15,4 +15,6 @@ public interface TipoActivoRepository extends JpaRepository<TipoActivo, Long> {
 
     Optional<TipoActivo> findFirstByNombre(String nombre);
 
+    boolean existsByNombreIgnoreCaseAndEmpresaId(String nombre, Long empresaId);
+
 }

@@ -86,30 +86,12 @@ export class EmpresaComponent implements OnInit {
         text: `Revisa el campo: ${campo}`
       });
 
-      console.log(FormUtils.getErrores(this.empresaForm));
-
       return;
     }
 
     const empresa: Empresa = this.empresaForm.value;
-    const adminNombre = this.empresaForm.get('adminNombre');
-    const adminEmail = this.empresaForm.get('adminEmail');
-    const adminPassword = this.empresaForm.get('adminPassword');
-
-    if (this.mostrarAdmin) {
-      this.flag = 1;
-      adminNombre?.setValidators([Validators.required]);
-      adminEmail?.setValidators([Validators.required, Validators.email]);
-      adminPassword?.setValidators([Validators.required]);
-    } else {
-      adminNombre?.clearValidators();
-      adminEmail?.clearValidators();
-      adminPassword?.clearValidators();
-    }
-
-    adminNombre?.updateValueAndValidity();
-    adminEmail?.updateValueAndValidity();
-    adminPassword?.updateValueAndValidity();
+    
+    this.flag = this.mostrarAdmin ? 1 : 0;
 
     this.loading = true;
 
@@ -140,8 +122,9 @@ export class EmpresaComponent implements OnInit {
                 timer: 2000,
                 showConfirmButton: false
               });
-
+              this.mostrarAdmin = false
               this.cargarEmpresas(); // 🔄 refrescar tabla
+              this.resetForm();
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -180,6 +163,7 @@ export class EmpresaComponent implements OnInit {
   }
 
   editar(emp: Empresa) {
+    this.flag = 0;
     this.editando = true;
     this.empresaId = emp.id!;
     this.empresaEditandoId = emp.id!
@@ -211,6 +195,29 @@ export class EmpresaComponent implements OnInit {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
+  }
+
+  onAdminClick() {
+
+    const adminNombre = this.empresaForm.get('adminNombre');
+    const adminEmail = this.empresaForm.get('adminEmail');
+    const adminPassword = this.empresaForm.get('adminPassword');
+    this.mostrarAdmin = !this.mostrarAdmin;
+    if (this.mostrarAdmin) {
+      this.flag = 1;
+      adminNombre?.setValidators([Validators.required]);
+      adminEmail?.setValidators([Validators.required, Validators.email]);
+      adminPassword?.setValidators([Validators.required]);
+    } else {
+      adminNombre?.clearValidators();
+      adminEmail?.clearValidators();
+      adminPassword?.clearValidators();
+    }
+
+    adminNombre?.updateValueAndValidity();
+    adminEmail?.updateValueAndValidity();
+    adminPassword?.updateValueAndValidity();
+
   }
 
 }

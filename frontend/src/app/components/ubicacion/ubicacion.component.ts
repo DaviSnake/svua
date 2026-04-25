@@ -58,7 +58,7 @@ export class UbicacionComponent implements OnInit {
       direccion: ['', Validators.required],
       empresa: [''],
       empresaId: [null, Validators.required],
-      activo: [false] // 👈 checkbox
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -202,8 +202,41 @@ export class UbicacionComponent implements OnInit {
     }  
   }
 
-  confirmarEliminar(id: number) {
-    //this.eliminar(id);
+  eliminar(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dejará inactivo la ubicacion',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+
+        // ✅ Llamar backend
+        this.ubicacionService.delete(id)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminar',
+                text: 'La ubicación se eliminó correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarUbicaciones(); // 🔄 refrescar tabla
+              this.nuevo();
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar la ubicación'
+              });
+            }
+          });       
+      }
+    });
   }
 
 

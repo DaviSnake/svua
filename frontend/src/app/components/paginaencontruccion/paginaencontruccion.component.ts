@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -8,6 +8,10 @@ import { RouterModule } from '@angular/router';
   templateUrl: './paginaencontruccion.component.html',
   styleUrl: './paginaencontruccion.component.css'
 })
-export class PaginaencontruccionComponent {
+export class PaginaencontruccionComponent  implements OnInit {
+  
+  ngOnInit(): void {
+    localStorage.clear();
+  }
 
 }

@@ -1,12 +1,14 @@
 package cl.aracridav.svua.mantenimiento.plan.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import cl.aracridav.svua.mantenimiento.plan.dto.response.PlanMantenimientoReponse;
 import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 
 @Repository
@@ -35,4 +37,6 @@ public interface PlanMantenimientoRepository extends JpaRepository<PlanMantenimi
             Long empresaId,
             LocalDate fecha
     );
+
+    List<PlanMantenimientoReponse> findByEstaActivoTrueAndProximaEjecucionLessThanEqual(LocalDateTime fecha);
 }

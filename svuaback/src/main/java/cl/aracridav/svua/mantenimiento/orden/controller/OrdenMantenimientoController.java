@@ -28,7 +28,7 @@ public class OrdenMantenimientoController {
     private final OrdenMantenimientoService service;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_CREATE')) "
     )
     @PostMapping
@@ -41,7 +41,7 @@ public class OrdenMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_VIEW')) "
     )
     @GetMapping
@@ -50,7 +50,7 @@ public class OrdenMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_UPDATE')) "
     )
     @PutMapping("/{ordenId}")

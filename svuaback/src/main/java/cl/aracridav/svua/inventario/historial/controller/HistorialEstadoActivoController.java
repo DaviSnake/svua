@@ -25,7 +25,7 @@ public class HistorialEstadoActivoController {
     private final ActivoRepository activoRepository;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('HISTORIAL_VIEW')) "
     )
     @GetMapping("/{activoId}")
