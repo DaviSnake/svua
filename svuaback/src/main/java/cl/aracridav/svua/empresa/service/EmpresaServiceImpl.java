@@ -2,7 +2,7 @@ package cl.aracridav.svua.empresa.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -21,6 +21,7 @@ import cl.aracridav.svua.empresa.dto.request.UpdateEmpresaRequest;
 import cl.aracridav.svua.empresa.dto.request.UpdatePlanEmpresaRequest;
 import cl.aracridav.svua.empresa.dto.response.EmpresaResponse;
 import cl.aracridav.svua.empresa.entity.Empresa;
+import cl.aracridav.svua.empresa.entity.TipoPlan;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.shared.enums.RolUsuario;
 import cl.aracridav.svua.shared.exception.BusinessException;
@@ -38,179 +39,111 @@ public class EmpresaServiceImpl implements EmpresaService {
 
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
+    /*
+     * =========================================
+     * REGISTRO
+     * =========================================
+     */
+
     @Override
-    public EmpresaResponse registrarEmpresa(
-        CreateEmpresaRequest request) {
+    public EmpresaResponse registrarEmpresa(CreateEmpresaRequest request) {
 
-        if (empresaRepository.existsByRut(request.getRut())) {
-            throw new BusinessException("El RUT ya está registrado");
-        }
+        validarEmpresaUnica(request.getRut(), request.getNombre());
 
-        if (empresaRepository.existsByNombre(request.getNombre())) {
-            throw new BusinessException("Ya existe una empresa con ese nombre");
-        }
-
-        Empresa empresa = new Empresa();
-
-        empresa.setNombre(request.getNombre());
-        empresa.setRut(request.getRut());
-        empresa.setEmailContacto(request.getEmailContacto());
-        empresa.setTelefono(request.getTelefono());
-        empresa.setDireccion(request.getDireccion());
-
-        // 🔹 Configuración SaaS
-        empresa.setTipoPlan(request.getTipoPlan());
-        
-        // 🔥 Lógica automática por plan
-        switch (request.getTipoPlan()) {
-
-            case FREE -> {
-                empresa.setMaxUsuarios(2);
-                empresa.setMaxActivos(20);
-                empresa.setFechaFinPlan(LocalDate.now().plusDays(15));
-            }
-
-            case BASICO -> {
-                empresa.setMaxUsuarios(5);
-                empresa.setMaxActivos(100);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(1));
-            }
-
-            case PROFESIONAL -> {
-                empresa.setMaxUsuarios(10);
-                empresa.setMaxActivos(150);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(6));
-            }
-
-            case ENTERPRISE -> {
-                empresa.setMaxUsuarios(50);
-                empresa.setMaxActivos(1000);
-                empresa.setFechaFinPlan(LocalDate.now().plusYears(1));
-            }
-
-            default -> throw new BusinessException("Plan no válido");
-        }
-
-        empresa.setFechaInicioPlan(LocalDate.now());
-        empresa.setFechaActualizacion(LocalDateTime.now());
-
-        empresa.setActiva(true);
-
-        // 🔹 Auditoría
-        empresa.setFechaCreacion(LocalDateTime.now());
+        Empresa empresa = construirEmpresaBase(request);
+        aplicarConfiguracionPlan(empresa, request.getTipoPlan());
 
         empresaRepository.save(empresa);
 
-        return generalMapper.mapEmpresaToResponse(empresa);
+        return mapper.mapEmpresaToResponse(empresa);
     }
 
+    @Transactional
+    public EmpresaResponse registrarEmpresaConAdmin(CreateEmpresaWithAdminRequest request) {
+
+        validarEmpresaUnica(request.getRut(), request.getNombre());
+        validarEmailUnico(request.getAdminEmail());
+
+        Empresa empresa = construirEmpresaBase(request);
+        aplicarConfiguracionPlan(empresa, request.getTipoPlan());
+
+        empresaRepository.save(empresa);
+
+        crearAdminEmpresa(request, empresa);
+
+        return mapper.mapEmpresaToResponse(empresa);
+    }
+
+    @Transactional
+    public AuthResponse onboarding(CreateEmpresaWithAdminRequest request, HttpServletRequest httpRequest) {
+
+        validarEmpresaUnica(request.getRut(), request.getNombre());
+        validarEmailUnico(request.getAdminEmail());
+
+        Empresa empresa = construirEmpresaBase(request);
+        aplicarConfiguracionPlan(empresa, request.getTipoPlan());
+
+        empresaRepository.save(empresa);
+
+        Usuario admin = crearAdminEmpresa(request, empresa);
+
+        return generarAuthResponse(admin, empresa, httpRequest);
+    }
+
+    /*
+     * =========================================
+     * ACTUALIZACIÓN
+     * =========================================
+     */
+
     @Override
-    public EmpresaResponse actualizarEmpresa(
-        Long empresaId,
-        UpdateEmpresaRequest request) {
+    public EmpresaResponse actualizarEmpresa(Long id, UpdateEmpresaRequest request) {
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() ->
-                        new BusinessException("Empresa no encontrada"));
+        Empresa empresa = obtenerEmpresa(id);
 
-        // 🔐 Actualización parcial segura
-        if (request.getNombre() != null) {
-            empresa.setNombre(request.getNombre());
-        }
+        actualizarCamposBasicos(empresa, request);
 
-        if (request.getRut() != null) {
-            empresa.setRut(request.getRut());
-        }
-
-        if (request.getDireccion() != null) {
-            empresa.setDireccion(request.getDireccion());
-        }
-
-        if (request.getTelefono() != null) {
-            empresa.setTelefono(request.getTelefono());
-        }
-
-        if (request.getActiva() != null) {
-            empresa.setActiva(request.getActiva());
+        if (request.getTipoPlan() != null) {
+            aplicarConfiguracionPlan(empresa, request.getTipoPlan());
         }
 
         empresaRepository.save(empresa);
 
-        return EmpresaResponse.builder()
-                .id(empresa.getId())
-                .nombre(empresa.getNombre())
-                .rut(empresa.getRut())
-                .direccion(empresa.getDireccion())
-                .telefono(empresa.getTelefono())
-                .activa(empresa.getActiva())
-                .build();
+        return mapper.mapEmpresaToResponse(empresa);
     }
 
     @Override
-    public EmpresaResponse actualizarPlan(
-        Long empresaId,
-        UpdatePlanEmpresaRequest request) {
+    public EmpresaResponse actualizarPlan(Long id, UpdatePlanEmpresaRequest request) {
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() ->
-                        new BusinessException("Empresa no encontrada"));
+        Empresa empresa = obtenerEmpresa(id);
 
-        // 🔹 Configuración SaaS
-        empresa.setTipoPlan(request.getTipoPlan());
+        aplicarConfiguracionPlan(empresa, request.getTipoPlan());
 
-        // 🔥 Lógica automática por plan
-        switch (request.getTipoPlan()) {
-
-            case FREE -> {
-                empresa.setMaxUsuarios(2);
-                empresa.setMaxActivos(20);
-                empresa.setFechaFinPlan(LocalDate.now().plusDays(15));
-            }
-
-            case BASICO -> {
-                empresa.setMaxUsuarios(5);
-                empresa.setMaxActivos(100);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(1));
-            }
-
-            case PROFESIONAL -> {
-                empresa.setMaxUsuarios(10);
-                empresa.setMaxActivos(150);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(6));
-            }
-
-            case ENTERPRISE -> {
-                empresa.setMaxUsuarios(50);
-                empresa.setMaxActivos(1000);
-                empresa.setFechaFinPlan(LocalDate.now().plusYears(1));
-            }
-
-            default -> throw new BusinessException("Plan no válido");
-        }
-        
-        
-   
         empresa.setActiva(request.getActiva());
-
         empresa.setFechaInicioPlan(LocalDate.now());
         empresa.setFechaActualizacion(LocalDateTime.now());
 
         empresaRepository.save(empresa);
 
-        return generalMapper.mapEmpresaToResponse(empresa);
+        return mapper.mapEmpresaToResponse(empresa);
     }
+
+    /*
+     * =========================================
+     * ELIMINACIÓN
+     * =========================================
+     */
 
     @Override
     @Transactional
-    public void eliminarEmpresa(Long empresaId) {
+    public void eliminarEmpresa(Long id) {
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+        Empresa empresa = obtenerEmpresa(id);
 
         empresa.setActiva(false);
         empresa.setFechaFinPlan(LocalDate.now());
@@ -218,92 +151,68 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresaRepository.save(empresa);
     }
 
-    @Transactional
-    public EmpresaResponse registrarEmpresaConAdmin(
-            CreateEmpresaWithAdminRequest request) {
+    /*
+     * =========================================
+     * CONSULTA
+     * =========================================
+     */
 
-        if (empresaRepository.existsByRut(request.getRut())) {
-            throw new BusinessException("El RUT ya está registrado");
-        }
+    public List<EmpresaResponse> obtenerEmpresa() {
 
-        if (usuarioRepository.existsByEmail(request.getAdminEmail())) {
-            throw new BusinessException("El email del admin ya está registrado");
-        }
+        Long empresaId = SecurityUtils.getEmpresaId();
 
-        // 🔹 Crear empresa
-        Empresa empresa = new Empresa();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        empresa.setNombre(request.getNombre());
-        empresa.setRut(request.getRut());
-        empresa.setEmailContacto(request.getEmailContacto());
-        empresa.setTelefono(request.getTelefono());
-        empresa.setDireccion(request.getDireccion());
+        boolean esSuperAdmin = tieneRol(auth, "ROLE_SUPER_ADMIN");
+        boolean esAdminEmpresa = tieneRol(auth, "ROLE_ADMIN_EMPRESA", "EMPRESA_VIEW");
 
-        empresa.setTipoPlan(request.getTipoPlan());
-        empresa.setFechaInicioPlan(LocalDate.now());
+        List<Empresa> empresas = esSuperAdmin
+                ? empresaRepository.findAll()
+                : esAdminEmpresa
+                    ? empresaRepository.findById(empresaId).map(List::of).orElse(List.of())
+                    : List.of();
 
-        // 🔥 Lógica automática por plan
-        switch (request.getTipoPlan()) {
-
-            case FREE -> {
-                empresa.setMaxUsuarios(2);
-                empresa.setMaxActivos(20);
-                empresa.setFechaFinPlan(LocalDate.now().plusDays(15));
-            }
-
-            case BASICO -> {
-                empresa.setMaxUsuarios(5);
-                empresa.setMaxActivos(100);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(1));
-            }
-
-            case PROFESIONAL -> {
-                empresa.setMaxUsuarios(10);
-                empresa.setMaxActivos(150);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(6));
-            }
-
-            case ENTERPRISE -> {
-                empresa.setMaxUsuarios(50);
-                empresa.setMaxActivos(1000);
-                empresa.setFechaFinPlan(LocalDate.now().plusYears(1));
-            }
-
-            default -> throw new BusinessException("Plan no válido");
-        }
-
-        empresa.setActiva(true);
-        empresa.setFechaCreacion(LocalDateTime.now());
-        empresa.setFechaActualizacion(LocalDateTime.now());
-
-        empresaRepository.save(empresa);
-
-        // 🔹 Crear ADMIN_EMPRESA automáticamente
-        Usuario admin = new Usuario();
-            admin.setNombre(request.getAdminNombre());
-            admin.setEmail(request.getAdminEmail());
-            admin.setPassword(passwordEncoder.encode(request.getAdminPassword()));
-            admin.setRol(RolUsuario.ADMIN_EMPRESA);
-            admin.setActivo(true);
-            admin.setEmpresa(empresa);
-
-        usuarioRepository.save(admin);
-
-        return generalMapper.mapEmpresaToResponse(empresa);
+        return empresas.stream()
+                .map(mapper::mapEmpresaToResponse)
+                .toList();
     }
 
-    @Transactional
-    public AuthResponse onboarding(CreateEmpresaWithAdminRequest request, HttpServletRequest httpRequest) {
+    /*
+     * =========================================
+     * PLAN (🔥 CLAVE DEL REFACTOR)
+     * =========================================
+     */
 
-        if (empresaRepository.existsByRut(request.getRut())) {
-            throw new BusinessException("El RUT ya está registrado");
+    private void aplicarConfiguracionPlan(Empresa empresa, TipoPlan plan) {
+
+        empresa.setTipoPlan(plan);
+        empresa.setFechaInicioPlan(LocalDate.now());
+        empresa.setFechaActualizacion(LocalDateTime.now());
+        empresa.setActiva(true);
+
+        switch (plan) {
+            case FREE -> configurarPlan(empresa, 2, 20, LocalDate.now().plusDays(15));
+            case BASICO -> configurarPlan(empresa, 5, 100, LocalDate.now().plusMonths(1));
+            case PROFESIONAL -> configurarPlan(empresa, 10, 150, LocalDate.now().plusMonths(6));
+            case ENTERPRISE -> configurarPlan(empresa, 50, 1000, LocalDate.now().plusYears(1));
+            default -> throw new BusinessException("Plan no válido");
         }
+    }
 
-        if (usuarioRepository.existsByEmail(request.getAdminEmail())) {
-            throw new BusinessException("El email ya está registrado");
-        }
+    private void configurarPlan(Empresa empresa, int maxUsuarios, int maxActivos, LocalDate fechaFin) {
+        empresa.setMaxUsuarios(maxUsuarios);
+        empresa.setMaxActivos(maxActivos);
+        empresa.setFechaFinPlan(fechaFin);
+    }
 
-        // 🔹 Crear Empresa
+    /*
+     * =========================================
+     * CREACIÓN
+     * =========================================
+     */
+
+    private Empresa construirEmpresaBase(CreateEmpresaRequest request) {
+
         Empresa empresa = new Empresa();
 
         empresa.setNombre(request.getNombre());
@@ -311,66 +220,36 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setEmailContacto(request.getEmailContacto());
         empresa.setTelefono(request.getTelefono());
         empresa.setDireccion(request.getDireccion());
-
-        empresa.setTipoPlan(request.getTipoPlan());
-        empresa.setFechaInicioPlan(LocalDate.now());
-
-        switch (request.getTipoPlan()) {
-
-            case FREE -> {
-                empresa.setMaxUsuarios(2);
-                empresa.setMaxActivos(20);
-                empresa.setFechaFinPlan(LocalDate.now().plusDays(15));
-            }
-
-            case BASICO -> {
-                empresa.setMaxUsuarios(5);
-                empresa.setMaxActivos(100);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(1));
-            }
-
-            case PROFESIONAL -> {
-                empresa.setMaxUsuarios(10);
-                empresa.setMaxActivos(150);
-                empresa.setFechaFinPlan(LocalDate.now().plusMonths(6));
-            }
-
-            case ENTERPRISE -> {
-                empresa.setMaxUsuarios(50);
-                empresa.setMaxActivos(1000);
-                empresa.setFechaFinPlan(LocalDate.now().plusYears(1));
-            }
-
-            default -> throw new BusinessException("Plan no válido");
-        }
-
-        empresa.setActiva(true);
         empresa.setFechaCreacion(LocalDateTime.now());
-        empresa.setFechaActualizacion(LocalDateTime.now());
 
-        empresaRepository.save(empresa);
+        return empresa;
+    }
 
-        // 🔹 Crear ADMIN_EMPRESA
+    private Usuario crearAdminEmpresa(CreateEmpresaWithAdminRequest request, Empresa empresa) {
+
         Usuario admin = new Usuario();
-            admin.setNombre(request.getAdminNombre());
-            admin.setEmail(request.getAdminEmail());
-            admin.setPassword(passwordEncoder.encode(request.getAdminPassword()));
-            admin.setRol(RolUsuario.ADMIN_EMPRESA);
-            admin.setActivo(true);
-            admin.setEmpresa(empresa);
 
-        usuarioRepository.save(admin);
+        admin.setNombre(request.getAdminNombre());
+        admin.setEmail(request.getAdminEmail());
+        admin.setPassword(passwordEncoder.encode(request.getAdminPassword()));
+        admin.setRol(RolUsuario.ADMIN_EMPRESA);
+        admin.setActivo(true);
+        admin.setEmpresa(empresa);
 
-        // 🔹 Generar UsuarioPrincipal
+        return usuarioRepository.save(admin);
+    }
+
+    private AuthResponse generarAuthResponse(Usuario admin, Empresa empresa, HttpServletRequest request) {
+
         UsuarioPrincipal principal = new UsuarioPrincipal(admin);
 
-        // Datos del dispositivo
-        String device = httpRequest.getHeader("User-Agent");
-        String ip = httpRequest.getRemoteAddr();
+        String device = request.getHeader("User-Agent");
+        String ip = request.getRemoteAddr();
 
-        // 🔹 Generar JWT
         String accessToken = jwtService.generateToken(principal);
-        String refreshToken = refreshTokenService.createRefreshToken(admin, empresa, device, ip).getToken();
+        String refreshToken = refreshTokenService
+                .createRefreshToken(admin, empresa, device, ip)
+                .getToken();
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -381,33 +260,49 @@ public class EmpresaServiceImpl implements EmpresaService {
                 .build();
     }
 
-    public List<EmpresaResponse> obtenerEmpresa(){
+    /*
+     * =========================================
+     * VALIDACIONES
+     * =========================================
+     */
 
-        List<Empresa> listaEmpresas = new ArrayList<>();
-
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean esSuperAdmin = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
-        
-        boolean esAdminEmpresa = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA")
-                            || a.getAuthority().equals("EMPRESA_VIEW"));
-
-        if (esSuperAdmin) {
-            listaEmpresas = empresaRepository.findAll();
-        } else if (esAdminEmpresa) {
-            listaEmpresas = empresaRepository.findById(empresaId)
-            .map(List::of)
-            .orElse(List.of());
+    private void validarEmpresaUnica(String rut, String nombre) {
+        if (empresaRepository.existsByRut(rut)) {
+            throw new BusinessException("El RUT ya está registrado");
         }
+        if (empresaRepository.existsByNombre(nombre)) {
+            throw new BusinessException("Ya existe una empresa con ese nombre");
+        }
+    }
 
-        List<EmpresaResponse> response = listaEmpresas.stream()
-        .map(generalMapper::mapEmpresaToResponse)
-        .toList();
+    private void validarEmailUnico(String email) {
+        if (usuarioRepository.existsByEmail(email)) {
+            throw new BusinessException("El email ya está registrado");
+        }
+    }
 
-        return response;
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
+     */
+
+    private Empresa obtenerEmpresa(Long id) {
+        return empresaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
+
+    private boolean tieneRol(Authentication auth, String... roles) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> Arrays.asList(roles).contains(a.getAuthority()));
+    }
+
+    private void actualizarCamposBasicos(Empresa empresa, UpdateEmpresaRequest request) {
+
+        if (request.getNombre() != null) empresa.setNombre(request.getNombre());
+        if (request.getRut() != null) empresa.setRut(request.getRut());
+        if (request.getDireccion() != null) empresa.setDireccion(request.getDireccion());
+        if (request.getTelefono() != null) empresa.setTelefono(request.getTelefono());
+        if (request.getActiva() != null) empresa.setActiva(request.getActiva());
     }
 }

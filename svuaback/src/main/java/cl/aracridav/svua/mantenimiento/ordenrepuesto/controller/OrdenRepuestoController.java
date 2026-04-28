@@ -25,7 +25,7 @@ public class OrdenRepuestoController {
     private final OrdenRepuestoService service;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_REPUESTO_CREATE')) "
     )
     @PostMapping
@@ -38,7 +38,7 @@ public class OrdenRepuestoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_REPUESTO_VIEW')) "
     )
     @GetMapping("/orden/{ordenId}")

@@ -11,6 +11,7 @@ public class UbicacionResponse {
     private String nombre;
     private String descripcion;
     private String direccion;
+    private Boolean activo;
     private Empresa empresa;
 
 }

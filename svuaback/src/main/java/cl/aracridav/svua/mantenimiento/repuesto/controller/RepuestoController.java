@@ -27,7 +27,7 @@ public class RepuestoController {
     private final RepuestoService repuestoService;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('REPUESTO_CREATE')) "
     )
     @PostMapping
@@ -36,7 +36,7 @@ public class RepuestoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('REPUESTO_VIEW')) "
     )
     @GetMapping
@@ -50,7 +50,7 @@ public class RepuestoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('REPUESTO_VIEW')) "
     )
     @GetMapping("/{id}")
@@ -59,7 +59,7 @@ public class RepuestoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('REPUESTO_UPDATE')) "
     )
     @PutMapping("/{id}")
@@ -71,7 +71,7 @@ public class RepuestoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('REPUESTO_DELETE')) "
     )
     @DeleteMapping("/{id}")

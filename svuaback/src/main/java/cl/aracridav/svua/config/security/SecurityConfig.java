@@ -71,7 +71,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", //local
                                                     "http://localhost")
                                 ); // frontend Angular
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true); // si usas cookies/token en headers
 

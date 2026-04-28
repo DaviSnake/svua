@@ -17,4 +17,6 @@ public interface BodegaRepository extends JpaRepository<Bodega, Long> {
 
     List<Bodega> findByEmpresaAndActivaTrue(Empresa empresa);
 
+    boolean existsByNombreIgnoreCaseAndEmpresaId(String nombre, Long empresaId);
+
 }

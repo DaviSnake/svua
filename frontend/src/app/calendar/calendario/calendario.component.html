@@ -1,41 +1,128 @@
-<div class="calendar-container">
-  <full-calendar [options]="calendarOptions"></full-calendar>
-</div>
+<div class="calendar-wrapper">
+  <!-- 🔹 Header -->
+  <div class="header">
+    <div>
+      <h1>Calendario</h1>
+      <p>Gestión de orden de mantención y programación</p>
+    </div>
+  </div>
+  <!-- 🔹 Calendario -->
+  <div class="calendar-container">
+    <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+  </div>
+  <!-- 🔹 Modal -->
 <div *ngIf="mostrarModal" class="modal-backdrop">
   <div class="modal">
 
-    <h2>Nueva Orden</h2>
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>{{ titulo }}</h2>
+      <button class="close-btn" (click)="cerrar()">✕</button>
+    </div>
 
-    <form [formGroup]="ordenMantencionForm">
+    <!-- 🔥 RIESGO -->
+    <div *ngIf="modoEdicion && riesgo !== undefined" 
+        class="riesgo-box" 
+        [ngClass]="nivel">
+      ⚠ Riesgo: {{ riesgo }}% ({{ nivel }})
+    </div>
 
-      <input type="text" formControlName="titulo" placeholder="Título" />
+    <!-- Form -->
+    <form [formGroup]="ordenMantencionForm" class="form">
 
-      <textarea formControlName="observaciones" placeholder="Descripción"></textarea>
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" formControlName="titulo" placeholder="Ej: Mantención preventiva" />
+      </div>
 
-      <input type="text" formControlName="lugar" placeholder="Lugar" />
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea formControlName="observaciones" placeholder="Detalle de la mantención"></textarea>
+      </div>
 
-      <select formControlName="activoId">
-        <option [ngValue]="null" disabled>Seleccione un Activo</option>
-        <option *ngFor="let activo of activos" [value]="activo.id">
-          {{ activo.nombre }}
-        </option>
-      </select>
+      <div class="form-group">
+        <label>Tipo de Mantenimiento</label>
+        <select formControlName="tipoMantenimiento">
+          <option value="null" disabled>Seleccione tipo</option>
+          <option value ="PREVENTIVO">PREVENTIVO</option>
+          <option value ="CORRECTIVO">CORRECTIVO</option>
+          <option value ="PREDICTIVO">PREDICTIVO</option>
+        </select>
+      </div>
 
-      <input type="time" formControlName="hora" />
+      <div class="form-group">
+        <label>Activo</label>
 
+        <mat-form-field appearance="outline" class="full-width custom-autocomplete">
+
+          <input 
+            type="text"
+            matInput
+            [matAutocomplete]="auto"
+            #trigger="matAutocompleteTrigger"
+            [formControl]="activoControl"
+            (focus)="onFocusActivo()"
+            placeholder="Seleccione un activo">
+
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
+            <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
+              {{ activo.nombre }}
+            </mat-option>
+          </mat-autocomplete>
+
+        </mat-form-field>
+
+      </div>
+
+      <div class="form-group">
+        <label>Fecha y Hora</label>
+        <input type="datetime-local" formControlName="fechaHora" />
+      </div>
+
+      <!-- Acciones -->
       <div class="acciones">
-        <button type="button" (click)="cerrar()">Cancelar</button>
 
-        <button *ngIf="modoEdicion" type="button" (click)="eliminar()">
-          Eliminar
+        <button class="btn ghost" type="button" (click)="cerrar()">
+          Cancelar
         </button>
 
-        <button type="button" (click)="guardar()" [disabled]="ordenMantencionForm.invalid">
-          {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
-        </button>
+        <ng-container *ngIf="estadoOrden !== 'COMPLETADA'">
+          <button 
+            *ngIf="modoEdicion"
+            class="btn danger"
+            type="button"
+            (click)="eliminar()">
+            Eliminar
+          </button>
+  
+          <!-- 🔥 NUEVO BOTÓN -->
+          <button 
+            *ngIf="modoEdicion" 
+            class="btn"
+            [ngClass]="estadoOrden === 'EN_EJECUCION' ? 'danger' : 'success'"
+            type="button"
+            (click)="toggleMantencion()">
+  
+            {{ estadoOrden === 'EN_EJECUCION' 
+                ? '⏹ Terminar mantención' 
+                : '▶ Iniciar mantención' }}
+          </button>
+          <ng-container *ngIf="estadoOrden !== 'EN_EJECUCION'">
+            <button 
+              class="btn primary"
+              type="button"
+              (click)="guardar()"
+              [disabled]="ordenMantencionForm.invalid">
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+            </button>
+          </ng-container>
+
+        </ng-container>
+
       </div>
 
     </form>
 
   </div>
+</div>
 </div>

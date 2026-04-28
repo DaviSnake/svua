@@ -1,12 +1,13 @@
 package cl.aracridav.svua.shared.enums;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum RolUsuario {
-    
-    SUPER_ADMIN(Set.of(Permiso.values())),
 
-    ADMIN_EMPRESA(Set.of(
+    SUPER_ADMIN(EnumSet.allOf(Permiso.class)),
+
+    ADMIN_EMPRESA(EnumSet.of(
             Permiso.EMPRESA_VIEW,
             Permiso.ACTIVO_CREATE, Permiso.ACTIVO_UPDATE, Permiso.ACTIVO_VIEW,
             Permiso.PROVEEDOR_CREATE, Permiso.PROVEEDOR_DELETE, Permiso.PROVEEDOR_UPDATE, Permiso.PROVEEDOR_VIEW,
@@ -23,7 +24,7 @@ public enum RolUsuario {
             Permiso.HISTORIAL_VIEW
     )),
 
-    JEFE_MANTENIMIENTO(Set.of(
+    JEFE_MANTENIMIENTO(EnumSet.of(
             Permiso.ACTIVO_VIEW,
             Permiso.ORDEN_MANT_CREATE,
             Permiso.ORDEN_MANT_UPDATE,
@@ -32,23 +33,24 @@ public enum RolUsuario {
             Permiso.PLAN_VIEW
     )),
 
-    TECNICO(Set.of(
+    TECNICO(EnumSet.of(
             Permiso.ACTIVO_VIEW,
             Permiso.ORDEN_MANT_VIEW,
             Permiso.ORDEN_MANT_UPDATE
     )),
 
-    BODEGUERO(Set.of(
+    BODEGUERO(EnumSet.of(
             Permiso.REPUESTO_CREATE,
             Permiso.STOCK_UPDATE,
             Permiso.STOCK_VIEW,
             Permiso.MOVIMIENTO_CREATE
     )),
 
-    USUARIO(Set.of(
+    USUARIO(EnumSet.of(
             Permiso.ACTIVO_VIEW,
             Permiso.USUARIO_VIEW,
-            Permiso.EMPRESA_VIEW
+            Permiso.EMPRESA_VIEW,
+            Permiso.TIPO_ACTIVO_VIEW
     ));
 
     private final Set<Permiso> permisos;

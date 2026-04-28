@@ -58,11 +58,11 @@ export class ProveedorComponent implements OnInit {
       rut: ['', Validators.required],
       //rut: ['', [Validators.required, rutValidator]],
       contacto: ['', Validators.required],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      telefono: ['', [Validators.required, Validators.pattern('^[+0-9]+$')]],
       email: ['', [Validators.required, Validators.email]],
       empresa: [''],
       empresaId: [null, Validators.required],
-      activo: [false] // 👈 checkbox
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -72,9 +72,17 @@ export class ProveedorComponent implements OnInit {
         this.proveedores = data.content;
         this.totalPages = data.totalPages;
         this.totalElements = data.totalElements;
+
+        //console.log("DATA:", this.proveedores)
       },
-      error: () => {
-        console.log("error");
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.error?.message || 'Error desconocido'
+        });
+
+        console.log("ERROR:", err);
       }
     });
   }
@@ -208,8 +216,41 @@ export class ProveedorComponent implements OnInit {
 
   }
 
-  confirmarEliminar(id: number) {
-    //this.eliminar(id);
+  eliminar(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dejará inactivo al proveedor',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+
+        // ✅ Llamar backend
+        this.proveedorService.delete(id)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminar',
+                text: 'El proveedor se eliminó correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarProveedores(); // 🔄 refrescar tabla
+              this.nuevo();
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar al proveedor'
+              });
+            }
+          });       
+      }
+    });
   }
 
 }

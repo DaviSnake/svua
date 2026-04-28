@@ -1,7 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
 
-import { FullCalendarModule } from '@fullcalendar/angular';
+import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -9,16 +9,22 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
 
 import { OrdenMantencionService } from '../../services/orden-mantencion.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { FormUtils } from '../../shared/form-utils';
 import { ActivoService } from '../../services/activo.service';
 import { Activo } from '../../model/activo';
+import { OrdenResponse } from '../../model/ordenResponse';
+
+import { MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { AuthService } from '../../services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule],
+  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule],
   templateUrl: './calendario.component.html',
   styleUrl: './calendario.component.css'
 })
@@ -26,17 +32,43 @@ export class CalendarioComponent implements OnInit {
 
   private ordenMantencionService = inject(OrdenMantencionService);
   private activoService = inject(ActivoService);
+  authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
+  usuario: any;
+
   activos: Activo[] = [];
+
+  activoControl = new FormControl();
+  activosFiltrados: Activo[] = [];
+
+  estadoOrden: string = 'PENDIENTE';
+
+  riesgo!: number;
+  nivel!: string;
+
+  orden!: OrdenResponse;
+
+  @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
+  @ViewChild(MatAutocompleteTrigger) trigger!: MatAutocompleteTrigger;
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.calendarComponent?.getApi().render();
+      this.trigger?.openPanel();
+    }, 300);
+  }
 
   // 🔹 CALENDARIO (inicializado desde el inicio 🔥)
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'timeGridWeek',
-    initialDate: '2026-04-10', // 🔥 importante para pruebas
+    initialDate: new Date(), // ✅ semana actual
     editable: true,
     locale: esLocale,
+    height: 'auto',   // 🔥 IMPORTANTE
+    expandRows: true, // 🔥 IMPORTANTE
+    contentHeight: 'auto',
     events: [],
 
     // 🟢 CREAR
@@ -61,16 +93,30 @@ export class CalendarioComponent implements OnInit {
   size = 100000;
 
   ngOnInit(): void {
+    // usuario
+    this.authService.user$.subscribe(user => {
+      this.usuario = user;
+    });
+
     this.ordenMantencionForm = this.fb.group({
       titulo: ['', Validators.required],
       observaciones: [''],
       lugar: [''],
-      hora: ['', Validators.required],
+      estado: [''],
+      fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
+      tipoMantenimiento: [null, Validators.required]
+    });
+
+    this.activoControl.valueChanges.subscribe(activo => {
+      this.ordenMantencionForm.patchValue({
+        activoId: activo?.id || null
+      });
     });
 
     this.cargarEventos();
     this.cargarActivos();
+
   }
 
   // 🔥 CARGAR EVENTOS (solo actualiza events)
@@ -106,14 +152,35 @@ export class CalendarioComponent implements OnInit {
   onDateClick(info: any) {
     const fecha = info.date;
 
-    const fechaISO = fecha.toISOString().split('T')[0];
-    const hora = fecha.toTimeString().slice(0, 5);
+    const ahora = new Date();
 
-    this.fechaSeleccionada = fechaISO;
+    // 🔥 comparar fechas
+    if (fecha < ahora) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No puedes usar fechas pasadas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      return;
+    }
+
+     const fechaLocal = this.formatFechaLocal(fecha);
+
+
+    this.fechaSeleccionada = fechaLocal;
     this.modoEdicion = false;
+    this.aplicarEstadoFormulario();
 
     this.ordenMantencionForm.reset();
-    this.ordenMantencionForm.patchValue({ hora });
+    // 🔥 LIMPIAR AUTOCOMPLETE
+    this.activoControl.reset();
+
+    this.ordenMantencionForm.patchValue({ 
+      fechaHora: fechaLocal
+     });
 
     this.mostrarModal = true;
   }
@@ -122,15 +189,93 @@ export class CalendarioComponent implements OnInit {
   onEventDrop(info: any) {
     if (!info.event.start) return;
 
-    const fecha = info.event.start;
+    const id = info.event.id;
+    const nuevaFecha = info.event.start;
 
-    const evento = {
-      titulo: info.event.title,
-      fechaProgramada: FormUtils.formatearFechaLocal(fecha)
-    };
+    const ahora = new Date();
 
-    this.ordenMantencionService.actualizar(Number(info.event.id), evento)
-      .subscribe();
+    this.estadoOrden = info.event.extendedProps?.estado;
+
+    // 🔥 comparar fechas
+    if (nuevaFecha < ahora) {
+      info.revert();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No puedes usar fechas pasadas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      return;
+    }
+
+    if (this.estadoOrden === 'EN_EJECUCION' || this.estadoOrden === 'COMPLETADA') {
+      info.revert();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No puedes Reprogramar',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Reprogramar orden',
+      input: 'textarea',
+      inputLabel: 'Motivo de la reprogramación',
+      inputPlaceholder: 'Escribe el motivo...',
+      inputAttributes: {
+        'aria-label': 'Motivo'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#64748b',
+      inputValidator: (value) => {
+        if (!value || value.trim().length < 3) {
+          return 'Debes ingresar un motivo válido';
+        }
+        return null;
+      }
+    }).then((result) => {
+
+      // ❌ Canceló → volver atrás
+      if (!result.isConfirmed) {
+        info.revert();
+        return;
+      }
+
+      const motivo = result.value;
+
+      // ✅ Llamar backend
+      this.ordenMantencionService.reprogramar(id, nuevaFecha, motivo)
+        .subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Reprogramado',
+              text: 'La orden fue actualizada',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          },
+          error: () => {
+            info.revert();
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo reprogramar'
+            });
+          }
+        });
+
+    });
   }
 
   // 🔵 CLICK EN EVENTO (EDITAR)
@@ -139,19 +284,32 @@ export class CalendarioComponent implements OnInit {
     const fecha = info.event.start;
     if (!fecha) return;
 
-    const fechaISO = fecha.toISOString().split('T')[0];
-    const hora = fecha.toTimeString().slice(0, 5);
+    const activoId = info.event.extendedProps?.activoId;
 
-    this.fechaSeleccionada = fechaISO;
+    if (activoId) {
+      this.cargarRiesgo(activoId);
+    }
+
+     const fechaLocal = this.formatFechaLocal(fecha);
+
+    this.estadoOrden = info.event.extendedProps?.estado;
+
+    this.fechaSeleccionada = fechaLocal;
     this.eventoSeleccionadoId = Number(info.event.id);
     this.modoEdicion = true;
 
     this.ordenMantencionForm.patchValue({
       titulo: info.event.title,
       observaciones: info.event.extendedProps?.observaciones || '',
-      lugar: '',
-      hora: hora
+      estado: this.estadoOrden,
+      tipoMantenimiento: info.event.extendedProps?.tipoMantenimiento || '',
+      fechaHora: fechaLocal
     });
+
+    // 🔥 AQUÍ LA MAGIA
+    this.setActivoSeleccionado(activoId);
+
+    this.aplicarEstadoFormulario();
 
     this.mostrarModal = true;
   }
@@ -163,16 +321,18 @@ export class CalendarioComponent implements OnInit {
       return;
     }
 
-    const { titulo, observaciones, lugar, hora } = this.ordenMantencionForm.value;
+    const { titulo, observaciones, activoId, tipoMantenimiento } = this.ordenMantencionForm.value;
 
     const data = {
       titulo,
+      fechaProgramada: this.fechaSeleccionada,
+      tipoMantenimiento,
+      estado: "PROGRAMADA",
       observaciones,
-      lugar,
-      fechaProgramada: `${this.fechaSeleccionada}T${hora}`
+      activoId,
+      usuarioId: this.usuario.sub,
+      planMantenimientoId: "1"
     };
-
-    console.log(data);
 
     if (this.modoEdicion) {
       // 🔵 EDITAR
@@ -182,6 +342,12 @@ export class CalendarioComponent implements OnInit {
           this.cerrar();
         });
     } else {
+      const activoSeleccionado = this.activoControl.value;
+
+      this.ordenMantencionForm.patchValue({
+        activoId: activoSeleccionado?.id || null
+      });
+
       // 🟢 CREAR
       this.ordenMantencionService.crear(data)
         .subscribe(() => {
@@ -193,18 +359,47 @@ export class CalendarioComponent implements OnInit {
 
   // ❌ ELIMINAR
   eliminar() {
-    if (!confirm('¿Eliminar esta cita?')) return;
+    Swal.fire({
+      title: '¿Eliminar orden?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
 
-    this.ordenMantencionService.eliminar(this.eventoSeleccionadoId)
-      .subscribe(() => {
-        this.cargarEventos();
-        this.cerrar();
-      });
+      if (result.isConfirmed) {
+
+        this.ordenMantencionService.eliminar(this.eventoSeleccionadoId)
+          .subscribe(() => {
+
+            Swal.fire({
+              title: 'Eliminado',
+              text: 'La orden fue eliminada correctamente',
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+
+            this.cargarEventos();
+            this.cerrar();
+          });
+
+      }
+
+    });
   }
 
   cerrar() {
     this.mostrarModal = false;
     this.modoEdicion = false;
+    this.estadoOrden = '';
+
+    setTimeout(() => {
+      this.calendarComponent?.getApi().updateSize();
+    }, 200);
   }
 
   getColorPorEstado(estado?: string): string {
@@ -233,11 +428,206 @@ export class CalendarioComponent implements OnInit {
     this.activoService.getAll(this.page, this.size).subscribe({
       next: (data) => {
         this.activos = data.content;
+
+        // 🔥 IMPORTANTE: inicializar filtro cuando ya tienes datos
+        this.initFiltroActivos();
+
+        // 🔥 CLAVE: dispara el autocomplete
+        this.activoControl.setValue('');
+
       },
       error: () => {
         console.log("error");
       }
     });
+  }
+
+  toggleMantencion() {
+    const id = this.eventoSeleccionadoId;
+    if (this.estadoOrden === 'EN_EJECUCION') {
+      this.confirmarDetencionConArchivo(id);
+    } else {
+      this.iniciarMantencion(id);
+    }
+
+  }
+
+  iniciarMantencion(id: number) {
+    // 🔥 aquí llamas backend
+    this.ordenMantencionService.iniciar(id).subscribe({
+      next: (orden) => {
+        this.estadoOrden = orden.estado; // o COMPLETADA si aplica
+        console.log('Iniciado OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: (err) => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: `No se pudo iniciar: ${err.error.error}`,
+          showConfirmButton: false,
+          timer: 2500
+        });
+      }
+    });
+  }
+
+  detenerMantencion(id: number) {    
+    // 🔥 backend
+    this.ordenMantencionService.detener(id).subscribe({
+      next: (orden) => {
+        this.estadoOrden = orden.estado; // o COMPLETADA si aplica
+        console.log('Detenido OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'No se pudo detener la mantención',
+          showConfirmButton: false,
+          timer: 2500
+        });
+      }
+    });
+  }
+
+  detenerMantencionConArchivo(id: number, archivo: File) {
+
+  const formData = new FormData();
+  formData.append('archivo', archivo);
+
+  this.ordenMantencionService.detenerConArchivo(id, formData)
+    .subscribe({
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Mantención detenida',
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        console.log('Detenido OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: (err: { error: { message: any; }; }) => {
+        Swal.fire({
+          icon: 'error',
+          title: err.error?.message || 'Error al detener'
+        });
+      }
+    });
+}
+
+  confirmarDetencionConArchivo(id: number) {
+    Swal.fire({
+      title: 'Ingrese dcto de chequeo de mantención',
+      html: `
+        <input type="file" id="fileInput" class="swal2-file" />
+      `,
+      confirmButtonText: 'Guardar',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const input = document.getElementById('fileInput') as HTMLInputElement;
+
+        if (!input || !input.files || input.files.length === 0) {
+          Swal.showValidationMessage('Debes subir un archivo');
+          return false;
+        }
+
+        return input.files[0]; // 🔥 devolvemos el archivo
+      }
+    }).then((result) => {
+
+      if (!result.isConfirmed) return;
+
+      const archivo: File = result.value;
+
+      this.detenerMantencionConArchivo(id, archivo);
+    });
+  }
+
+  get titulo(): string {
+    if (this.estadoOrden === 'COMPLETADA') return 'Orden';
+    if (this.modoEdicion) return 'Actualizar Orden';
+    return 'Nueva Orden';
+  }
+
+  initFiltroActivos() {
+    this.activosFiltrados = this.activos;
+
+    this.activoControl.valueChanges.subscribe(value => {
+      const search = (typeof value === 'string' ? value : value?.nombre || '')
+        .toLowerCase()
+        .trim();
+
+      if (!search) {
+        this.activosFiltrados = this.activos;
+      } else {
+        this.activosFiltrados = this.activos.filter(a =>
+          a.nombre.toLowerCase().includes(search)
+        );
+      }
+    });
+  }
+
+  displayActivo(activo: any): string {
+    return activo ? activo.nombre : '';
+  }
+
+  onFocusActivo() {
+    // 🔥 fuerza a emitir para mostrar todos
+    this.activosFiltrados = this.activos;
+  }
+
+  setActivoSeleccionado(activoId: number) {
+    if (!this.activos || this.activos.length === 0) {
+      setTimeout(() => this.setActivoSeleccionado(activoId), 200);
+      return;
+    }
+
+    const activo = this.activos.find(a => a.id === activoId);
+
+    if (activo) {
+      this.activoControl.setValue(activo);
+    }
+  }
+
+  puedeEditar(): boolean {
+    if (!this.modoEdicion) return true; // 🔥 nueva orden
+
+    return this.estadoOrden === 'PENDIENTE' || 
+          this.estadoOrden === 'PROGRAMADA';
+  }
+
+  aplicarEstadoFormulario() {
+    if (this.puedeEditar()) {
+      this.ordenMantencionForm.enable();
+      this.activoControl.enable();
+    } else {
+      this.ordenMantencionForm.disable();
+      this.activoControl.disable();
+    }
+  }
+
+  cargarRiesgo(activoId: number) {
+    this.ordenMantencionService.getRiesgo(activoId)
+      .subscribe((res: any) => {
+        this.riesgo = res.riesgo;
+        this.nivel = res.nivel;
+      });
+  }
+
+  formatFechaLocal(date: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 }
 

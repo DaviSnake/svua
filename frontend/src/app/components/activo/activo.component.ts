@@ -90,7 +90,9 @@ export class ActivoComponent implements OnInit {
       proveedorId: [null, Validators.required],
       proveedorNombre: [''],
       empresaId: [null, Validators.required],
-      activo: [false] // 👈 checkbox
+      estadoActual: [''],
+
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -199,6 +201,7 @@ export class ActivoComponent implements OnInit {
       proveedorId: activo.proveedor.id,
       proveedorNombre: activo.proveedor.nombre,
       empresaId: activo.empresa.id,
+      estadoActual: activo.estadoActual,
     });
 
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
@@ -252,6 +255,7 @@ export class ActivoComponent implements OnInit {
               });
 
               this.cargarActivos(); // 🔄 refrescar tabla
+              this.resetForm();
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -290,12 +294,71 @@ export class ActivoComponent implements OnInit {
     }
   }
 
-  confirmarEliminar(id: number) {
-    this.eliminar(id);
-  }
+  darDeBaja(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dará de baja al activo',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, actualizar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
 
-  eliminar(id: number) {
-    this.activoService.delete(id).subscribe(() => this.cargarActivos());
+        Swal.fire({
+          title: 'Dar de Baja',
+          input: 'textarea',
+          inputLabel: 'Motivo de la baja',
+          inputPlaceholder: 'Escribe el motivo...',
+          showCancelButton: true,
+
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+
+          confirmButtonColor: '#3b82f6',
+          cancelButtonColor: '#64748b',
+
+          buttonsStyling: true, // 🔥 IMPORTANTE
+
+          inputValidator: (value) => {
+            if (!value || value.trim().length < 3) {
+              return 'Debes ingresar un motivo válido';
+            }
+            return null;
+          }
+        }).then((result) => {
+
+          // ❌ Canceló → volver atrás
+        if (!result.isConfirmed) {
+          return;
+        }
+
+        const motivo = result.value?.trim();
+
+          // ✅ Llamar backend
+        this.activoService.darDeBaja(id, motivo)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Baja activo',
+                text: 'El activo se dio de baja',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarActivos(); // 🔄 refrescar tabla
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo dar de baja al activo'
+              });
+            }
+          });
+        });        
+      }
+    });
   }
 
   abrirModalActivo(activo: any) {
@@ -316,6 +379,7 @@ export class ActivoComponent implements OnInit {
       vidaUtilMeses: activo.vidaUtilMeses,
       ubicacionNombre: activo.ubicacion.nombre,
       proveedorNombre: activo.proveedor.nombre,
+      estadoActual: activo.estadoActual,
     });
     this.activoForm.get('codigoInterno')?.disable(); // 🔥 aquí
     this.activoForm.get('nombre')?.disable(); // 🔥 aquí
@@ -330,7 +394,10 @@ export class ActivoComponent implements OnInit {
     this.activoForm.get('vidaUtilMeses')?.disable(); // 🔥 aquí
     this.activoForm.get('ubicacionNombre')?.disable(); // 🔥 aquí
     this.activoForm.get('proveedorNombre')?.disable(); // 🔥 aquí
+    this.activoForm.get('estadoActual')?.disable(); // 🔥 aquí
   }
+
+  
 
   cerrarModal() {
     this.mostrarModalActivo = false;

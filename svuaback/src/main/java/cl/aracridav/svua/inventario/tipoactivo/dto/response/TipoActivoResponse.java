@@ -11,6 +11,7 @@ public class TipoActivoResponse {
     private String nombre;
     private String descripcion;
     private Integer vidaUtilReferencialMeses;
+    private Boolean activo;
     private Empresa empresa;
 
 }

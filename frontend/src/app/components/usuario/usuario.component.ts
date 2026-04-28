@@ -73,6 +73,7 @@ export class UsuarioComponent implements OnInit {
       nombre: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.minLength(6)],
+      confirmarPassword: ['', Validators.minLength(6)],
       empresaId: [null, Validators.required],
       empresaNombre: [null],
       rol: ['USUARIO', Validators.required],
@@ -123,6 +124,17 @@ export class UsuarioComponent implements OnInit {
     }
 
     const usuario: Usuario = this.usuarioForm.value;
+
+    if (usuario.password !== this.usuarioForm.value.confirmarPassword){
+      Swal.fire({
+        title: 'Validación',
+        text: 'Los Password deben coincidir',
+        icon: 'error',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      return;
+    }
 
     if (this.editando && this.usuarioEditandoId !== null) {
       // EDITAR

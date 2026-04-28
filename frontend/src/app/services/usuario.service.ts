@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Usuario } from '../model/usuario';
 import { Page } from '../shared/page';
 import { environment } from '../../environments/environment';
+import { PerfilUsuario } from '../model/perfilUsuario';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,10 @@ export class UsuarioService {
 
   getAll(page = 0, size = 3): Observable<Page<Usuario>> {
     return this.http.get<Page<Usuario>>(`${this.apiUrl}/usuarios?page=${page}&size=${size}?page=0&size=3&sort=nombre,asc`);
+  }
+
+  getPerfilUsurio(): Observable<PerfilUsuario> {
+    return this.http.get<PerfilUsuario>(`${this.apiUrl}/usuarios/perfilUsuario`);
   }
 
   create(usuario: Usuario): Observable<Usuario> {

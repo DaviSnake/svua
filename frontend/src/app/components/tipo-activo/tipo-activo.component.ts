@@ -58,7 +58,7 @@ export class TipoActivoComponent implements OnInit {
       vidaUtilReferencialMeses: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       empresaId: [null, Validators.required],
       empresa: [''],
-      activo: [false] // 👈 checkbox
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -69,8 +69,12 @@ export class TipoActivoComponent implements OnInit {
         this.totalPages = data.totalPages;
         this.totalElements = data.totalElements;
       },
-      error: () => {
-        console.log("error");
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.error?.error || 'Error desconocido'
+        });
       }
     });
   }
@@ -133,6 +137,7 @@ export class TipoActivoComponent implements OnInit {
               });
 
               this.cargarTipoActivos(); // 🔄 refrescar tabla
+              this.nuevo();
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -203,8 +208,41 @@ export class TipoActivoComponent implements OnInit {
   
     }
   
-    confirmarEliminar(id: number) {
-      //this.eliminar(id);
-    }
+  eliminar(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dejará inactivo el tipo de activo',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+
+        // ✅ Llamar backend
+        this.tipoActivoService.delete(id)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminar',
+                text: 'El tipo de activo se eliminó correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarTipoActivos(); // 🔄 refrescar tabla
+              this.nuevo();
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo dar de baja al activo'
+              });
+            }
+          });       
+      }
+    });
+  }
 
 }

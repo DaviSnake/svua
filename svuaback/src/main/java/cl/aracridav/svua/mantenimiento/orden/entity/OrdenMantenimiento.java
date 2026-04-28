@@ -32,6 +32,12 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "fecha_ejecucion")
     private LocalDateTime fechaEjecucion;
 
+    @Column(name = "fecha_fin_ejecucion")
+    private LocalDateTime fechaFinEjecucion;
+
+    @Column(name = "duracion_segundos")
+    private Long duracionSegundos;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_mantenimiento", nullable = false)
     private TipoMantenimiento tipoMantenimiento;
@@ -49,13 +55,33 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(length = 255)
     private String observaciones;
 
+    @Column(name = "ruta_archivo")
+    private String rutaArchivo;
+
+    // 🔥 NUEVO: quién ejecuta (inicia)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_ejecucion")
+    private Usuario usuarioEjecucion;
+
+    // 🔥 NUEVO: quién finaliza (detiene o cancela)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_finalizacion")
+    private Usuario usuarioFinalizacion;
+
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
     private List<OrdenRepuesto> repuestosUtilizados;
+
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Archivo> archivos;
+
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrdenReprogramacion> reprogramaciones;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_activo", nullable = false, updatable = false)
     private Activo activo;
 
+    // 👇 este usuario ahora representa el creador de la orden
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
     private Usuario usuario;

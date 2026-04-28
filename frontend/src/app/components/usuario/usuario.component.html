@@ -13,6 +13,8 @@
               <input type="email" placeholder="Email" formControlName="email" />
               @if (!editando) {
                   <input type="password" placeholder="Password" formControlName="password" />
+
+                  <input type="password" placeholder="Confirmar Password" formControlName="confirmarPassword" />
               }
             
               <select formControlName="rol">
@@ -31,12 +33,12 @@
                 {{ editando ? 'Actualizar' : 'Guardar' }}
               </button>
               @if (editando) {
-                <button (click)="abrirModalPassword(usuarioSeleccionado)">
+                <button type="button" (click)="abrirModalPassword(usuarioSeleccionado)">
                   Cambiar Password
                 </button>
               }
               @if (mostrarNuevo) {
-                <button (click)="nuevo()">
+                <button type="button" (click)="nuevo()">
                   Nuevo
                 </button>
               }

@@ -12,6 +12,9 @@ import { TipoActivoComponent } from './components/tipo-activo/tipo-activo.compon
 import { ProveedorComponent } from './components/proveedor/proveedor.component';
 import { BodegaComponent } from './components/bodega/bodega.component';
 import { RepuestoComponent } from './components/repuesto/repuesto.component';
+import { CargaMasivaComponent } from './components/carga-masiva/carga-masiva.component';
+import { PerfilUsuarioComponent } from './components/perfil-usuario/perfil-usuario.component';
+import { ConfiguracionComponent } from './components/configuracion/configuracion.component';
 
 export const routes: Routes = [
     {
@@ -127,6 +130,39 @@ export const routes: Routes = [
             {
                 path: 'usuario',
                 component: UsuarioComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'configuracion',
+                component: ConfiguracionComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'perfilUsuario',
+                component: PerfilUsuarioComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'cargaMasiva',
+                component: CargaMasivaComponent
             }
         ]
     },

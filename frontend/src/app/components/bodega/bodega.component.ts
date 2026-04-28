@@ -57,7 +57,7 @@ export class BodegaComponent implements OnInit {
       ubicacionFisica: ['', Validators.required],
       empresaId: [null, Validators.required],
       empresa: [''],
-      activo: [false] // 👈 checkbox
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -148,7 +148,7 @@ export class BodegaComponent implements OnInit {
       // CREAR
       this.bodegaService.create(bodega).subscribe({
         next: () => {
-          this.resetForm();
+          this.nuevo();
           this.cargarBodegas();
 
           Swal.fire({
@@ -199,8 +199,41 @@ export class BodegaComponent implements OnInit {
     }  
   }
 
-  confirmarEliminar(id: number) {
-    //this.eliminar(id);
+  eliminar(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dejará inactivo la bodega',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+
+        // ✅ Llamar backend
+        this.bodegaService.delete(id)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminar',
+                text: 'La bodega se eliminó correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarBodegas(); // 🔄 refrescar tabla
+              this.nuevo();
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar la bodega'
+              });
+            }
+          });       
+      }
+    });
   }
 
 }

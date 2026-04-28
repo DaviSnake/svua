@@ -14,13 +14,16 @@ export class LoginComponent {
 
   showPassword = false;
 
-  loginData = {
-    email: 'admin@admin.com',
-    password: 'Admin123*'
-  };
+  //email = 'admin@admin.com';
+  //password = 'Admin123*';
 
-  email = 'admin@admin.com';
-  password = 'Admin123*';
+  email = 'admin@empresademo.cl';
+  password = 'Admin12345';
+
+  loginData = {
+    email: this.email,
+    password: this.password
+  };
 
   authService = inject(AuthService)
   router = inject(Router);

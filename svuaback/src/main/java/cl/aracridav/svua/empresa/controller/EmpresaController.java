@@ -31,7 +31,7 @@ public class EmpresaController {
 
     private final EmpresaService empresaService;
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @PostMapping
     public ResponseEntity<EmpresaResponse> crear(
             @RequestBody CreateEmpresaRequest request) {
@@ -45,7 +45,7 @@ public class EmpresaController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('EMPRESA_VIEW'))"
     )
     @GetMapping
@@ -59,7 +59,7 @@ public class EmpresaController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('EMPRESA_UPDATE') and " +
         "#empresaId == authentication.principal.empresaId)"
     )
@@ -74,7 +74,7 @@ public class EmpresaController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @PutMapping("/{empresaId}/plan")
     public ResponseEntity<EmpresaResponse> actualizarPlan(
             @PathVariable Long empresaId,
@@ -93,7 +93,7 @@ public class EmpresaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @PostMapping("/onboarding")
     public ResponseEntity<EmpresaResponse> crearConAdmin(
             @RequestBody CreateEmpresaWithAdminRequest request) {
@@ -106,7 +106,7 @@ public class EmpresaController {
                 .body(response);
     }
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @PostMapping("/onboardinglogueado")
     public ResponseEntity<AuthResponse> onboarding(
             @RequestBody CreateEmpresaWithAdminRequest request, HttpServletRequest httpRequest) {

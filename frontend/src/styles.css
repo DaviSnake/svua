@@ -1,4 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css'; /* ✅ PRIMERO */
+
 :root {
   --color-bg: #0f172a;
   --color-surface: #111827;
@@ -9,4 +11,23 @@
 
   --shadow-soft: 0 10px 30px rgba(0,0,0,0.25);
   --radius: 14px;
+}
+
+/* 🔥 FIX AUTOCOMPLETE EN MODAL CUSTOM */
+.cdk-overlay-container {
+  position: fixed !important;
+  z-index: 99999 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 99999 !important;
+}
+
+.mat-mdc-autocomplete-panel {
+  z-index: 99999 !important;
+}
+
+.modal {
+  position: relative;
+  z-index: 1001;
 }

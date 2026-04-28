@@ -11,21 +11,22 @@
     <div class="card-section">
       <h3>Datos de la Empresa</h3>
 
-      <input placeholder="Nombre" formControlName="nombre">
-      <input placeholder="RUT" formControlName="rut">
-      <input placeholder="Email contacto" formControlName="emailContacto">
-      <input placeholder="Teléfono" formControlName="telefono">
+      <input class="span-2" placeholder="Nombre" formControlName="nombre">
+      <input class="span-2" placeholder="RUT" formControlName="rut">
+      <input class="span-2" placeholder="Email contacto" formControlName="emailContacto">
+      <input class="span-2" placeholder="Teléfono" formControlName="telefono">
       <div *ngIf="empresaForm.get('telefono')?.touched && empresaForm.get('telefono')?.invalid">  
         <small *ngIf="empresaForm.get('telefono')?.errors?.['pattern']">
           Solo se permiten números
         </small>
       </div>
-      <input placeholder="Dirección" formControlName="direccion">
+      <input class="span-2" placeholder="Dirección" formControlName="direccion">
 
       <select formControlName="tipoPlan">
         <option value="FREE">FREE</option>
-        <option value="BASIC">BASIC</option>
-        <option value="PRO">PRO</option>
+        <option value="BASICO">BASICO</option>
+        <option value="PROFESIONAL">PROFESIONAL</option>
+        <option value="ENTERPRISE">ENTERPRISE</option>
       </select>
     </div>
 
@@ -34,24 +35,27 @@
     <!-- ========================= -->
     <div class="card-section admin-section">
 
-      <div class="admin-header" (click)="mostrarAdmin = !mostrarAdmin">
-        <h3>👤 Administrador</h3>
-        <span>{{ mostrarAdmin ? '▲' : '▼' }}</span>
-      </div>
-
-      <div *ngIf="mostrarAdmin" class="admin-body">
-
-        <input placeholder="Nombre Administrador" formControlName="adminNombre">
-        <input placeholder="Email Administrador" formControlName="adminEmail">
-        <div class="input-group password-group">
-          <input [type]="showPassword ? 'text' : 'password'"  type="password" placeholder="Password" formControlName="adminPassword">
-          <!-- 👁 toggle -->
-          <span class="eye" (click)="togglePassword()">
-            {{ showPassword ? '🙈' : '👁' }}
-          </span>
+      <div *ngIf="!editando">
+        <div class="admin-header" (click)="onAdminClick();">
+          <h3>👤 Administrador</h3>
+          <span>{{ mostrarAdmin ? '▲' : '▼' }}</span>
         </div>
-
+  
+        <div *ngIf="mostrarAdmin" class="admin-body">
+  
+          <input placeholder="Nombre Administrador" formControlName="adminNombre">
+          <input placeholder="Email Administrador" formControlName="adminEmail">
+          <div class="input-group password-group">
+            <input [type]="showPassword ? 'text' : 'password'"  type="password" placeholder="Password" formControlName="adminPassword">
+            <!-- 👁 toggle -->
+            <span class="eye" (click)="togglePassword()">
+              {{ showPassword ? '🙈' : '👁' }}
+            </span>
+          </div>
+  
+        </div>
       </div>
+
     </div>
 
     <!-- BOTONES -->

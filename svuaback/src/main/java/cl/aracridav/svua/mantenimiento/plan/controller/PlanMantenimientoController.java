@@ -25,7 +25,7 @@ public class PlanMantenimientoController {
     private final PlanMantenimientoService service;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('PLAN_CREATE')) "
     )
     @PostMapping
@@ -36,7 +36,7 @@ public class PlanMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('PLAN_VIEW')) "
     )
     @GetMapping
@@ -45,18 +45,18 @@ public class PlanMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('PLAN_VIEW')) "
     )
     @GetMapping("/{id}")
-    public ResponseEntity<PlanMantenimientoReponse> obtener(
+    public ResponseEntity<List<PlanMantenimientoReponse>> obtener(
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(service.obtener(id));
+        return ResponseEntity.ok(service.obtenerPlanesVencidosEntity());
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('PLAN_DELETE')) "
     )
     @DeleteMapping("/{id}")

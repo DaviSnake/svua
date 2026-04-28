@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import cl.aracridav.svua.auth.dto.request.ChangePasswordRequest;
 import cl.aracridav.svua.usuario.dto.request.RegisterRequest;
 import cl.aracridav.svua.usuario.dto.request.UpdateUsuarioRequest;
+import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
 import cl.aracridav.svua.usuario.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_CREATE')) "
     )
     @PostMapping
@@ -43,7 +44,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_DELETE'))"
     )
     @DeleteMapping("/{usuarioId}")
@@ -57,7 +58,7 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_UPDATE'))"
     )
     @PutMapping("/{usuarioId}")
@@ -83,12 +84,22 @@ public class UsuarioController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('USUARIO_VIEW'))"
     )
     @GetMapping
     public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(Pageable pegable) {
 
         return ResponseEntity.ok(usuarioService.listarUsuarios(pegable));
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('USUARIO_VIEW'))"
+    )
+    @GetMapping("/perfilUsuario")
+    public ResponseEntity<PerfilUsuarioDTO> perfilUsuario() {
+
+        return ResponseEntity.ok(usuarioService.perfilUsuario());
     }
 }

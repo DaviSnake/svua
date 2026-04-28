@@ -7,14 +7,31 @@
     <title>SVUA</title>
 </head>
 <body>
-    <div>
-        <!-- <app-header /> --> 
+    <div class="layout">
+
+      <!-- ☰ botón móvil -->
+      <button class="menu-btn" (click)="toggleSidebar()">
+        ☰
+      </button>
+
+      <!-- overlay oscuro -->
+      <div 
+        class="overlay" 
+        *ngIf="sidebarOpen" 
+        (click)="closeSidebar()">
+      </div>
+
+      <!-- sidebar -->
+      <app-sidebar 
+        class="sidebar"
+        [class.open]="sidebarOpen">
+      </app-sidebar>
+
+      <!-- contenido -->
+      <div class="content">
+        <router-outlet></router-outlet>
+      </div>
+
     </div>
-    <div class="sidebar-padre" #sidebarPadre>
-        <app-sidebar (datoEmitido)="recibirDato($event)" />  
-    </div>
-    <main>
-      <router-outlet />
-    </main>
 </body>
 </html>

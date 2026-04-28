@@ -1,0 +1,36 @@
+# =========================
+# 🏗️ ETAPA 1: BUILD
+# =========================
+FROM maven:FROM maven:3.9.9-eclipse-temurin-21
+
+WORKDIR /app
+
+# Copiamos primero el pom para cachear dependencias
+COPY pom.xml .
+
+RUN mvn dependency:go-offline
+
+# Ahora copiamos el resto del proyecto
+COPY src ./src
+
+# Compilamos el proyecto
+RUN mvn clean package -DskipTests
+
+
+# =========================
+# 🚀 ETAPA 2: RUNTIME
+# =========================
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
+
+WORKDIR /app
+
+# Copiamos el jar generado desde la etapa anterior
+COPY --from=builder /app/target/*.jar app.jar
+
+# Seguridad: no correr como root
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -10,6 +10,7 @@ public class BodegaResponse {
     private Long id;
     private String nombre;
     private String ubicacionFisica;
+    private Boolean activo;
     private EmpresaDTO empresa;
 
 }

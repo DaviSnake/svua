@@ -1,0 +1,59 @@
+<div class="perfil-wrapper" *ngIf="perfil">
+
+  <!-- 🔥 Título -->
+  <!-- 🔥 Header PRO -->
+  <div class="header">
+    <div>
+      <h1>Perfil de usuario</h1>
+      <p>Información general de tu cuenta</p>
+    </div>
+
+    <button class="btn-back" routerLink="/inicio/dashboard">
+      ← Volver
+    </button>
+  </div>
+
+  <div class="perfil-container">
+
+    <div class="card usuario">
+
+      <div class="user-info">
+
+        <!-- 🔥 Avatar -->
+        <img 
+          class="avatar"
+          [src]="'https://ui-avatars.com/api/?name=' + perfil.nombre"
+        />
+
+        <!-- Info -->
+        <div class="info">
+          <h2>{{ perfil.nombre }}</h2>
+          <p>{{ perfil.email }}</p>
+
+          <div class="badges">
+            <span class="badge rol">{{ perfil.rol }}</span>
+
+            <span class="badge estado" [class.activo]="perfil.activo">
+              {{ perfil.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="card empresa">
+      <h3>Empresa</h3>
+      <p><strong>{{ perfil.empresaNombre }}</strong></p>
+      <p>Rut: {{ perfil.empresaRut }}</p>
+
+      <div class="plan">
+        <span>Plan: {{ perfil.plan }}</span>
+        <small>  Vence: {{ perfil.fechaFinPlan | date }}</small>
+      </div>
+    </div>
+
+  </div>
+
+</div>

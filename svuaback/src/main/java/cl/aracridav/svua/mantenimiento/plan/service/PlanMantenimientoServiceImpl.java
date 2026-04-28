@@ -1,11 +1,11 @@
 package cl.aracridav.svua.mantenimiento.plan.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
@@ -21,7 +21,6 @@ import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoReposito
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 
@@ -34,20 +33,153 @@ public class PlanMantenimientoServiceImpl implements PlanMantenimientoService {
     private final ActivoRepository activoRepository;
     private final OrdenMantenimientoRepository ordenRepository;
     private final EmpresaRepository empresaRepository;
-    private final GeneralMapper generalMapper;
+    private final GeneralMapper mapper;
 
+    /*
+     * =========================================
+     * CREAR
+     * =========================================
+     */
     @Override
     public PlanMantenimientoReponse crear(PlanMantenimientoCreateRequest request) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        Empresa empresa = obtenerEmpresaActual();
+        Activo activo = obtenerActivo(request.getActivoId());
 
-        Activo activo = activoRepository.findById(request.getActivoId())
-                .orElseThrow(() -> new BusinessException("Activo no encontrado"));
+        PlanMantenimiento plan = construirPlan(request, empresa, activo);
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+        return mapper.mapPlanMantenimientotoResponse(repository.save(plan));
+    }
+
+    /*
+     * =========================================
+     * ACTUALIZAR
+     * =========================================
+     */
+    @Override
+    public PlanMantenimientoReponse actualizar(Long id, PlanMantenimientoCreateRequest request) {
+
+        PlanMantenimiento plan = obtenerPlan(id);
+
+        plan.setTipoMantenimiento(request.getTipoMantenimiento());
+        plan.setFrecuenciaDias(request.getFrecuenciaDias());
+        plan.setDescripcion(request.getDescripcion());
+
+        return mapper.mapPlanMantenimientotoResponse(repository.save(plan));
+    }
+
+    /*
+     * =========================================
+     * DESACTIVAR
+     * =========================================
+     */
+    @Override
+    public void desactivar(Long id) {
+
+        PlanMantenimiento plan = obtenerPlan(id);
+        plan.setEstaActivo(false);
+
+        repository.save(plan);
+    }
+
+    /*
+     * =========================================
+     * LISTAR
+     * =========================================
+     */
+    @Override
+    public List<PlanMantenimientoReponse> listar() {
+
+        return repository.findByEmpresaId(SecurityUtils.getEmpresaId())
+                .stream()
+                .map(mapper::mapPlanMantenimientotoResponse)
+                .toList();
+    }
+
+    /*
+     * =========================================
+     * PLANES VENCIDOS (ENTIDAD)
+     * =========================================
+     */
+    @Transactional(readOnly = true)
+    public List<PlanMantenimientoReponse> obtenerPlanesVencidosEntity() {
+
+        return repository
+                .findByEstaActivoTrueAndProximaEjecucionLessThanEqual(LocalDateTime.now());
+    }
+
+    /*
+     * =========================================
+     * SCHEDULER
+     * =========================================
+     */
+    @Override
+    @Transactional
+    public void procesarPlanesVencidos() {
+
+        List<PlanMantenimientoReponse> planes = obtenerPlanesVencidosEntity();
+
+        for (PlanMantenimientoReponse plan : planes) {
+
+            if (existeOrdenPendiente(plan)) continue;
+
+            crearOrdenPreventiva(plan);
+            actualizarPlan(plan);
+        }
+    }
+
+    /*
+     * =========================================
+     * CORE
+     * =========================================
+     */
+
+    private boolean existeOrdenPendiente(PlanMantenimientoReponse plan) {
+
+        return ordenRepository.existsByActivoIdAndEstado(
+                plan.getActivoId(),
+                EstadoOrden.PENDIENTE
+        );
+    }
+
+    private void crearOrdenPreventiva(PlanMantenimientoReponse plan) {
+
+        OrdenMantenimiento orden = new OrdenMantenimiento();
+        Activo activo = obtenerActivo(plan.getActivoId());
+
+        orden.setActivo(activo);
+        orden.setFechaProgramada(LocalDateTime.now());
+        orden.setTipoMantenimiento(plan.getTipoMantenimiento());
+        orden.setEstado(EstadoOrden.PENDIENTE);
+        orden.setCosto(BigDecimal.ZERO);
+
+        ordenRepository.save(orden);
+    }
+
+    private void actualizarPlan(PlanMantenimientoReponse plan) {
+
+        PlanMantenimiento planAct = obtenerPlan(plan.getId());
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        planAct.setUltimaEjecucion(ahora);
+        planAct.setProximaEjecucion(ahora.plusDays(planAct.getFrecuenciaDias()));
+
+        repository.save(planAct);
+    }
+
+    /*
+     * =========================================
+     * BUILDER
+     * =========================================
+     */
+    private PlanMantenimiento construirPlan(
+            PlanMantenimientoCreateRequest request,
+            Empresa empresa,
+            Activo activo) {
 
         PlanMantenimiento plan = new PlanMantenimiento();
+
         plan.setTipoMantenimiento(request.getTipoMantenimiento());
         plan.setFrecuenciaDias(request.getFrecuenciaDias());
         plan.setDescripcion(request.getDescripcion());
@@ -57,116 +189,27 @@ public class PlanMantenimientoServiceImpl implements PlanMantenimientoService {
         plan.setEmpresa(empresa);
         plan.setActivo(activo);
 
-        PlanMantenimiento planGuardado = repository.save(plan);
-
-        return generalMapper.mapPlanMantenimientotoResponse(planGuardado);
+        return plan;
     }
 
-    @Override
-    public PlanMantenimientoReponse actualizar(Long id, PlanMantenimientoCreateRequest request) {
-
-        PlanMantenimiento plan = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("Plan no encontrado"));
-
-        plan.setTipoMantenimiento(request.getTipoMantenimiento());
-        plan.setFrecuenciaDias(request.getFrecuenciaDias());
-        plan.setDescripcion(request.getDescripcion());
-
-        PlanMantenimiento planGuardado = repository.save(plan);
-
-        return generalMapper.mapPlanMantenimientotoResponse(planGuardado);
-    }
-
-    @Override
-    public void desactivar(Long id) {
-
-        PlanMantenimiento plan = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("Plan no encontrado"));
-
-        plan.setEstaActivo(false);
-        repository.save(plan);
-    }
-
-    public PlanMantenimientoReponse obtener(Long id) {
-
-        PlanMantenimiento entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
-
-        return generalMapper.mapPlanMantenimientotoResponse(entity);
-    }
-
-    public List<PlanMantenimientoReponse> listar() {
-
-        Long empresaId = SecurityUtils.getEmpresaId();
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
-
-        return repository.findByEmpresaId(empresa.getId())
-                .stream()
-                .map(generalMapper::mapPlanMantenimientotoResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional
-    public List<PlanMantenimientoReponse> obtenerPlanesVencidos() {
-        
-        return repository.findByEstaActivoTrueAndProximaEjecucionLessThanEqual(LocalDate.now())
-            .stream()
-            .map(generalMapper::mapPlanMantenimientotoResponse)
-            .toList();
-    }
-    
-    /**
-     * Método que será usado por un Scheduler
+    /*
+     * =========================================
+     * HELPERS
+     * =========================================
      */
-    @Override
-    public void procesarPlanesVencidos() {
 
-        List<PlanMantenimientoReponse> planesVencidos = obtenerPlanesVencidos();
-
-        for (PlanMantenimientoReponse plan : planesVencidos) {
-
-            // 🔎 Verificar que no exista orden pendiente
-            boolean existeOrdenPendiente = ordenRepository
-                    .existsByActivoIdAndEstado(
-                            plan.getActivoId(),
-                            EstadoOrden.PENDIENTE
-                    );
-
-            if (existeOrdenPendiente) {
-                continue; // Evita duplicar órdenes
-            }
-
-            Activo activo = activoRepository.findById(plan.getActivoId())
-                .orElseThrow(() -> new BusinessException("Activo no encontrado"));
-
-            // 🛠 Crear orden preventiva automática
-            OrdenMantenimiento orden = new OrdenMantenimiento();
-            orden.setActivo(activo);
-            orden.setFechaProgramada(LocalDateTime.now());
-            orden.setTipoMantenimiento(plan.getTipoMantenimiento());
-            orden.setEstado(EstadoOrden.PENDIENTE);
-            orden.setCosto(BigDecimal.ZERO);
-
-            ordenRepository.save(orden);
-
-            // 📅 Actualizar fechas del plan
-            plan.setUltimaEjecucion(LocalDateTime.now());
-            plan.setProximaEjecucion(LocalDateTime.now().plusDays(plan.getFrecuenciaDias()));
-
-            PlanMantenimiento planAGuardar = new PlanMantenimiento();
-            planAGuardar.setTipoMantenimiento(plan.getTipoMantenimiento());
-            planAGuardar.setFrecuenciaDias(plan.getFrecuenciaDias());
-            planAGuardar.setDescripcion(plan.getDescripcion());
-            planAGuardar.setEstaActivo(plan.getEstaActivo());
-            planAGuardar.setUltimaEjecucion(plan.getProximaEjecucion());
-            planAGuardar.setProximaEjecucion(LocalDateTime.now().plusDays(plan.getFrecuenciaDias()));
-            planAGuardar.setActivo(activo);
-
-            repository.save(planAGuardar);
-        }
+    private Empresa obtenerEmpresaActual() {
+        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
+    private Activo obtenerActivo(Long id) {
+        return activoRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Activo no encontrado"));
+    }
+
+    private PlanMantenimiento obtenerPlan(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new BusinessException("Plan no encontrado"));
+    }
 }

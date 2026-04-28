@@ -11,9 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.request.ReprogramarOrdenRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.service.OrdenMantenimientoService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +30,7 @@ public class OrdenMantenimientoController {
     private final OrdenMantenimientoService service;
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_CREATE')) "
     )
     @PostMapping
@@ -39,7 +43,7 @@ public class OrdenMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_VIEW')) "
     )
     @GetMapping
@@ -48,7 +52,7 @@ public class OrdenMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasRole('SUPER_ADMIN') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
         "(hasAuthority('ORDEN_MANT_UPDATE')) "
     )
     @PutMapping("/{ordenId}")
@@ -56,6 +60,42 @@ public class OrdenMantenimientoController {
         @PathVariable Long ordenId,
         @RequestBody OrdenMantenimientoRequest request) {
         return ResponseEntity.ok(service.actualizarOrden(ordenId, request));
+    }
+
+    @PutMapping("/{id}/ejecutar")
+    public ResponseEntity<OrdenEjecucionResponse> ejecutarOrden(@PathVariable Long id) {
+
+        OrdenEjecucionResponse orden = service.ejecutarOrden(id);
+
+        return ResponseEntity.ok(orden);
+    }
+
+    @PutMapping("/{id}/detener")
+    public ResponseEntity<OrdenEjecucionResponse> detenerOrden(@PathVariable Long id) {
+
+        OrdenEjecucionResponse orden = service.detenerOrden(id);
+
+        return ResponseEntity.ok(orden);
+    }
+
+    @PostMapping("/{id}/detenerConArchivo")
+    public ResponseEntity<Void> detener(
+            @PathVariable Long id,
+            @RequestParam("archivo") MultipartFile archivo) {
+
+        service.detenerOrden(id, archivo);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/reprogramar")
+    public ResponseEntity<OrdenMantenimientoResponse> reprogramarOrden(
+            @PathVariable Long id,
+            @RequestBody ReprogramarOrdenRequest request
+    ) {
+        return ResponseEntity.ok(
+            service.reprogramarOrden(id, request.getNuevaFecha(), request.getMotivo())
+        );
     }
 
 }

@@ -60,7 +60,7 @@ export class RepuestoComponent implements OnInit {
       stockMinimo: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       empresaId: [null, Validators.required],
       empresa: [''],
-      activo: [false] // 👈 checkbox
+      activo: [true] // 👈 checkbox
     });
   }
 
@@ -135,6 +135,7 @@ export class RepuestoComponent implements OnInit {
               });
 
               this.cargarRepuestos(); // 🔄 refrescar tabla
+              this.nuevo();
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -151,7 +152,7 @@ export class RepuestoComponent implements OnInit {
       // CREAR
       this.repuestoService.create(repuesto).subscribe({
         next: () => {
-          this.resetForm();
+          this.nuevo();
           this.cargarRepuestos();
 
           Swal.fire({
@@ -205,8 +206,41 @@ export class RepuestoComponent implements OnInit {
     }  
   }
 
-  confirmarEliminar(id: number) {
-    //this.eliminar(id);
+  eliminar(id: number) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción dejará inactivo el repuesto',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+
+        // ✅ Llamar backend
+        this.repuestoService.delete(id)
+          .subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminar',
+                text: 'El repuesto se eliminó correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.cargarRepuestos(); // 🔄 refrescar tabla
+              this.nuevo();
+            },
+            error: () => {    
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar el repuesto'
+              });
+            }
+          });       
+      }
+    });
   }
 
 }
