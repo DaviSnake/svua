@@ -30,6 +30,10 @@ export class OrdenMantencionService {
     return this.http.put<OrdenResponse>(`${this.apiUrl}/ordenes-mantenimiento/${id}/detener`, {});
   }
 
+  detenerConArchivo(id: number, formData: FormData) {
+    return this.http.post(`${this.apiUrl}/ordenes-mantenimiento/${id}/detenerConArchivo`, formData);
+  }
+
   actualizar(id: number, ordenMantencion: OrdenMantencion) {
     return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}`, ordenMantencion);
   }

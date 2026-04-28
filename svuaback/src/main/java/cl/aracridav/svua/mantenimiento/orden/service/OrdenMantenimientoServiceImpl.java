@@ -1,6 +1,11 @@
 package cl.aracridav.svua.mantenimiento.orden.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,6 +13,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
@@ -66,6 +73,23 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     @Override
     public OrdenEjecucionResponse detenerOrden(Long idOrden) {
         return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.COMPLETADA);
+    }
+
+    @Override
+    @Transactional
+    public OrdenEjecucionResponse detenerOrden(Long id, MultipartFile archivo) {
+
+        validarArchivo(archivo);
+
+        OrdenMantenimiento orden = obtenerOrden(id);
+
+        // 🔥 guardamos el archivo ANTES del cambio de estado
+        String ruta = guardarArchivoSeguro(archivo, orden.getId());
+
+        orden.setRutaArchivo(ruta);
+
+        // 🔥 reutilizamos CORE
+        return cambiarEstado(orden, EstadoOrden.COMPLETADA);
     }
 
     @Override
@@ -255,6 +279,32 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setUsuarioFinalizacion(getUsuarioActual());
     }
 
+    private String guardarArchivoSeguro(MultipartFile archivo, Long ordenId) {
+
+        try {
+            String carpetaBase = "uploads/mantenimientos/";
+
+            Path carpeta = Paths.get(carpetaBase);
+
+            if (!Files.exists(carpeta)) {
+                Files.createDirectories(carpeta);
+            }
+
+            String nombreLimpio = StringUtils.cleanPath(archivo.getOriginalFilename());
+
+            String nombreArchivo = ordenId + "_" + System.currentTimeMillis() + "_" + nombreLimpio;
+
+            Path ruta = carpeta.resolve(nombreArchivo);
+
+            Files.copy(archivo.getInputStream(), ruta, StandardCopyOption.REPLACE_EXISTING);
+
+            return ruta.toString();
+
+        } catch (IOException e) {
+            throw new BusinessException("Error al guardar archivo");
+        }
+    }
+
     private void calcularDuracion(OrdenMantenimiento orden) {
 
         LocalDateTime ahora = LocalDateTime.now();
@@ -267,6 +317,17 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         orden.setDuracionSegundos(duracion);
     }
+
+    private void validarArchivo(MultipartFile archivo) {
+
+    if (archivo == null || archivo.isEmpty()) {
+        throw new BusinessException("Debe adjuntar un archivo");
+    }
+
+    if (archivo.getSize() > 5 * 1024 * 1024) {
+        throw new BusinessException("Archivo supera 5MB");
+    }
+}
 
     /*
      * =========================================

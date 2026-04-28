@@ -445,7 +445,7 @@ export class CalendarioComponent implements OnInit {
   toggleMantencion() {
     const id = this.eventoSeleccionadoId;
     if (this.estadoOrden === 'EN_EJECUCION') {
-      this.detenerMantencion(id);
+      this.confirmarDetencionConArchivo(id);
     } else {
       this.iniciarMantencion(id);
     }
@@ -461,12 +461,12 @@ export class CalendarioComponent implements OnInit {
         this.cargarEventos();
         this.cerrar();
       },
-      error: () => {
+      error: (err) => {
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'error',
-          title: 'No se pudo iniciar',
+          title: `No se pudo iniciar: ${err.error.error}`,
           showConfirmButton: false,
           timer: 2500
         });
@@ -493,6 +493,63 @@ export class CalendarioComponent implements OnInit {
           timer: 2500
         });
       }
+    });
+  }
+
+  detenerMantencionConArchivo(id: number, archivo: File) {
+
+  const formData = new FormData();
+  formData.append('archivo', archivo);
+
+  this.ordenMantencionService.detenerConArchivo(id, formData)
+    .subscribe({
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Mantención detenida',
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+        console.log('Detenido OK');
+        this.cargarEventos();
+        this.cerrar();
+      },
+      error: (err: { error: { message: any; }; }) => {
+        Swal.fire({
+          icon: 'error',
+          title: err.error?.message || 'Error al detener'
+        });
+      }
+    });
+}
+
+  confirmarDetencionConArchivo(id: number) {
+    Swal.fire({
+      title: 'Ingrese dcto de chequeo de mantención',
+      html: `
+        <input type="file" id="fileInput" class="swal2-file" />
+      `,
+      confirmButtonText: 'Guardar',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const input = document.getElementById('fileInput') as HTMLInputElement;
+
+        if (!input || !input.files || input.files.length === 0) {
+          Swal.showValidationMessage('Debes subir un archivo');
+          return false;
+        }
+
+        return input.files[0]; // 🔥 devolvemos el archivo
+      }
+    }).then((result) => {
+
+      if (!result.isConfirmed) return;
+
+      const archivo: File = result.value;
+
+      this.detenerMantencionConArchivo(id, archivo);
     });
   }
 

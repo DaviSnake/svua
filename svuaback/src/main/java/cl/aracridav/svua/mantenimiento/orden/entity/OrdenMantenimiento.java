@@ -55,6 +55,9 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(length = 255)
     private String observaciones;
 
+    @Column(name = "ruta_archivo")
+    private String rutaArchivo;
+
     // 🔥 NUEVO: quién ejecuta (inicia)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_ejecucion")
@@ -72,7 +75,7 @@ public class OrdenMantenimiento extends BaseEntity {
     private List<Archivo> archivos;
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
-private List<OrdenReprogramacion> reprogramaciones;
+    private List<OrdenReprogramacion> reprogramaciones;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_activo", nullable = false, updatable = false)

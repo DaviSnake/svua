@@ -191,6 +191,8 @@ export class EmpresaComponent implements OnInit {
     this.editando = false;
     this.loading = false;
     this.empresaEditandoId = null;
+    this.flag = 0;
+    this.onAdminClick();
   }
 
   togglePassword() {
@@ -202,7 +204,7 @@ export class EmpresaComponent implements OnInit {
     const adminNombre = this.empresaForm.get('adminNombre');
     const adminEmail = this.empresaForm.get('adminEmail');
     const adminPassword = this.empresaForm.get('adminPassword');
-    this.mostrarAdmin = !this.mostrarAdmin;
+    //this.mostrarAdmin = !this.mostrarAdmin;
     if (this.mostrarAdmin) {
       this.flag = 1;
       adminNombre?.setValidators([Validators.required]);

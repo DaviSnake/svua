@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-dominio.com/api/v1/svua'
+  apiUrl: 'http://localhost:8080/api/v1/svua'
 };

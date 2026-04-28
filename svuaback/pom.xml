@@ -5,12 +5,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>cl.aracridav.svua</groupId>
 	<artifactId>svuaback</artifactId>
 	<version>0.0.1</version>
+	 <!-- 👇 AQUÍ VA -->
+    <packaging>jar</packaging>
 	<name>svuaback</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
