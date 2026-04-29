@@ -18,8 +18,8 @@ export class LayoutComponent {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        localStorage.removeItem('token'); // limpiar token
-        localStorage.removeItem('refreshToken'); // limpiar refreshToken
+        sessionStorage.removeItem('token'); // limpiar token
+        sessionStorage.removeItem('refreshToken'); // limpiar refreshToken
         console.log("Logout exitoso");
         this.router.navigateByUrl('/login');
       },

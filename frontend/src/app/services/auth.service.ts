@@ -24,7 +24,7 @@ export class AuthService {
   }
 
   getUserRole(): string | null {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) return null;
 
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -36,7 +36,7 @@ export class AuthService {
   }
 
   startRefreshTimer() {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     if (!token) return;
 
@@ -49,7 +49,7 @@ export class AuthService {
   }
 
   setUserFromToken() {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     if (!token) return;
 
@@ -71,26 +71,26 @@ export class AuthService {
   }
 
   guardarToken(token: string) {
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('token', token);
   }
 
   guardarRefreshToken(refreshToken: string) {
-    localStorage.setItem('refreshToken', refreshToken);
+    sessionStorage.setItem('refreshToken', refreshToken);
   }
 
   getToken() {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   }
 
   getRefreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = sessionStorage.getItem('refreshToken');
 
     this.http.post<any>(`${this.apiUrl}/auth/refresh`, {
       refreshToken
     }).subscribe({
       next: (res) => {
-        localStorage.setItem('token', res.accessToken);
-        localStorage.setItem('refreshToken', res.refreshToken);
+        sessionStorage.setItem('token', res.accessToken);
+        sessionStorage.setItem('refreshToken', res.refreshToken);
         this.init();
 
         // 🔁 reiniciar timer
@@ -111,7 +111,7 @@ export class AuthService {
   }
 
   getUser() {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     if (!token) return null;
 

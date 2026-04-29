@@ -8,6 +8,6 @@ bootstrapApplication(AppComponent, {
   ...appConfig,
   providers: [
     ...(appConfig.providers || []),
-    provideAnimations(), provideAnimationsAsync() // 🔥 CLAVE
+    provideAnimations(), provideAnimationsAsync(), provideAnimationsAsync() // 🔥 CLAVE
   ]
 }).catch((err) => console.error(err));
