@@ -3,6 +3,8 @@ export interface OrdenMantencion {
   titulo?: string;
   observaciones?: string;
   fechaProgramada?: string;
+  fechaTermino?: string;
+  duracionMinutos?: string;
   end?: string;
   estado?: string;
   tipoMantenimiento?: string;

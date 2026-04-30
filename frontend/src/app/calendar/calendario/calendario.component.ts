@@ -103,6 +103,7 @@ export class CalendarioComponent implements OnInit {
       observaciones: [''],
       lugar: [''],
       estado: [''],
+      duracionMinutos: [''],
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
       tipoMantenimiento: [null, Validators.required]
@@ -129,6 +130,7 @@ export class CalendarioComponent implements OnInit {
         id: ordenMantencion.id?.toString(),
         title: ordenMantencion.titulo,
         start: ordenMantencion.fechaProgramada,
+        end: ordenMantencion.fechaTermino,
 
         // 🎨 color dinámico
         backgroundColor: this.getColorPorEstado(ordenMantencion.estado),
@@ -138,6 +140,7 @@ export class CalendarioComponent implements OnInit {
         extendedProps: {
           estado: ordenMantencion.estado,
           tipoMantenimiento: ordenMantencion.tipoMantenimiento,
+          duracionMinutos: ordenMantencion.duracionMinutos,
           observaciones: ordenMantencion.observaciones,
           costo: ordenMantencion.costo,
           activoId: ordenMantencion.activoId,
@@ -302,6 +305,7 @@ export class CalendarioComponent implements OnInit {
       titulo: info.event.title,
       observaciones: info.event.extendedProps?.observaciones || '',
       estado: this.estadoOrden,
+      duracionMinutos: info.event.extendedProps?.duracionMinutos || '',
       tipoMantenimiento: info.event.extendedProps?.tipoMantenimiento || '',
       fechaHora: fechaLocal
     });
@@ -321,11 +325,12 @@ export class CalendarioComponent implements OnInit {
       return;
     }
 
-    const { titulo, observaciones, activoId, tipoMantenimiento } = this.ordenMantencionForm.value;
+    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos } = this.ordenMantencionForm.value;
 
     const data = {
       titulo,
       fechaProgramada: this.fechaSeleccionada,
+      duracionMinutos,
       tipoMantenimiento,
       estado: "PROGRAMADA",
       observaciones,

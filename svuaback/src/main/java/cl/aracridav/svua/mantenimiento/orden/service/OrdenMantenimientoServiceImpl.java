@@ -422,6 +422,13 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         orden.setTitulo(req.getTitulo());
         orden.setFechaProgramada(req.getFechaProgramada());
+
+        // 🔥 AQUÍ agregas la lógica
+        if (req.getFechaProgramada() != null) {
+            LocalDateTime fechaTermino = req.getFechaProgramada().plusMinutes(req.getDuracionMinutos());
+            orden.setFechaTermino(fechaTermino);
+        }
+
         orden.setTipoMantenimiento(req.getTipoMantenimiento());
         orden.setEstado(EstadoOrden.PROGRAMADA);
         orden.setCosto(req.getCosto());

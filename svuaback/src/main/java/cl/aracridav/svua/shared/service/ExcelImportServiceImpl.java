@@ -290,22 +290,25 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             "Fecha u hora inválida"
         );
 
+        Integer duracionMinutos = getInteger(row, 3, "Duración minutos inválido");
+
         TipoMantenimiento tipo = getEnum(
-            row, 3, TipoMantenimiento.class, "Tipo de mantenimiento inválido"
+            row, 4, TipoMantenimiento.class, "Tipo de mantenimiento inválido"
         );
 
         EstadoOrden estado = getEnum(
-            row, 4, EstadoOrden.class, "Estado inválido"
+            row, 5, EstadoOrden.class, "Estado inválido"
         );
 
-        String observaciones = getString(row, 5);
+        String observaciones = getString(row, 6);
 
-        Activo activo = obtenerActivoPorNombre(getRequiredString(row, 6, "Activo requerido"));
-        PlanMantenimiento plan = obtenerPlan(getRequiredLong(row, 7, "Plan requerido"));
+        Activo activo = obtenerActivoPorNombre(getRequiredString(row, 7, "Activo requerido"));
+        PlanMantenimiento plan = obtenerPlan(getRequiredLong(row, 8, "Plan requerido"));
 
         return construirOrden(
             titulo,
             fechaProgramada,
+            duracionMinutos,
             tipo,
             estado,
             observaciones,
@@ -391,6 +394,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private OrdenMantenimiento construirOrden(
         String titulo,
         LocalDateTime fechaProgramada,
+        Integer duracionMinutos,
         TipoMantenimiento tipo,
         EstadoOrden estado,
         String observaciones,

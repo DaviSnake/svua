@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router';
 export class PaginaencontruccionComponent  implements OnInit {
   
   ngOnInit(): void {
-    localStorage.clear();
+    sessionStorage.clear();
   }
 
 }

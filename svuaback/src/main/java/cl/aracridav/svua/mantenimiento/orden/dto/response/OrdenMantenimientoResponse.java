@@ -13,6 +13,8 @@ public class OrdenMantenimientoResponse {
     private Long id;
     private String titulo;
     private LocalDateTime fechaProgramada;
+    private LocalDateTime fechaTermino;
+    private Long duracionMinutos;
     private LocalDateTime fechaEjecucion;
     private TipoMantenimiento tipoMantenimiento;
     private EstadoOrden estado;

@@ -12,6 +12,7 @@ public class OrdenMantenimientoRequest {
 
     private String titulo;
     private LocalDateTime fechaProgramada;
+    private Long duracionMinutos;
     private TipoMantenimiento tipoMantenimiento;
     private EstadoOrden estado;
     private BigDecimal costo;

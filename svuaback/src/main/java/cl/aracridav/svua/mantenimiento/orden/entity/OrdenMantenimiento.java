@@ -29,6 +29,9 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "fecha_programada", nullable = false)
     private LocalDateTime fechaProgramada;
 
+    @Column(name = "fecha_termino", nullable = false)
+    private LocalDateTime fechaTermino;
+
     @Column(name = "fecha_ejecucion")
     private LocalDateTime fechaEjecucion;
 

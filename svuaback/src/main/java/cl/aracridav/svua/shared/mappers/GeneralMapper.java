@@ -1,5 +1,7 @@
 package cl.aracridav.svua.shared.mappers;
 
+import java.time.Duration;
+
 import org.springframework.stereotype.Component;
 
 import cl.aracridav.svua.empresa.dto.response.EmpresaResponse;
@@ -235,6 +237,10 @@ public class GeneralMapper {
     oMantenimientoResponse.setTitulo(oMantenimiento.getTitulo());
     oMantenimientoResponse.setId(oMantenimiento.getId());
     oMantenimientoResponse.setFechaProgramada(oMantenimiento.getFechaProgramada());
+    oMantenimientoResponse.setFechaTermino(oMantenimiento.getFechaTermino());
+    oMantenimientoResponse.setDuracionMinutos(Duration
+        .between(oMantenimiento.getFechaProgramada(), oMantenimiento.getFechaTermino())
+        .toMinutes());
     oMantenimientoResponse.setFechaEjecucion(oMantenimiento.getFechaEjecucion());
     oMantenimientoResponse.setTipoMantenimiento(oMantenimiento.getTipoMantenimiento());
     oMantenimientoResponse.setEstado(oMantenimiento.getEstado());
