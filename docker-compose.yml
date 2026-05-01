@@ -6,6 +6,8 @@ services:
     restart: always
     env_file:
       - .env
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -27,8 +29,8 @@ services:
     environment:
       DB_HOSTNAME: postgres
       DB_PORT: 5432
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     networks:
       - svua_net
 
@@ -38,30 +40,14 @@ services:
     restart: always
     depends_on:
       - backend
-    expose:
-      - "80"
-    networks:
-      - svua_net
-
-  nginx-proxy-manager:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: svua_npm
-    restart: always
     ports:
       - "80:80"
-      - "443:443"
-      - "81:81"   # panel admin
-    volumes:
-      - npm_data:/data
-      - npm_letsencrypt:/etc/letsencrypt
     networks:
       - svua_net
 
 volumes:
   postgres_data:
-  npm_data:
-  npm_letsencrypt:
 
 networks:
   svua_net:
-    name: svua_net
+    name: svua_net   # 👈 CLAVE
