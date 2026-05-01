@@ -69,7 +69,9 @@ public class SecurityConfig {
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", //local
-                                                    "http://localhost") // frontend Angular
+                                                    "http://localhost", // frontend Angular local
+                                                    "http://www.svua.cl" // frontend Angular internet
+                                                ) 
                                 ); 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));

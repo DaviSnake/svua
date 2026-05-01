@@ -14,11 +14,14 @@ export class LoginComponent {
 
   showPassword = false;
 
+  email = '';
+  password = '';
+
   //email = 'admin@admin.com';
   //password = 'Admin123*';
 
-  email = 'admin@empresademo.cl';
-  password = 'Admin12345';
+  //email = 'admin@empresademo.cl';
+  //password = 'Admin12345';
 
   loginData = {
     email: this.email,
