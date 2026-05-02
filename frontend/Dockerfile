@@ -24,6 +24,11 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 👇 TEMPLATE (IMPORTANTE)
 COPY src/assets/env.template.js /usr/share/nginx/html/assets/env.js
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 EXPOSE 80
 
 # 👇 REEMPLAZO DINÁMICO
