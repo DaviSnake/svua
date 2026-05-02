@@ -70,6 +70,10 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data);
   }
 
+  forgotPassword(email: string) {
+  return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
+}
+
   guardarToken(token: string) {
     sessionStorage.setItem('token', token);
   }

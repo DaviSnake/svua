@@ -1,4 +1,6 @@
+import { env } from './env.runtime';
+
 export const environment = {
   production: true,
-  apiUrl: 'http://api.svua.cl/api/v1/svua'
+  apiUrl: env.apiUrl || 'http://localhost:8080/api/v1/svua'
 };

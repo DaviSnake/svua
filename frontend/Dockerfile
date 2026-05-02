@@ -1,9 +1,9 @@
+# -------- BUILD --------
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm install
 
 RUN npm install -g @angular/cli
@@ -12,12 +12,19 @@ COPY . .
 
 RUN ng build
 
+# -------- RUNTIME --------
 FROM nginx:alpine
 
+# Copiar build Angular
 COPY --from=build /app/dist/frontend-svua/browser /usr/share/nginx/html
 
+# Copiar nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 👇 TEMPLATE (IMPORTANTE)
+COPY src/assets/env.template.js /usr/share/nginx/html/assets/env.js
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# 👇 REEMPLAZO DINÁMICO
+CMD ["/bin/sh", "-c", "envsubst < /usr/share/nginx/html/assets/env.js > /usr/share/nginx/html/assets/env.js && nginx -g 'daemon off;'"]

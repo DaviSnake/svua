@@ -1,37 +1,80 @@
-<div class="auth-container">
+<form class="auth-container" (ngSubmit)="login()" #form="ngForm">
 
   <div class="auth-card">
 
-    <h2>Iniciar sesión</h2>
-
-    <div class="input-group">
-      <input 
-        type="email" 
-        required 
-        [(ngModel)]="loginData.email"
-        name="email"
-      >
-      <label>Correo</label>
+    <div class="brand">
+      <div class="logo">S</div>
+      <h2>Bienvenido</h2>
+      <p>Inicia sesión en tu cuenta</p>
     </div>
 
+    <!-- EMAIL -->
+    <div class="input-group">
+      <input 
+        (input)="clearError()"
+        type="email"
+        required
+        email
+        [(ngModel)]="loginData.email"
+        name="email"
+        #emailCtrl="ngModel"
+      >
+      <label>Correo electrónico</label>
+
+      <!-- 👇 ERRORES -->
+      <div class="error" *ngIf="emailCtrl.invalid && emailCtrl.touched">
+        <span *ngIf="emailCtrl.errors?.['required']">
+          El correo es obligatorio
+        </span>
+        <span *ngIf="emailCtrl.errors?.['email']">
+          Formato de correo inválido
+        </span>
+      </div>
+    </div>
+
+    <!-- PASSWORD -->
     <div class="input-group password-group">
       <input 
-        [type]="showPassword ? 'text' : 'password'" 
-        required 
+        (input)="clearError()"
+        [type]="showPassword ? 'text' : 'password'"
+        required
+        minlength="6"
         [(ngModel)]="loginData.password"
         name="password"
+        #passCtrl="ngModel"
       >
       <label>Contraseña</label>
 
-      <!-- 👁 toggle -->
       <span class="eye" (click)="togglePassword()">
         {{ showPassword ? '🙈' : '👁' }}
       </span>
+
+      <!-- 👇 ERRORES -->
+      <div class="error" *ngIf="passCtrl.invalid && passCtrl.touched">
+        <span *ngIf="passCtrl.errors?.['required']">
+          La contraseña es obligatoria
+        </span>
+        <span *ngIf="passCtrl.errors?.['minlength']">
+          Mínimo 6 caracteres
+        </span>
+      </div>
     </div>
 
-    <button (click)="login()">Entrar</button>
+    <!-- ERROR GLOBAL (backend) -->
+    <div class="error global" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
+    <button type="submit" [disabled]="form.invalid">
+      Entrar
+    </button>
+
+    <div class="extra">
+      <span (click)="goToForgotPassword()">
+        ¿Olvidaste tu contraseña?
+      </span>
+    </div>
 
   </div>
 
-</div>
+</form>
