@@ -8,6 +8,8 @@ import cl.aracridav.svua.usuario.dto.request.RegisterRequest;
 import cl.aracridav.svua.usuario.dto.request.UpdateUsuarioRequest;
 import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
+import cl.aracridav.svua.usuario.entity.PasswordResetToken;
+import cl.aracridav.svua.usuario.entity.Usuario;
 
 public interface UsuarioService {
     
@@ -22,5 +24,11 @@ public interface UsuarioService {
     public Page<UsuarioResponse> listarUsuarios(Pageable pageable);
     
     public PerfilUsuarioDTO perfilUsuario();
+
+    public String createToken(Usuario user);
+
+    public PasswordResetToken validateToken(String token);
+
+    public void resetPassword(String token, String newPassword);
 
 }

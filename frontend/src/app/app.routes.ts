@@ -16,6 +16,7 @@ import { CargaMasivaComponent } from './components/carga-masiva/carga-masiva.com
 import { PerfilUsuarioComponent } from './components/perfil-usuario/perfil-usuario.component';
 import { ConfiguracionComponent } from './components/configuracion/configuracion.component';
 import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 
 export const routes: Routes = [
     {
@@ -26,6 +27,9 @@ export const routes: Routes = [
     },
     { 
         path: 'forgot-password', component: ForgotPasswordComponent 
+    },
+    { 
+        path: 'reset-password', component: ResetPasswordComponent 
     },
     {
         path: 'inicio',

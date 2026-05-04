@@ -1,6 +1,8 @@
 package cl.aracridav.svua.usuario.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,7 +24,9 @@ import cl.aracridav.svua.usuario.dto.request.RegisterRequest;
 import cl.aracridav.svua.usuario.dto.request.UpdateUsuarioRequest;
 import cl.aracridav.svua.usuario.dto.response.PerfilUsuarioDTO;
 import cl.aracridav.svua.usuario.dto.response.UsuarioResponse;
+import cl.aracridav.svua.usuario.entity.PasswordResetToken;
 import cl.aracridav.svua.usuario.entity.Usuario;
+import cl.aracridav.svua.usuario.repository.PasswordResetTokenRepository;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +37,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
+    private final PasswordResetTokenRepository tokenRepo;
     private final PasswordEncoder passwordEncoder;
     private final GeneralMapper generalMapper;
     private final SecurityService securityService;
@@ -110,6 +115,66 @@ public class UsuarioServiceImpl implements UsuarioService {
         );
 
         usuarioRepository.save(usuario);
+    }
+
+    // ===============================
+    // CREAR TOKEN
+    // ===============================
+    @Override
+    public String createToken(Usuario user) {
+
+        tokenRepo.deleteByUser(user);
+
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+        resetToken.setEmpresa(user.getEmpresa());
+
+        tokenRepo.save(resetToken);
+
+        return token;
+    }
+
+    // ===============================
+    // VALIDAR TOKEN
+    // ===============================
+    @Override
+    public PasswordResetToken validateToken(String token) {
+
+        PasswordResetToken t = tokenRepo.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Token inválido"));
+
+        if (t.isUsed()) {
+            throw new RuntimeException("Token ya utilizado");
+        }
+
+        if (t.getExpiryDate().isBefore(LocalDateTime.now())) {
+            tokenRepo.delete(t);
+            throw new RuntimeException("Token expirado");
+        }
+
+        return t;
+    }
+
+    // ===============================
+    // RESETEAR PASSWORD
+    // ===============================
+    @Override
+    public void resetPassword(String token, String newPassword) {
+
+        PasswordResetToken t = validateToken(token);
+
+        Usuario user = t.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        usuarioRepository.save(user);
+
+        // 🔥 invalidar token
+        t.setUsed(true);
+        tokenRepo.save(t);
     }
 
     // ===============================

@@ -5,6 +5,7 @@ import { LoginResponse } from '../auth/models/login-response';
 import { jwtDecode } from 'jwt-decode';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { EmailResetRequest } from '../auth/models/email-reset-request';
 
 @Injectable({
   providedIn: 'root'
@@ -70,9 +71,9 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data);
   }
 
-  forgotPassword(email: string) {
-  return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
-}
+  forgotPassword(data: EmailResetRequest) {
+    return this.http.post<any>(`${this.apiUrl}/auth/request-reset`, data );
+  }
 
   guardarToken(token: string) {
     sessionStorage.setItem('token', token);
@@ -104,6 +105,14 @@ export class AuthService {
         this.logout();
       }
     });
+  }
+
+  validateToken(token: string) {
+    return this.http.get(`${this.apiUrl}/auth/validate-token?token=${token}`);
+  }
+
+  resetPassword(token: string, password: string) {
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, password });
   }
 
   logout() {

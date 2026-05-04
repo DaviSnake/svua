@@ -2,7 +2,9 @@ package cl.aracridav.svua.auth.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,13 +12,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import cl.aracridav.svua.auth.dto.request.EmailResetRequest;
 import cl.aracridav.svua.auth.dto.request.LoginRequest;
 import cl.aracridav.svua.auth.dto.request.RefreshTokenRequest;
+import cl.aracridav.svua.auth.dto.request.ResetPasswordRequest;
 import cl.aracridav.svua.auth.dto.response.AuthLoginResponse;
 import cl.aracridav.svua.auth.entity.RefreshToken;
 import cl.aracridav.svua.auth.repository.RefreshTokenRepository;
@@ -28,8 +34,10 @@ import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.shared.constants.AppConstants;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.exception.InvalidRefreshTokenException;
+import cl.aracridav.svua.shared.service.EmailService;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
+import cl.aracridav.svua.usuario.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -41,10 +49,15 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final EmailService emailService;
+    private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmpresaRepository empresaRepository;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl; // 👈 AQUÍ, fuera del método
 
     @PostMapping("/login")
     public AuthLoginResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
@@ -186,6 +199,41 @@ public class AuthController {
 
         usuarioRepository.save(usuario);
     }
+
+    @PostMapping("/request-reset")
+    public ResponseEntity<?> requestReset(@RequestBody EmailResetRequest request,
+                                        HttpServletRequest httpRequest) {
+
+
+        Usuario user = usuarioRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String token = usuarioService.createToken(user);
+
+        String link = frontendUrl + "/reset-password?token=" + token;
+
+        emailService.sendResetEmail(request.getEmail(), link);
+
+        return ResponseEntity.ok(Map.of("message", "Correo enviado"));
+    }
+
+    @GetMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestParam String token) {
+
+        usuarioService.validateToken(token);
+
+        return ResponseEntity.ok(Map.of("message", "Token válido"));
+    }
+
+    // 3️⃣ Cambiar contraseña
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+
+        usuarioService.resetPassword(request.getToken(), request.getPassword());
+
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada"));
+    }
+
 
     private void verificarDesbloqueoAutomatico(Usuario usuario) {
 

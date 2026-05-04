@@ -28,12 +28,26 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    this.authService.forgotPassword(this.email).subscribe({
-      next: () => {
-        this.errorMessage = 'Revisa tu correo 📩';
+    const data = {
+      email: this.email
+    };
+
+    this.authService.forgotPassword(data).subscribe({
+      next: (res: any) => {
+        this.message = res.message || 'Revisa tu correo 📩';
+        this.errorMessage = '';
+
+        this.message = 'Correo enviado 📩';
+
+        setTimeout(() => {
+          this.goBack();
+        }, 3000);
       },
-      error: () => {
-        this.errorMessage = 'Error al enviar el correo';
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Error al enviar correo';
+        this.message = '';
+
+        setTimeout(() => this.errorMessage = '', 4000);
       }
     });
   }
