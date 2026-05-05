@@ -38,8 +38,8 @@ services:
     build: ./frontend
     container_name: svua_frontend
     restart: always
-    environment:
-      - API_URL=http://api.svua.cl/api/v1/svua
+    env_file:
+      - .env
     depends_on:
       - backend
     ports:
