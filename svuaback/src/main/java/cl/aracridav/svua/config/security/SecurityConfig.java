@@ -71,7 +71,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", //local
                                                     "http://localhost", // frontend Angular local
                                                     "http://www.svua.cl", // frontend Angular internet
-                                                    "http://157.173.112.68" // frontend Angular IP
+                                                    "https://svua.cl", // frontend Angular internet
+                                                    "https://157.173.112.68" // frontend Angular IP
                                                 ) 
                                 ); 
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
