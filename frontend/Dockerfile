@@ -18,9 +18,6 @@ FROM nginx:alpine
 # Copiar build Angular
 COPY --from=build /app/dist/frontend-svua/browser /usr/share/nginx/html
 
-# Copiar nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # 👇 TEMPLATE (IMPORTANTE)
 COPY src/assets/env.template.js /usr/share/nginx/html/assets/env.js
 
