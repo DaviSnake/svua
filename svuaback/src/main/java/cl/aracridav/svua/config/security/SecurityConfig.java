@@ -70,7 +70,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:4200", //local
                                                     "http://localhost", // frontend Angular local
-                                                    "http://www.svua.cl", // frontend Angular internet
+                                                    "https://www.svua.cl", // frontend Angular internet
                                                     "https://svua.cl", // frontend Angular internet
                                                     "https://157.173.112.68" // frontend Angular IP
                                                 ) 
