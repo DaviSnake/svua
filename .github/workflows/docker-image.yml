@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /davisneke/svua
+            cd /svua
             git pull origin master
             docker compose down
             docker compose up -d --build
