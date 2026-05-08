@@ -10,18 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+
           script: |
-            cd svua/
-            git pull origin master
+
+            APP_DIR=svua/
+            
+            echo "📁 Verificando proyecto..."
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "🚀 Primera instalación"
+
+              git clone git@github.com:DaviSnake/svua.git $APP_DIR
+            else
+              echo "🔄 Actualizando proyecto"
+
+              cd $APP_DIR
+              git pull origin master
+            fi
+
+            cd $APP_DIR
+
+            echo "🐳 Levantando Docker"
+
             docker compose down
             docker compose up -d --build
+
+            echo "✅ Deploy completado"
