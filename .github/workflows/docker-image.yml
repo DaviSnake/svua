@@ -36,7 +36,6 @@ jobs:
               cd $APP_DIR
               git fetch origin
               git reset --hard origin/master
-              git clean -fd
             fi
 
             cd $APP_DIR
