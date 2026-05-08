@@ -43,11 +43,10 @@ jobs:
 
             docker compose down
             docker compose up -d --build      
-
-            pwd     
+   
 
             echo "✅ Valida si existe certificado SSL "
-            if [ ! -f "/certbot/conf/live/svua.cl/fullchain.pem" ]; then
+            if [ ! -f "certbot/conf/live/svua.cl/fullchain.pem" ]; then
             echo "🔐 Generando SSL..."
 
               docker compose run --rm --entrypoint certbot certbot certonly \
