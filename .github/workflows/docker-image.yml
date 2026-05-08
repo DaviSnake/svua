@@ -66,6 +66,7 @@ jobs:
 
             echo "✅ Valida si existe certificado SSL "
             if [ ! -f "certbot/conf/renewal/svua.cl.conf" ]; then
+            
             echo "🔐 Generando SSL..."
 
               docker compose run --rm --entrypoint certbot certbot certonly \
