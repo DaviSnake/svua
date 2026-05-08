@@ -42,9 +42,9 @@ jobs:
             if [ ! -f ".env" ]; then
 
               echo "Creando .env"
-              cat > .env <<EOF
-              POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-              EOF
+            cat > .env <<EOF
+            POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            EOF
 
             else
               echo ".env ya existe"
