@@ -34,7 +34,9 @@ jobs:
               echo "🔄 Actualizando proyecto"
 
               cd $APP_DIR
-              git pull origin master
+              git fetch origin
+              git reset --hard origin/master
+              git clean -fd
             fi
 
             cd $APP_DIR
@@ -66,7 +68,7 @@ jobs:
 
             echo "✅ Valida si existe certificado SSL "
             if [ ! -f "certbot/conf/renewal/svua.cl.conf" ]; then
-            
+
             echo "🔐 Generando SSL..."
 
               docker compose run --rm --entrypoint certbot certbot certonly \
