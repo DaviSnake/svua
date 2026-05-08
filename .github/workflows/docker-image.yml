@@ -22,7 +22,7 @@ jobs:
 
           script: |
 
-            APP_DIR=svua/
+            APP_DIR=/home/davisnake/svua
             
             echo "📁 Verificando proyecto..."
 
