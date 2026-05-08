@@ -42,13 +42,10 @@ jobs:
             echo "🐳 Levantando Docker"
 
             docker compose down
-            docker compose up -d --build
-
-            echo "✅ Entrar al contenedor"
-            docker exec -it svua_frontend sh            
+            docker compose up -d --build           
 
             echo "✅ Valida si existe certificado SSL "
-            if [ ! -f "/etc/letsencrypt/live/svua.cl/fullchain.pem" ]; then
+            if [ ! -f "/certbot/conf/live/svua.cl/fullchain.pem" ]; then
             echo "🔐 Generando SSL..."
 
               docker compose run --rm --entrypoint certbot certbot certonly \
@@ -61,8 +58,5 @@ jobs:
             else
               echo "✅ SSL ya existe"
             fi
-
-            echo "✅ Salir del contenedor"
-            exit
 
             echo "✅ Deploy completado"
