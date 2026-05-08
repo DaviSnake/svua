@@ -39,6 +39,15 @@ jobs:
 
             cd $APP_DIR
 
+            if [ ! -f ".env" ]; then
+
+              echo "No existe"
+
+            else
+              echo "existe"
+
+            fi
+
             echo "🐳 Levantando Docker"
 
             docker compose down
