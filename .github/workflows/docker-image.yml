@@ -39,25 +39,6 @@ jobs:
 
             cd $APP_DIR
 
-            if [ ! -f ".env" ]; then
-              echo "📝 Creando .env"
-
-              cat > .env <<EOF
-              POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-              POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-              POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-              POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-              POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
-
-              JWT_SECRET=${{ secrets.JWT_SECRET }}
-
-              FRONTEND_URL=${{ secrets.FRONTEND_URL }}
-              API_URL=${{ secrets.API_URL }}
-              EOF
-
-              echo "✅ .env creado"
-            fi
-
             echo "🐳 Levantando Docker"
 
             docker compose down
