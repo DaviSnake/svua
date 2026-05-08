@@ -42,7 +42,9 @@ jobs:
             echo "🐳 Levantando Docker"
 
             docker compose down
-            docker compose up -d --build           
+            docker compose up -d --build      
+
+            pwd     
 
             echo "✅ Valida si existe certificado SSL "
             if [ ! -f "/certbot/conf/live/svua.cl/fullchain.pem" ]; then
