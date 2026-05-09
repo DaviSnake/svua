@@ -63,22 +63,5 @@ jobs:
 
             docker compose down
             docker compose up -d --build      
-   
-
-            echo "✅ Valida si existe certificado SSL "
-            if [ ! -f "certbot/conf/renewal/svua.cl.conf" ]; then
-
-            echo "🔐 Generando SSL..."
-
-              docker compose run --rm --entrypoint certbot certbot certonly \
-                --webroot \
-                --webroot-path=/var/www/certbot \
-                -d www.svua.cl -d svua.cl -d api.svua.cl \
-                --email dmedina.c@hotmail.com \
-                --agree-tos \
-                --no-eff-email
-            else
-              echo "✅ SSL ya existe"
-            fi
 
             echo "✅ Deploy completado"
