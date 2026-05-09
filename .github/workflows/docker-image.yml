@@ -2,10 +2,10 @@ name: Deploy SaaS
 
 on:
   # Deshabilitar WorkFlow
-  #workflow_dispatch:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+  #push:
+    #branches:
+      #- master
 
 jobs:
   deploy:
