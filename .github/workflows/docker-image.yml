@@ -68,7 +68,7 @@ jobs:
    
 
             echo "✅ Valida si existe certificado SSL "
-            if [ ! -f "certbot/conf/renewal/svua.cl.conf" ]; then
+            if [ ! -f "certbot/conf/renewal/www.svua.cl.conf" ]; then
 
             echo "🔐 Generando SSL..."
 
