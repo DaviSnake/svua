@@ -30,6 +30,8 @@ jobs:
               echo "🚀 Primera instalación"
 
               git clone git@github.com:DaviSnake/svua.git $APP_DIR
+
+              mkdir -p certbot/www certbot/conf
             else
               echo "🔄 Actualizando proyecto"
 
