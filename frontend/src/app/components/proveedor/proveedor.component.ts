@@ -62,6 +62,7 @@ export class ProveedorComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       empresa: [''],
       empresaId: [null, Validators.required],
+      tipoProveedor: [null, Validators.required],
       activo: [true] // 👈 checkbox
     });
   }
@@ -207,6 +208,7 @@ export class ProveedorComponent implements OnInit {
       email: proveedor.email,
       empresa: proveedor.empresa.nombre,
       empresaId: proveedor.empresa.id,
+      tipoProveedor: proveedor.tipoProveedor,
       activo: proveedor.activo
     });
 

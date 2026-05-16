@@ -1,6 +1,7 @@
 package cl.aracridav.svua.proveedor.dto.response;
 
-import cl.aracridav.svua.empresa.entity.Empresa;
+import cl.aracridav.svua.proveedor.entity.TipoProveedor;
+import cl.aracridav.svua.shared.dto.response.EmpresaDTO;
 import lombok.*;
 
 @Data
@@ -14,6 +15,7 @@ public class ProveedorResponse {
     private String telefono;
     private String email;
     private Boolean activo;
-    private Empresa empresa;
+    private TipoProveedor tipoProveedor;
+    private EmpresaDTO empresa;
 
 }

@@ -226,6 +226,22 @@ export class ActivoComponent implements OnInit {
     }
     const activo: Activo = this.activoForm.value;
 
+    const body = {
+      codigoInterno: activo.codigoInterno,
+      nombre: activo.nombre,
+      descripcion: activo.descripcion,
+      tipoActivoId: this.activoForm.value.tipoActivoId,
+      marca: activo.marca,
+      modelo: activo.modelo,
+      numeroSerie: activo.numeroSerie,
+      fechaAdquisicion: activo.fechaAdquisicion,
+      valorAdquisicion: activo.valorAdquisicion,
+      valorResidual: activo.valorResidual,
+      vidaUtilMeses: activo.vidaUtilMeses,
+      ubicacionId: this.activoForm.value.ubicacionId,
+      proveedorId: this.activoForm.value.proveedorId 
+    };
+
     if (this.editando && this.activoEditandoId !== null) {
       // EDITAR
       Swal.fire({
@@ -271,7 +287,7 @@ export class ActivoComponent implements OnInit {
       });
     } else {
       // CREAR
-      this.activoService.create(activo).subscribe({
+      this.activoService.create(body).subscribe({
         next: () => {
           this.resetForm();
           this.cargarActivos();

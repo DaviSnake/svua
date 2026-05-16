@@ -77,6 +77,15 @@ public class GeneralMapper {
   }
 
   public TipoActivoResponse mapTipoActivoResponse (TipoActivo tipoActivo){
+
+    EmpresaDTO empresaDTO = EmpresaDTO.builder()
+      .id(tipoActivo.getEmpresa().getId())
+      .rut(tipoActivo.getEmpresa().getRut())
+      .nombre(tipoActivo.getEmpresa().getNombre())
+      .telefono(tipoActivo.getEmpresa().getTelefono())
+      .emailContacto(tipoActivo.getEmpresa().getEmailContacto())
+      .tipoPlan(tipoActivo.getEmpresa().getTipoPlan())
+      .build();
       
     return TipoActivoResponse.builder()
       .id(tipoActivo.getId())
@@ -84,11 +93,20 @@ public class GeneralMapper {
       .descripcion(tipoActivo.getDescripcion())
       .vidaUtilReferencialMeses(tipoActivo.getVidaUtilReferencialMeses())
       .activo(tipoActivo.getActivo())
-      .empresa(tipoActivo.getEmpresa())
+      .empresa(empresaDTO)
       .build();
   }
 
   public UbicacionResponse mapUbicacionResponse (Ubicacion ubicacion){
+
+    EmpresaDTO empresaDTO = EmpresaDTO.builder()
+      .id(ubicacion.getEmpresa().getId())
+      .rut(ubicacion.getEmpresa().getRut())
+      .nombre(ubicacion.getEmpresa().getNombre())
+      .telefono(ubicacion.getEmpresa().getTelefono())
+      .emailContacto(ubicacion.getEmpresa().getEmailContacto())
+      .tipoPlan(ubicacion.getEmpresa().getTipoPlan())
+      .build();
       
     return UbicacionResponse.builder()
       .id(ubicacion.getId())
@@ -96,11 +114,20 @@ public class GeneralMapper {
       .descripcion(ubicacion.getDescripcion())
       .direccion(ubicacion.getDireccion())
       .activo(ubicacion.getActivo())
-      .empresa(ubicacion.getEmpresa())
+      .empresa(empresaDTO)
       .build();
   }
 
   public ProveedorResponse mapProeedorResponse (Proveedor proveedor){
+
+    EmpresaDTO empresaDTO = EmpresaDTO.builder()
+      .id(proveedor.getEmpresa().getId())
+      .rut(proveedor.getEmpresa().getRut())
+      .nombre(proveedor.getEmpresa().getNombre())
+      .telefono(proveedor.getEmpresa().getTelefono())
+      .emailContacto(proveedor.getEmpresa().getEmailContacto())
+      .tipoPlan(proveedor.getEmpresa().getTipoPlan())
+      .build();
       
     return ProveedorResponse.builder()
       .id(proveedor.getId())
@@ -110,7 +137,8 @@ public class GeneralMapper {
       .telefono(proveedor.getTelefono())
       .email(proveedor.getEmail())
       .activo(proveedor.getActivo())
-      .empresa(proveedor.getEmpresa())
+      .tipoProveedor(proveedor.getTipoProveedor())
+      .empresa(empresaDTO)
       .build();
   }
 

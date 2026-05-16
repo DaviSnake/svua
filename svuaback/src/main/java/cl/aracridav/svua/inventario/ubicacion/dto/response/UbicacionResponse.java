@@ -1,6 +1,6 @@
 package cl.aracridav.svua.inventario.ubicacion.dto.response;
 
-import cl.aracridav.svua.empresa.entity.Empresa;
+import cl.aracridav.svua.shared.dto.response.EmpresaDTO;
 import lombok.*;
 
 @Data
@@ -12,6 +12,6 @@ public class UbicacionResponse {
     private String descripcion;
     private String direccion;
     private Boolean activo;
-    private Empresa empresa;
+    private EmpresaDTO empresa;
 
 }

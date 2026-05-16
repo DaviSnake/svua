@@ -17,7 +17,7 @@ export class ActivoService {
     return this.http.get<Page<Activo>>(`${this.apiUrl}/activos?page=${page}&size=${size}?page=0&size=3&sort=nombre,asc`);
   }
 
-  create(activo: Activo): Observable<Activo> {
+  create(activo: any): Observable<Activo> {
     return this.http.post<Activo>(`${this.apiUrl}/activos`, activo);
   }
 

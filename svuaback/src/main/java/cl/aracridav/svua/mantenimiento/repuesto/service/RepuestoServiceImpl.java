@@ -2,6 +2,7 @@ package cl.aracridav.svua.mantenimiento.repuesto.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
@@ -31,7 +32,9 @@ public class RepuestoServiceImpl implements RepuestoService {
     @Override
     public RepuestoResponse crear(RepuestoRequest request) {
 
-        Empresa empresa = obtenerEmpresaActual();
+        Long empresaId = resolveEmpresaId(request.getEmpresaId());
+
+        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         validarCodigoUnico(request.getCodigo(), empresa, null);
 
@@ -48,10 +51,24 @@ public class RepuestoServiceImpl implements RepuestoService {
     @Override
     public Page<RepuestoResponse> listarRepuestos(Pageable pageable) {
 
-        Empresa empresa = obtenerEmpresaActual();
+        Page<RepuestoResponse> RepuestoResponse = null;
 
-        return repository.findByEmpresa(empresa, pageable)
+        Long empresaId = resolveEmpresaId(null);
+
+        Empresa empresa = obtenerEmpresaActual(empresaId);
+
+        if (esSuperAdmin()) {
+            RepuestoResponse =  repository.findAll(pageable)
                 .map(mapper::mapRepuestoResponse);
+        }
+
+        if (esAdminEmpresa()) {
+            RepuestoResponse = repository.findByEmpresa(empresa, pageable)
+                    .map(mapper::mapRepuestoResponse);
+        }
+
+        return RepuestoResponse;
+
     }
 
     /*
@@ -103,8 +120,8 @@ public class RepuestoServiceImpl implements RepuestoService {
      * =========================================
      */
 
-    private Empresa obtenerEmpresaActual() {
-        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
@@ -127,6 +144,24 @@ public class RepuestoServiceImpl implements RepuestoService {
                 throw new BusinessException("El código ya existe");
             }
         }
+    }
+
+    private Long resolveEmpresaId(Long requestEmpresaId) {
+        return requestEmpresaId != null
+                ? requestEmpresaId
+                : SecurityUtils.getEmpresaId();
+    }
+
+    private boolean esSuperAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    private boolean esAdminEmpresa() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA"));
     }
 
     private Repuesto construirRepuesto(RepuestoRequest request, Empresa empresa) {

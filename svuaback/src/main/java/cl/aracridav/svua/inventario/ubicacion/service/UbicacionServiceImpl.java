@@ -1,10 +1,8 @@
 package cl.aracridav.svua.inventario.ubicacion.service;
 
-import java.util.Arrays;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,8 +34,8 @@ public class UbicacionServiceImpl implements UbicacionService {
      */
     @Override
     public UbicacionResponse registrarUbicacion(UbicacionCreateRequest request) {
-
-        Empresa empresa = obtenerEmpresaActual();
+        
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRequest(request);
         validarDuplicado(request.getNombre(), empresa.getId());
@@ -57,7 +55,7 @@ public class UbicacionServiceImpl implements UbicacionService {
     public UbicacionResponse obtener(Long id) {
 
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(ubicacion.getEmpresa().getId());
 
         validarPerteneceEmpresa(ubicacion, empresa.getId());
 
@@ -72,8 +70,9 @@ public class UbicacionServiceImpl implements UbicacionService {
     @Override
     public UbicacionResponse actualizar(Long id, UbicacionCreateRequest request) {
 
+
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarPerteneceEmpresa(ubicacion, empresa.getId());
         validarRequest(request);
@@ -105,7 +104,7 @@ public class UbicacionServiceImpl implements UbicacionService {
     public void eliminar(Long id) {
 
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(ubicacion.getEmpresa().getId());
 
         validarPerteneceEmpresa(ubicacion, empresa.getId());
 
@@ -123,18 +122,22 @@ public class UbicacionServiceImpl implements UbicacionService {
     @Transactional(readOnly = true)
     public Page<UbicacionResponse> listarUbicaciones(Pageable pageable) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Page<Ubicacion> ubicaciones = null;
 
-        Page<Ubicacion> ubicaciones;
+        Boolean esAdmin = false;
 
-        if (tieneRol(auth, "ROLE_SUPER_ADMIN")) {
+        if (esSuperAdmin()) {
             ubicaciones = repository.findAll(pageable);
+            esAdmin = true;
+        }
 
-        } else if (tieneRol(auth, "ROLE_ADMIN_EMPRESA")) {
+        if (esAdminEmpresa()) {
             ubicaciones = repository.findByEmpresaId(
-                    SecurityUtils.getEmpresaId(), pageable);
+                SecurityUtils.getEmpresaId(), pageable);
+            esAdmin = true;
+        }
 
-        } else {
+        if (!esAdmin){
             throw new BusinessException("No tienes permisos para ver ubicaciones");
         }
 
@@ -196,13 +199,22 @@ public class UbicacionServiceImpl implements UbicacionService {
                 .orElseThrow(() -> new BusinessException("Ubicación no encontrada"));
     }
 
-    private Empresa obtenerEmpresaActual() {
-        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
-    private boolean tieneRol(Authentication auth, String... roles) {
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> Arrays.asList(roles).contains(a.getAuthority()));
+    
+
+    private boolean esSuperAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    private boolean esAdminEmpresa() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA"));
     }
 }

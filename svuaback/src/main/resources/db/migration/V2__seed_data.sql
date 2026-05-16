@@ -73,7 +73,7 @@ INSERT INTO usuario (
 VALUES (
     1,
     true,
-    'dmedina.c@hotmail.com',
+    'dmedinac@gmail.com',
     0,
     'Admin Sistema',
     '$2a$10$17S4rbARxF6h48a9O/nfPOWYctDmfB1NiM4HOY/q5RLc0PGrwhVva',
@@ -93,7 +93,7 @@ INSERT INTO usuario (
 VALUES (
     2,
     true,
-    'mvega@fhalimentos.cl',
+    'contacto@svua.cl',
     'Mauricio Vega',
     '$2a$10$ST6UM3qrY8g3U5QuhAVZV.Wlfmfut6qB0e/.R.A5mebeVz2fhDrFq',
     'ADMIN_EMPRESA',

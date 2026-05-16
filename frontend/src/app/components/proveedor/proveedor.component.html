@@ -28,6 +28,13 @@
             <input type="email" placeholder="Email" formControlName="email" />
           </div>
           <div class="form-group">
+            <select formControlName="tipoProveedor">
+              <option [ngValue]="null" disabled>Seleccione tipo proveedor</option>
+              <option value="INTERNO">INTERNO</option>
+              <option value="EXTERNO">EXTERNO</option>
+            </select>
+          </div>
+          <div class="form-group">
             <select formControlName="empresaId">
               <option [ngValue]="null" disabled>Seleccione una empresa</option>
               <option *ngFor="let empresa of empresas" [value]="empresa.id">

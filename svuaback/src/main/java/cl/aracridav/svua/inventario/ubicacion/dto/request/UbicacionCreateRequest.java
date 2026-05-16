@@ -8,5 +8,6 @@ public class UbicacionCreateRequest {
     private String nombre;
     private String descripcion;
     private String direccion;
+    private Long empresaId;
 
 }

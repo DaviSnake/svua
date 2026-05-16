@@ -113,9 +113,16 @@ export class SidebarComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout().subscribe(() => {
-      sessionStorage.clear();
-      this.router.navigate(['/login']);
+   this.authService.logout().subscribe({
+      next: () => {
+        sessionStorage.clear();
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        console.error('Error al cerrar sesión', err);
+        sessionStorage.clear();
+        this.router.navigate(['/login']);
+      }
     });
   }
 }

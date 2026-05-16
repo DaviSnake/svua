@@ -77,7 +77,14 @@ CREATE TABLE proveedor (
     nombre VARCHAR(150) NOT NULL,
     rut VARCHAR(20) NOT NULL UNIQUE,
     telefono VARCHAR(30),
+    tipo_proveedor VARCHAR(30),
     empresa_id BIGINT NOT NULL,
+
+    CONSTRAINT chk_tipo_proveedor
+        CHECK (tipo_proveedor IN (
+            'INTERNO',
+            'EXTERNO'
+        )),
 
     CONSTRAINT fk_proveedor_empresa
         FOREIGN KEY (empresa_id)

@@ -1,10 +1,7 @@
 package cl.aracridav.svua.inventario.tipoactivo.service;
 
-import java.util.Arrays;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +34,7 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     @Override
     public TipoActivoResponse crear(TipoActivoCreateRequest request) {
 
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarNombreUnico(request.getNombre(), empresa.getId());
 
@@ -55,7 +52,7 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     public TipoActivoResponse actualizar(Long id, TipoActivoCreateRequest request) {
 
         TipoActivo tipo = obtenerTipoActivo(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarPerteneceEmpresa(tipo, empresa.getId());
 
@@ -89,8 +86,10 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     @Override
     public void eliminar(Long id) {
 
+        Long empresaId = resolveEmpresaId(null);
+
         TipoActivo tipo = obtenerTipoActivo(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         validarPerteneceEmpresa(tipo, empresa.getId());
 
@@ -108,8 +107,10 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     @Transactional(readOnly = true)
     public TipoActivoResponse obtener(Long id) {
 
+        Long empresaId = resolveEmpresaId(null);
+
         TipoActivo tipo = obtenerTipoActivo(id);
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         validarPerteneceEmpresa(tipo, empresa.getId());
 
@@ -125,17 +126,21 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     @Transactional(readOnly = true)
     public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Page<TipoActivo> tipos = null;
 
-        Page<TipoActivo> tipos;
+        Boolean esAdmin = false;
 
-        if (tieneRol(auth, "ROLE_SUPER_ADMIN")) {
+        if (esSuperAdmin()) {
             tipos = repository.findAll(pageable);
+            esAdmin = true;
+        }
 
-        } else if (tieneRol(auth, "ROLE_ADMIN_EMPRESA")) {
+        if (esAdminEmpresa()) {
             tipos = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
+            esAdmin = true;
+        } 
 
-        } else {
+        if (!esAdmin){
             throw new BusinessException("No tienes permisos para ver tipos activos");
         }
 
@@ -171,8 +176,8 @@ public class TipoActivoServiceImpl implements TipoActivoService {
                 .orElseThrow(() -> new BusinessException("Tipo de activo no encontrado"));
     }
 
-    private Empresa obtenerEmpresaActual() {
-        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById((long) empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
@@ -188,8 +193,21 @@ public class TipoActivoServiceImpl implements TipoActivoService {
         }
     }
 
-    private boolean tieneRol(Authentication auth, String... roles) {
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> Arrays.asList(roles).contains(a.getAuthority()));
+    private Long resolveEmpresaId(Long requestEmpresaId) {
+        return requestEmpresaId != null
+                ? requestEmpresaId
+                : SecurityUtils.getEmpresaId();
+    }
+
+    private boolean esSuperAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    private boolean esAdminEmpresa() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA"));
     }
 }

@@ -37,7 +37,7 @@ public class ProveedorServiceImpl implements ProveedorService {
 
         validarRequest(request);
 
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRutUnico(request.getRut(), empresa.getId());
 
@@ -62,10 +62,8 @@ public class ProveedorServiceImpl implements ProveedorService {
                     .map(mapper::mapProeedorResponse);
         }
 
-        Empresa empresa = obtenerEmpresaActual();
-
         return proveedorRepository
-                .findByEmpresaId(empresa.getId(), pageable)
+                .findByEmpresaId(SecurityUtils.getEmpresaId(), pageable)
                 .map(mapper::mapProeedorResponse);
     }
 
@@ -202,6 +200,7 @@ public class ProveedorServiceImpl implements ProveedorService {
         proveedor.setContacto(request.getContacto());
         proveedor.setTelefono(request.getTelefono());
         proveedor.setEmail(request.getEmail());
+        proveedor.setTipoProveedor(request.getTipoProveedor());
         proveedor.setEmpresa(empresa);
         proveedor.setActivo(true);
 
@@ -228,8 +227,8 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .orElseThrow(() -> new BusinessException("Proveedor no encontrado"));
     }
 
-    private Empresa obtenerEmpresaActual() {
-        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 

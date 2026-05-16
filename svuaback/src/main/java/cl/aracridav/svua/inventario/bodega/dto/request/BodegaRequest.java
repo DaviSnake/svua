@@ -7,5 +7,6 @@ public class BodegaRequest {
 
     private String nombre;
     private String ubicacionFisica;
+    private Long empresaId;
 
 }

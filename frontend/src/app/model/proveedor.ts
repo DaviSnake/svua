@@ -7,6 +7,7 @@ export interface Proveedor {
   contacto: string;
   telefono: string;
   email: string;
+  tipoProveedor: string;
   empresa: Empresa;
   activo: boolean;
 }

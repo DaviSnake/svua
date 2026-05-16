@@ -37,7 +37,7 @@ public class BodegaServiceImpl implements BodegaService {
     @Override
     public BodegaResponse crear(BodegaRequest request) {
 
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRequest(request);
         validarDuplicado(request.getNombre(), empresa.getId());
@@ -205,8 +205,8 @@ public class BodegaServiceImpl implements BodegaService {
                 .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
     }
 
-    private Empresa obtenerEmpresaActual() {
-        return empresaRepository.findById(SecurityUtils.getEmpresaId())
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 

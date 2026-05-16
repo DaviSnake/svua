@@ -39,4 +39,7 @@ public class Proveedor extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean activo;
+
+    @Enumerated(EnumType.STRING)
+    private TipoProveedor tipoProveedor;
 }
