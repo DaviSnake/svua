@@ -16,12 +16,12 @@ VALUES (
     1,
     true,
     'Av. Casa Matriz 1234',
-    'contacto@casamatriz.cl',
+    'contacto@svua.cl',
     NOW(),
     '2036-05-06',
     999,
     999,
-    'Casa Matriz SPA',
+    'SVUA SPA',
     '99.999.999-9',
     '+56912345678',
     'ENTERPRISE'
@@ -73,7 +73,7 @@ INSERT INTO usuario (
 VALUES (
     1,
     true,
-    'dmedinac@gmail.com',
+    'david.medina@svua.cl',
     0,
     'Admin Sistema',
     '$2a$10$17S4rbARxF6h48a9O/nfPOWYctDmfB1NiM4HOY/q5RLc0PGrwhVva',
@@ -93,9 +93,9 @@ INSERT INTO usuario (
 VALUES (
     2,
     true,
-    'contacto@svua.cl',
+    'mvega@fhalimentos.cl',
     'Mauricio Vega',
-    '$2a$10$ST6UM3qrY8g3U5QuhAVZV.Wlfmfut6qB0e/.R.A5mebeVz2fhDrFq',
+    '$2a$10$17S4rbARxF6h48a9O/nfPOWYctDmfB1NiM4HOY/q5RLc0PGrwhVva',
     'ADMIN_EMPRESA',
     2
 );
