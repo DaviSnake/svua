@@ -25,6 +25,7 @@ public class ActivoCreateRequest {
     private Integer vidaUtilMeses;
 
     private EstadoActivo estadoActual;
+    private String cuentaContable;
 
     private Long ubicacionId;
     private Long proveedorId;

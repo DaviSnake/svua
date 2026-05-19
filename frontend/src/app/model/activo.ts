@@ -21,4 +21,5 @@ export interface Activo {
   ubicacion: Ubicacion;
   proveedor: Proveedor;
   activo: boolean;
+  cuentaContable: string;
 }

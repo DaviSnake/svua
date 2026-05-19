@@ -183,6 +183,7 @@ public class GeneralMapper {
       .valorResidual(activo.getValorResidual())
       .vidaUtilMeses(activo.getVidaUtilMeses())
       .estadoActual(activo.getEstadoActual())
+      .cuentaContable(activo.getCuentaContable())
       .tipoActivo(tipoActivoDTO)
       .ubicacion(ubicacionDTO)
       .proveedor(proveedorDTO)

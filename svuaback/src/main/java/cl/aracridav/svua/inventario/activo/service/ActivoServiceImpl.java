@@ -293,6 +293,7 @@ public class ActivoServiceImpl implements ActivoService {
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
         activo.setUbicacion(obtenerUbicacion(req.getUbicacionId()));
         activo.setProveedor(obtenerProveedor(req.getProveedorId()));
+        activo.setCuentaContable(req.getCuentaContable());
         activo.setEmpresa(empresa);
 
         return activo;

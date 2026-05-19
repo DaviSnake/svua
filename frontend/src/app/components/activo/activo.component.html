@@ -58,6 +58,9 @@
             </div>
           </div>
           <div class="form-group">
+            <input type="text" placeholder="Cuenta Contable" formControlName="cuentaContable" />
+          </div>
+          <div class="form-group">
             <select formControlName="ubicacionId">
               <option [ngValue]="null" disabled>Seleccione una ubicación</option>
               <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.id">
@@ -170,6 +173,7 @@
       <input type="text" formControlName="valorAdquisicion" />
       <input type="text" formControlName="valorResidual" />
       <input type="text" formControlName="vidaUtilMeses" />
+      <input type="text" formControlName="cuentaContable" />
       <input type="text" formControlName="ubicacionNombre" />
       <input type="text" formControlName="proveedorNombre" />
       <input type="text" formControlName="estadoActual" />

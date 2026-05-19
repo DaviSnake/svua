@@ -25,6 +25,7 @@ public class ActivoUpdateRequest {
     private Integer vidaUtilMeses;
 
     private EstadoActivo estadoActual;
+    private String cuentaContable;
 
     // 🔗 Relaciones
     private Long tipoActivoId;

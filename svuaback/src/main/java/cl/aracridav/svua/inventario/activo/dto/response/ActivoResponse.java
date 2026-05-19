@@ -42,6 +42,7 @@ public class ActivoResponse {
     private BigDecimal valorResidual;
     private Integer vidaUtilMeses;
     private EstadoActivo estadoActual;
+    private String cuentaContable;
     
     private TipoActivoDTO tipoActivo;
 

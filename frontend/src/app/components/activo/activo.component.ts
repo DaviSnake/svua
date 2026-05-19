@@ -91,6 +91,7 @@ export class ActivoComponent implements OnInit {
       proveedorNombre: [''],
       empresaId: [null, Validators.required],
       estadoActual: [''],
+      cuentaContable: [''],
 
       activo: [true] // 👈 checkbox
     });
@@ -202,6 +203,7 @@ export class ActivoComponent implements OnInit {
       proveedorNombre: activo.proveedor.nombre,
       empresaId: activo.empresa.id,
       estadoActual: activo.estadoActual,
+      cuentaContable: activo.cuentaContable,
     });
 
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
@@ -239,7 +241,8 @@ export class ActivoComponent implements OnInit {
       valorResidual: activo.valorResidual,
       vidaUtilMeses: activo.vidaUtilMeses,
       ubicacionId: this.activoForm.value.ubicacionId,
-      proveedorId: this.activoForm.value.proveedorId 
+      proveedorId: this.activoForm.value.proveedorId,
+      cuentaContable: this.activoForm.value.cuentaContable 
     };
 
     if (this.editando && this.activoEditandoId !== null) {
@@ -396,6 +399,7 @@ export class ActivoComponent implements OnInit {
       ubicacionNombre: activo.ubicacion.nombre,
       proveedorNombre: activo.proveedor.nombre,
       estadoActual: activo.estadoActual,
+      cuentaContable: activo.cuentaContable,
     });
     this.activoForm.get('codigoInterno')?.disable(); // 🔥 aquí
     this.activoForm.get('nombre')?.disable(); // 🔥 aquí
@@ -411,11 +415,27 @@ export class ActivoComponent implements OnInit {
     this.activoForm.get('ubicacionNombre')?.disable(); // 🔥 aquí
     this.activoForm.get('proveedorNombre')?.disable(); // 🔥 aquí
     this.activoForm.get('estadoActual')?.disable(); // 🔥 aquí
+    this.activoForm.get('cuentaContable')?.disable(); // 🔥 aquí
   }
 
   
 
   cerrarModal() {
+    this.activoForm.get('codigoInterno')?.enable(); // 🔥 aquí
+    this.activoForm.get('nombre')?.enable(); // 🔥 aquí
+    this.activoForm.get('descripcion')?.enable(); // 🔥 aquí
+    this.activoForm.get('tipoActivoNombre')?.enable(); // 🔥 aquí
+    this.activoForm.get('marca')?.enable(); // 🔥 aquí
+    this.activoForm.get('modelo')?.enable(); // 🔥 aquí
+    this.activoForm.get('numeroSerie')?.enable(); // 🔥 aquí
+    this.activoForm.get('fechaAdquisicion')?.enable(); // 🔥 aquí
+    this.activoForm.get('valorAdquisicion')?.enable(); // 🔥 aquí
+    this.activoForm.get('valorResidual')?.enable(); // 🔥 aquí
+    this.activoForm.get('vidaUtilMeses')?.enable(); // 🔥 aquí
+    this.activoForm.get('ubicacionNombre')?.enable(); // 🔥 aquí
+    this.activoForm.get('proveedorNombre')?.enable(); // 🔥 aquí
+    this.activoForm.get('estadoActual')?.enable(); // 🔥 aquí
+    this.activoForm.get('cuentaContable')?.enable(); // 🔥 aquí
     this.mostrarModalActivo = false;
     this.activoForm.reset();
   }

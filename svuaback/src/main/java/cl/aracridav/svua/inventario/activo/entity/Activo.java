@@ -66,6 +66,9 @@ public class Activo extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private EstadoActivo estadoActual;
 
+    @Column(name = "cuenta_contable")
+    private String cuentaContable;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ubicacion_id", nullable = false, updatable = false)
     private Ubicacion ubicacion;

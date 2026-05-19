@@ -103,7 +103,7 @@ export class CalendarioComponent implements OnInit {
       observaciones: [''],
       lugar: [''],
       estado: [''],
-      duracionMinutos: [''],
+      duracionMinutos: ['', Validators.required],
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
       tipoMantenimiento: [null, Validators.required]
@@ -325,11 +325,11 @@ export class CalendarioComponent implements OnInit {
       return;
     }
 
-    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos } = this.ordenMantencionForm.value;
+    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos, fechaHora } = this.ordenMantencionForm.value;
 
     const data = {
       titulo,
-      fechaProgramada: this.fechaSeleccionada,
+      fechaProgramada: fechaHora,
       duracionMinutos,
       tipoMantenimiento,
       estado: "PROGRAMADA",
