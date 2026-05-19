@@ -103,7 +103,7 @@ export class CalendarioComponent implements OnInit {
       observaciones: [''],
       lugar: [''],
       estado: [''],
-      duracionMinutos: ['', Validators.required],
+      duracionMinutos: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
       tipoMantenimiento: [null, Validators.required]

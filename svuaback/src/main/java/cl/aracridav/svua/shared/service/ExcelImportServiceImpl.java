@@ -363,6 +363,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         activo.setValorAdquisicion(getBigDecimal(row, 8));
         activo.setValorResidual(getBigDecimal(row, 9));
         activo.setVidaUtilMeses(getInteger(row, 10));
+        activo.setCuentaContable(getString(row, 13));
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
         activo.setUbicacion(ubicacion);
         activo.setProveedor(proveedor);
