@@ -286,8 +286,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
             Path carpeta = Paths.get(carpetaBase);
 
+            System.out.println("Ruta absoluta: " + carpeta.toAbsolutePath());
+
             if (!Files.exists(carpeta)) {
                 Files.createDirectories(carpeta);
+                System.out.println("Carpeta creada correctamente");
             }
 
             String nombreLimpio = StringUtils.cleanPath(archivo.getOriginalFilename());
