@@ -80,8 +80,8 @@ export class SidebarComponent implements OnInit {
     }
 
     if (
-      url.includes('/analisis') ||
-      url.includes('/reportes')
+      url.includes('/reportes') ||
+      url.includes('/auditorias')
     ) {
       this.openMenus.analisis = true;
     }

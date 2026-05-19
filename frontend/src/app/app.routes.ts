@@ -17,6 +17,8 @@ import { PerfilUsuarioComponent } from './components/perfil-usuario/perfil-usuar
 import { ConfiguracionComponent } from './components/configuracion/configuracion.component';
 import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { ReportesComponent } from './components/reportes/reportes.component';
+import { AuditoriasComponent } from './components/auditorias/auditorias.component';
 
 export const routes: Routes = [
     {
@@ -138,6 +140,28 @@ export const routes: Routes = [
             {
                 path: 'usuario',
                 component: UsuarioComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'reportes',
+                component: ReportesComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'auditorias',
+                component: AuditoriasComponent
             }
         ]
     },
