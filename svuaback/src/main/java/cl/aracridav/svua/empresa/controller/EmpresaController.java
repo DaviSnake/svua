@@ -125,7 +125,7 @@ public class EmpresaController {
 
     @PostMapping("/webhook/mercadopago")
     public ResponseEntity<Void> recibirWebhook(
-      @RequestBody Map<String, Object> body) throws JsonMappingException, JsonProcessingException {
+      @RequestBody(required = false) Map<String, Object> body) throws JsonMappingException, JsonProcessingException {
 
       /*Object dataObj = body.get("data");
 
@@ -137,7 +137,8 @@ public class EmpresaController {
         }
       }*/
 
-      System.out.print(body);
+      System.out.println("WEBHOOK MP");  
+      System.out.println("BODY: " + body);
 
       return ResponseEntity.ok().build();
     }
