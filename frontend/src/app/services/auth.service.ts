@@ -14,10 +14,18 @@ export class AuthService {
 
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
-  private refreshTimeout: any;
+  private refreshTimeout?: ReturnType<typeof setTimeout>;
 
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
+
+  constructor() {
+
+    window.addEventListener('beforeunload', () => {
+      this.stopRefreshTimer();
+    });
+
+  }
 
   getTokenExpiration(token: string): number {
     const decoded: any = jwtDecode(token);
@@ -37,6 +45,10 @@ export class AuthService {
   }
 
   startRefreshTimer() {
+
+    // 🔥 detener timer anterior
+    this.stopRefreshTimer();
+
     const token = sessionStorage.getItem('token');
 
     if (!token) return;
@@ -44,9 +56,22 @@ export class AuthService {
     const expires = this.getTokenExpiration(token);
     const timeout = expires - Date.now() - (2 * 60 * 1000); // 2 min antes
 
+    // token expirado
+    if (timeout <= 0) {
+      this.getRefreshToken();
+      return;
+    }
+
     this.refreshTimeout = setTimeout(() => {
       this.getRefreshToken();
     }, timeout);
+  }
+
+  private stopRefreshTimer() {
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+      this.refreshTimeout = undefined;
+    }
   }
 
   setUserFromToken() {
@@ -116,7 +141,18 @@ export class AuthService {
   }
 
   logout() {
+    this.stopRefreshTimer();
+
+    this.userSubject.next(null);
     return this.http.post(`${this.apiUrl}/auth/logout`, null);
+  }
+
+  clearSession() {
+
+    sessionStorage.clear();
+
+    this.userSubject.next(null);
+
   }
 
   isLogged(): boolean {

@@ -5,14 +5,15 @@ public enum EstadoOrden {
     PROGRAMADA,
     EN_EJECUCION,
     COMPLETADA,
-    CANCELADA;
+    CANCELADA,
+    ATRASADA;
 
     public boolean puedePasarA(EstadoOrden nuevo) {
         return switch (this) {
             case PENDIENTE -> nuevo == PROGRAMADA;
             case PROGRAMADA -> nuevo == EN_EJECUCION;
             case EN_EJECUCION -> (nuevo == COMPLETADA || nuevo == CANCELADA);
-            case COMPLETADA, CANCELADA -> false;
+            case COMPLETADA, CANCELADA, ATRASADA -> false;
         };
     }
 }

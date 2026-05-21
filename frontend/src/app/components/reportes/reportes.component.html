@@ -1,1 +1,47 @@
-<app-paginaencontruccion />
+<div class="dashboard-header">
+
+  <div>
+    <h1 class="dashboard-title">
+      Centro de Monitoreo de Mantenimiento
+    </h1>
+
+    <p class="dashboard-subtitle">
+      Indicadores operacionales y desempeño en tiempo real
+    </p>
+  </div>
+
+</div>
+
+<div class="dashboard-grid">
+
+  <div class="dashboard-card cumplimiento">
+    <span class="titulo">Cumplimiento</span>
+    <span class="valor">{{ data?.cumplimiento }}%</span>
+  </div>
+
+  <div class="dashboard-card">
+    <span class="titulo">MTTR</span>
+    <span class="valor">{{ data?.mttrHoras }} h</span>
+  </div>
+
+  <div class="dashboard-card">
+    <span class="titulo">MTBF</span>
+    <span class="valor">{{ data?.mtbfHoras }} h</span>
+  </div>
+
+  <div class="dashboard-card">
+    <span class="titulo">Programadas</span>
+    <span class="valor">{{ data?.programadas }}</span>
+  </div>
+
+  <div class="dashboard-card">
+    <span class="titulo">Completadas</span>
+    <span class="valor">{{ data?.completadas }}</span>
+  </div>
+
+  <div class="dashboard-card pendientes">
+    <span class="titulo">Pendientes</span>
+    <span class="valor">{{ data?.pendientes }}</span>
+  </div>
+
+</div>

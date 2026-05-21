@@ -3,6 +3,7 @@ import { Observable, of } from 'rxjs';
 import { DashboardKPIs } from '../components/dashboard/models/dashboard.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { DashboardResponse } from '../components/reportes/models/reportes.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,12 @@ export class DashboardService {
   }
 
   getDashboard(): Observable<DashboardKPIs> {
-  return this.http.get<DashboardKPIs>(`${this.apiUrl}/dashboard/full`);
+    return this.http.get<DashboardKPIs>(`${this.apiUrl}/dashboard/full`);
+  }
+
+  getDashboardIndicadores() {
+  return this.http.get<DashboardResponse>(`${this.apiUrl}/dashboard`
+  );
 }
 
 }
