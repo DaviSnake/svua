@@ -79,7 +79,7 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         FROM OrdenMantenimiento o
         WHERE o.empresa.id = :empresaId
         AND o.fechaProgramada < CURRENT_DATE
-        AND o.estado <> 'FINALIZADA'
+        AND o.estado <> 'COMPLETADA'
     """)
     Long countMantenimientosVencidos(Long empresaId);
 
