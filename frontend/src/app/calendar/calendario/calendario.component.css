@@ -248,3 +248,166 @@ textarea {
   background: rgba(239,68,68,0.2);
   color: #ef4444;
 }
+
+.mini-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.mini-modal {
+  width: 420px;
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+
+.mini-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.repuestos-agregados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.repuesto-chip {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  background: #eff6ff;
+  border-radius: 999px;
+}
+
+.repuesto-chip button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #ef4444;
+}
+
+.grande {
+  width: 800px;
+  max-width: 95vw;
+}
+
+.form-repuesto {
+  display: grid;
+  grid-template-columns: 1fr 150px 120px;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 2rem;
+}
+
+.tabla-repuestos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.fila-repuesto {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.sin-datos {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.footer {
+  margin-top: 2rem;
+  justify-content: flex-end;
+}
+
+.legend {
+  display: flex;
+  gap: 15px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.fc-event {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* 🔥 TOOLTIP */
+.fc-event::after {
+
+  content: attr(data-tooltip);
+
+  position: absolute;
+
+  bottom: 110%;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: #111827;
+  color: white;
+
+  padding: 8px 10px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+
+  white-space: pre-line;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity .2s ease;
+
+  z-index: 9999;
+
+  min-width: 180px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+
+/* 🔥 mostrar tooltip */
+.fc-event:hover::after {
+  opacity: 1;
+}
+
+/* colores iguales a tu backend */
+.pendiente { background: #eab308; }
+.programada { background: #3b82f6; }
+.ejecucion { background: #f97316; }
+.completada { background: #22c55e; }
+.cancelada { background: #ef4444; }

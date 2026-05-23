@@ -9,6 +9,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -28,8 +29,13 @@ import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenReprogramacion;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenReprogramacionRepository;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.repository.OrdenRepuestoRepository;
 import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
+import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
+import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
@@ -45,6 +51,8 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     private final OrdenMantenimientoRepository ordenRepository;
     private final OrdenReprogramacionRepository ordenReprogramacionRepository;
+    private final RepuestoRepository repuestoRepository;
+    private final OrdenRepuestoRepository ordenRepuestoRepository;
     private final ActivoRepository activoRepository;
     private final UsuarioRepository usuarioRepository;
     private final PlanMantenimientoRepository planRepository;
@@ -116,6 +124,8 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     public OrdenMantenimientoResponse crearOrden(OrdenMantenimientoRequest req) {
 
         Activo activo = obtenerActivo(req.getActivoId());
+        Empresa empresa = obtenerEmpresaActual();
+        Usuario usuario = obtenerUsuario(req.getUsuarioId());
         validarNoExisteOrdenPendiente(activo.getId());
 
         OrdenMantenimiento orden = construirOrden(
@@ -126,7 +136,18 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 obtenerPlan(req.getPlanMantenimientoId())
         );
 
-        return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+        // 🔥 guardar primero
+        orden = ordenRepository.save(orden);
+
+        // 🔥 guardar repuestos
+        guardarRepuestosOrden(
+                orden,
+                req.getRepuestos(),
+                usuario,
+                empresa
+        );
+
+        return mapper.mapOrdenMantenimientoResponse(orden);
     }
 
     @Override
@@ -372,6 +393,16 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 .orElseThrow(() -> new RuntimeException("Activo no encontrado"));
     }
 
+    private Repuesto obtenerRepuesto(Long id) {
+
+        return repuestoRepository.findById(id)
+            .orElseThrow(() ->
+                new BusinessException(
+                    "Repuesto no encontrado"
+                )
+            );
+    }
+
     /*
      * =========================================
      * VALIDACIONES
@@ -443,6 +474,72 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setEmpresa(empresa);
 
         return orden;
+    }
+
+    private void guardarRepuestosOrden(
+        OrdenMantenimiento orden,
+        List<OrdenRepuestoRequest> repuestos,
+        Usuario usuario,
+        Empresa empresa) {
+
+        if (repuestos == null || repuestos.isEmpty()) {
+            return;
+        }
+
+        List<OrdenRepuesto> lista = new ArrayList<>();
+
+        for (OrdenRepuestoRequest req : repuestos) {
+
+            Repuesto repuesto =
+                    obtenerRepuesto(req.getRepuestoId());
+
+            // validar stock
+            if (repuesto.getStockActual() < req.getCantidad()) {
+
+                throw new BusinessException(
+                    "Stock insuficiente para: "
+                    + repuesto.getNombre()
+                );
+            }
+
+            OrdenRepuesto item = new OrdenRepuesto();
+
+            item.setOrden(orden);
+            item.setRepuesto(repuesto);
+
+            item.setCantidad(req.getCantidad());
+
+            item.setCostoUnitario(
+                    repuesto.getCostoUnitario()
+            );
+
+            item.setCostoTotal(
+                    repuesto.getCostoUnitario()
+                        .multiply(
+                            BigDecimal.valueOf(
+                                req.getCantidad()
+                            )
+                        )
+            );
+
+            item.setUsuario(usuario);
+
+            item.setEmpresa(empresa);
+
+            lista.add(item);
+
+            // 🔥 descontar stock
+            repuesto.setStockActual(
+                repuesto.getStockActual()
+                    - req.getCantidad()
+            );
+
+            repuestoRepository.save(repuesto);
+        }
+
+        ordenRepuestoRepository.saveAll(lista);
+
+        orden.setRepuestosUtilizados(lista);
     }
 
     private void guardarHistorialReprogramacion(OrdenMantenimiento orden, LocalDateTime nuevaFecha, String motivo) {

@@ -57,6 +57,7 @@ export class RepuestoComponent implements OnInit {
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
       costoUnitario: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      stockActual: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       stockMinimo: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       empresaId: [null, Validators.required],
       empresa: [''],
@@ -152,6 +153,7 @@ export class RepuestoComponent implements OnInit {
       // CREAR
       this.repuestoService.create(repuesto).subscribe({
         next: () => {
+
           this.nuevo();
           this.cargarRepuestos();
 
@@ -162,11 +164,14 @@ export class RepuestoComponent implements OnInit {
             confirmButtonColor: '#3498db'
           });
         },
-        error: () => {
+
+        error: (err) => {
+          console.log("Error: "+ err);
+
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No se pudo guardar el repuesto'
+            text: err?.error?.error || 'No se pudo guardar el repuesto'
           });
         }
       });
@@ -196,6 +201,7 @@ export class RepuestoComponent implements OnInit {
       nombre: repuesto.nombre,
       descripcion: repuesto.descripcion,
       costoUnitario: repuesto.costoUnitario,
+      stockActual: repuesto.stockActual,
       stockMinimo: repuesto.stockMinimo,
       empresaId: repuesto.empresa.id,
       activo: repuesto.activo

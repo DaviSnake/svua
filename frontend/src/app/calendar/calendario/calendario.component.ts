@@ -9,7 +9,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
 
 import { OrdenMantencionService } from '../../services/orden-mantencion.service';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivoService } from '../../services/activo.service';
 import { Activo } from '../../model/activo';
@@ -20,6 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
+import { RepuestoService } from '../../services/repuesto.service';
 
 @Component({
   selector: 'app-calendario',
@@ -32,12 +33,15 @@ export class CalendarioComponent implements OnInit {
 
   private ordenMantencionService = inject(OrdenMantencionService);
   private activoService = inject(ActivoService);
+  private repuestoService = inject(RepuestoService);
   authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
   usuario: any;
 
   activos: Activo[] = [];
+
+  repuestos: any[] = [];
 
   activoControl = new FormControl();
   activosFiltrados: Activo[] = [];
@@ -71,6 +75,79 @@ export class CalendarioComponent implements OnInit {
     contentHeight: 'auto',
     events: [],
 
+    eventDidMount: (info) => {
+      const estado =
+        info.event.extendedProps?.['estado'];
+
+      const tipo =
+        info.event.extendedProps?.['tipoMantenimiento'];
+
+      const duracion =
+        info.event.extendedProps?.['duracionMinutos'];
+
+      info.el.style.boxShadow =
+        this.getShadowPorEstado(estado);
+
+      info.el.style.borderRadius = '6px';
+
+      info.el.style.border = 'none';
+
+      info.el.style.cursor = 'pointer';
+
+      info.el.style.position = 'relative';
+
+      const tooltip = document.createElement('div');
+
+      tooltip.innerHTML = `
+        <strong>${estado}</strong><br>
+        Tipo: ${tipo}<br>
+        Duración: ${duracion} min
+      `;
+
+      tooltip.style.position = 'absolute';
+      tooltip.style.bottom = '110%';
+      tooltip.style.left = '50%';
+      tooltip.style.transform = 'translateX(-50%)';
+
+      tooltip.style.background = '#111827';
+      tooltip.style.color = '#fff';
+
+      tooltip.style.padding = '8px 10px';
+      tooltip.style.borderRadius = '8px';
+
+      tooltip.style.fontSize = '12px';
+      tooltip.style.whiteSpace = 'nowrap';
+
+      tooltip.style.boxShadow =
+        '0 4px 12px rgba(0,0,0,.25)';
+
+      tooltip.style.opacity = '0';
+
+      tooltip.style.pointerEvents = 'none';
+
+      tooltip.style.transition = 'opacity .2s ease';
+
+      tooltip.style.zIndex = '9999';
+
+      info.el.appendChild(tooltip);
+
+      info.el.addEventListener('mouseenter', () => {
+
+        tooltip.style.opacity = '1';
+
+        info.el.style.transform = 'scale(1.03)';
+      });
+
+      info.el.addEventListener('mouseleave', () => {
+
+        tooltip.style.opacity = '0';
+
+        info.el.style.transform = 'scale(1)';
+      });
+
+      info.el.style.transition = 'all .2s ease';
+    },
+
     // 🟢 CREAR
     dateClick: (info) => this.onDateClick(info),
 
@@ -81,9 +158,35 @@ export class CalendarioComponent implements OnInit {
     eventClick: (info) => this.onEventClick(info)
   };
 
+  getShadowPorEstado(estado?: string): string {
+
+  switch (estado) {
+
+      case 'COMPLETADA':
+        return '0 0 10px rgba(34,197,94,0.4)';
+
+      case 'EN_EJECUCION':
+        return '0 0 10px rgba(249,115,22,0.4)';
+
+      case 'PROGRAMADA':
+        return '0 0 10px rgba(59,130,246,0.4)';
+
+      case 'PENDIENTE':
+        return '0 0 10px rgba(234,179,8,0.4)';
+
+      case 'CANCELADA':
+        return '0 0 10px rgba(239,68,68,0.4)';
+
+      default:
+        return 'none';
+    }
+  }
+
   // 🔹 FORMULARIO
   ordenMantencionForm!: FormGroup;
   mostrarModal = false;
+  repuestoForm!: FormGroup;
+  mostrarModalRepuesto = false;
   fechaSeleccionada!: string;
 
   modoEdicion = false;
@@ -106,7 +209,14 @@ export class CalendarioComponent implements OnInit {
       duracionMinutos: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
-      tipoMantenimiento: [null, Validators.required]
+      tipoMantenimiento: [null, Validators.required],
+      repuestos: this.fb.array([])
+    });
+
+    this.repuestoForm = this.fb.group({
+
+      repuestoId: [null, Validators.required],
+      cantidad: [1, [Validators.required, Validators.min(1)]]
     });
 
     this.activoControl.valueChanges.subscribe(activo => {
@@ -117,6 +227,7 @@ export class CalendarioComponent implements OnInit {
 
     this.cargarEventos();
     this.cargarActivos();
+    this.cargarRepustos();
 
   }
 
@@ -144,10 +255,49 @@ export class CalendarioComponent implements OnInit {
           observaciones: ordenMantencion.observaciones,
           costo: ordenMantencion.costo,
           activoId: ordenMantencion.activoId,
-          usuarioId: ordenMantencion.usuarioId
+          usuarioId: ordenMantencion.usuarioId,
+          repuestos: ordenMantencion.repuestos
         }
       }));
 
+    });
+  }
+
+  // 🔥 CARGAR ACTIVOS
+  cargarActivos() {
+    this.activoService.getAll(this.page, this.size).subscribe({
+      next: (data) => {
+        this.activos = data.content;
+
+        // 🔥 IMPORTANTE: inicializar filtro cuando ya tienes datos
+        this.initFiltroActivos();
+
+        // 🔥 CLAVE: dispara el autocomplete
+        this.activoControl.setValue('');
+
+      },
+      error: () => {
+        console.log("error");
+      }
+    });
+  }
+
+  // 🔥 CARGAR REPUESTOS
+  cargarRepustos(){
+    this.repuestoService.getAll(this.page, this.size).subscribe({
+      next: (data) => {
+        this.repuestos = data.content;
+
+        // 🔥 IMPORTANTE: inicializar filtro cuando ya tienes datos
+        //this.initFiltroActivos();
+
+        // 🔥 CLAVE: dispara el autocomplete
+        //this.activoControl.setValue('');
+
+      },
+      error: () => {
+        console.log("error");
+      }
     });
   }
 
@@ -301,6 +451,24 @@ export class CalendarioComponent implements OnInit {
     this.eventoSeleccionadoId = Number(info.event.id);
     this.modoEdicion = true;
 
+    // 🔥 LIMPIAR FORMARRAY
+    this.repuestosFormArray.clear();
+
+    // 🔥 TOMAR REPUESTOS
+    const repuestos =
+      info.event.extendedProps?.repuestos || [];
+
+    // 🔥 CARGAR REPUESTOS AL FORMARRAY
+    repuestos.forEach((r: any) => {
+
+      const repuestoGroup = this.fb.group({
+        repuestoId: [r.repuestoId],
+        cantidad: [r.cantidad]
+      });
+
+      this.repuestosFormArray.push(repuestoGroup);
+    });
+
     this.ordenMantencionForm.patchValue({
       titulo: info.event.title,
       observaciones: info.event.extendedProps?.observaciones || '',
@@ -336,7 +504,9 @@ export class CalendarioComponent implements OnInit {
       observaciones,
       activoId,
       usuarioId: this.usuario.sub,
-      planMantenimientoId: "1"
+      planMantenimientoId: "1",
+      // 🔥 NUEVO
+      repuestos: this.repuestosFormArray.value
     };
 
     if (this.modoEdicion) {
@@ -356,6 +526,7 @@ export class CalendarioComponent implements OnInit {
       // 🟢 CREAR
       this.ordenMantencionService.crear(data)
         .subscribe(() => {
+          this.repuestosFormArray.clear();
           this.cargarEventos();
           this.cerrar();
         });
@@ -429,22 +600,36 @@ export class CalendarioComponent implements OnInit {
     }
   }
 
-  cargarActivos() {
-    this.activoService.getAll(this.page, this.size).subscribe({
-      next: (data) => {
-        this.activos = data.content;
+  getColor(
+    estado?: string,
+    tipoMantenimiento?: string
+  ): string {
 
-        // 🔥 IMPORTANTE: inicializar filtro cuando ya tienes datos
-        this.initFiltroActivos();
+    switch (`${estado}-${tipoMantenimiento}`) {
 
-        // 🔥 CLAVE: dispara el autocomplete
-        this.activoControl.setValue('');
+      case 'PENDIENTE-PREVENTIVO':
+        return '#eab308';
 
-      },
-      error: () => {
-        console.log("error");
-      }
-    });
+      case 'PENDIENTE-CORRECTIVO':
+        return '#ef4444';
+
+      case 'PROGRAMADA-PREVENTIVO':
+        return '#3b82f6';
+
+      case 'EN_EJECUCION-CORRECTIVO':
+        return '#f97316';
+
+      case 'COMPLETADA-PREVENTIVO':
+      case 'COMPLETADA-CORRECTIVO':
+        return '#22c55e';
+
+      case 'CANCELADA-PREVENTIVO':
+      case 'CANCELADA-CORRECTIVO':
+        return '#6b7280';
+
+      default:
+        return '#9ca3af';
+    }
   }
 
   toggleMantencion() {
@@ -627,6 +812,100 @@ export class CalendarioComponent implements OnInit {
         this.riesgo = res.riesgo;
         this.nivel = res.nivel;
       });
+  }
+
+  agregarRepuesto(): void {
+    const group = this.fb.group({
+      repuestoId: [null, Validators.required],
+      cantidad: [
+        1,
+        [
+          Validators.required,
+          Validators.min(1)
+        ]
+      ]
+    });
+
+    this.repuestosFormArray?.push(group);
+  }
+
+  get repuestosFormArray(): FormArray {
+    return this.ordenMantencionForm.get('repuestos') as FormArray;
+  }
+
+  getRepuestoGroup(i: number): FormGroup {
+    return this.repuestosFormArray.at(i) as FormGroup;
+  }
+
+  eliminarRepuesto(index: number): void {
+
+    this.repuestosFormArray?.removeAt(index);
+  }
+
+  abrirModalRepuesto(): void {
+    this.repuestoForm.reset({
+      cantidad: 1
+
+    });
+
+    this.mostrarModalRepuesto = true;
+  }
+
+  cerrarModalRepuesto(): void {
+
+    this.mostrarModalRepuesto = false;
+  }
+
+  confirmarAgregarRepuesto(): void {
+    if (this.repuestoForm.invalid) {
+      this.repuestoForm.markAllAsTouched();
+      return;
+    }
+
+    const repuestoId =
+      Number(this.repuestoForm.value.repuestoId);
+
+    const cantidad =
+      Number(this.repuestoForm.value.cantidad);
+
+    // 🔍 buscar si ya existe
+    const existente =
+      this.repuestosFormArray?.controls.find(control =>
+        Number(control.value.repuestoId) === repuestoId
+      );
+
+    // ✅ SI EXISTE → SUMAR CANTIDAD
+    if (existente) {
+      const cantidadActual =
+        Number(existente.value.cantidad);
+
+      existente.patchValue({
+        cantidad: cantidadActual + cantidad
+      });
+    }
+    // ✅ SI NO EXISTE → AGREGAR
+    else {
+      const repuesto = this.fb.group({
+        repuestoId: [repuestoId],
+        cantidad: [cantidad]
+      });
+      this.repuestosFormArray?.push(repuesto);
+    }
+
+    // 🔥 limpiar form
+    this.repuestoForm.reset({
+      repuestoId: null,
+      cantidad: 1
+    });
+
+    this.cerrarModalRepuesto();
+  }
+
+  obtenerNombreRepuesto(id: number): string {
+    const repuesto = this.repuestos.find(
+      r => Number(r.id) === Number(id)
+    );
+    return repuesto?.nombre || '';
   }
 
   formatFechaLocal(date: Date): string {

@@ -12,6 +12,7 @@ public class RepuestoRequest {
     private String descripcion;
     private BigDecimal costoUnitario;
     private Integer stockMinimo;
+    private Integer stockActual;
     private Long empresaId;
     private Boolean activo;
 

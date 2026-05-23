@@ -32,6 +32,9 @@ public class Repuesto extends BaseEntity {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal costoUnitario;
 
+    @Column(name = "stock_actual", nullable = false)
+    private Integer stockActual;
+
     @Column(nullable = false)
     private Integer stockMinimo;
 

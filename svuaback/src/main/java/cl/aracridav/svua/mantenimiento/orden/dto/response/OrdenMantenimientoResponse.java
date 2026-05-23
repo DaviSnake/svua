@@ -2,8 +2,10 @@ package cl.aracridav.svua.mantenimiento.orden.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.response.OrdenRepuestoResponse;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import lombok.Data;
 
@@ -22,5 +24,6 @@ public class OrdenMantenimientoResponse {
     private String observaciones;
     private Long activoId;
     private Long usuarioId;
+    private List<OrdenRepuestoResponse> repuestos;
 
 }

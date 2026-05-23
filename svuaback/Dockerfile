@@ -17,6 +17,14 @@ RUN mvn clean package -DskipTests
 # --------- Etapa 2: Imagen final con JDK ----------
 FROM eclipse-temurin:21-jdk
 
+# 🔥 Zona horaria Chile
+ENV TZ=America/Santiago
+
+RUN apt-get update && apt-get install -y tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone \
+    && rm -rf /var/lib/apt/lists/*
+
 # Directorio de trabajo
 WORKDIR /app
 

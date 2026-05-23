@@ -2,8 +2,10 @@ package cl.aracridav.svua.mantenimiento.orden.dto.request;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import lombok.Data;
 
@@ -20,5 +22,6 @@ public class OrdenMantenimientoRequest {
     private Long activoId;
     private Long usuarioId;
     private Long planMantenimientoId;
+    private List<OrdenRepuestoRequest> repuestos;
 
 }

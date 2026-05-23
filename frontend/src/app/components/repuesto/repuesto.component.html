@@ -17,6 +17,9 @@
             <input type="text" placeholder="Costo Unitario" formControlName="costoUnitario" />
           </div>
           <div class="form-group">
+            <input type="text" placeholder="Stock Actual" formControlName="stockActual" />
+          </div>
+          <div class="form-group">
             <input type="text" placeholder="Stock Mínimo" formControlName="stockMinimo" />
           </div>
           <div class="form-group">
@@ -53,6 +56,7 @@
         <th>Nombre</th>
         <th>Descripión</th>
         <th>Costo Unitario</th>
+        <th>Stock Actual</th>
         <th>Stock Mínimo</th>
         <th>Empresa</th>
         <th>Acciones</th>
@@ -64,6 +68,7 @@
         <td>{{ repuesto.nombre }}</td>
         <td>{{ repuesto.descripcion }}</td>
         <td class="text-right">{{ repuesto.costoUnitario | number:'1.0-0':'es-CL' }}</td>
+        <td class="text-right">{{ repuesto.stockActual | number:'1.0-0':'es-CL' }}</td>
         <td class="text-right">{{ repuesto.stockMinimo | number:'1.0-0':'es-CL' }}</td>
         <td>{{ repuesto.empresa.nombre }}</td>
         <td>

@@ -6,6 +6,7 @@ export interface Repuesto {
   nombre: string;
   descripcion: string;
   costoUnitario: number;
+  stockActual: number;
   stockMinimo: number;
   empresa: Empresa;
   activo: boolean;

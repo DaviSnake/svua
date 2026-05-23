@@ -6,128 +6,237 @@
       <p>Gestión de orden de mantención y programación</p>
     </div>
   </div>
+  <!-- 🟡 LEYENDA (AQUÍ VA) -->
+  <div class="legend">
+    <div class="item"><span class="dot pendiente"></span> PENDIENTE</div>
+    <div class="item"><span class="dot programada"></span> PROGRAMADA</div>
+    <div class="item"><span class="dot ejecucion"></span> EN EJECUCIÓN</div>
+    <div class="item"><span class="dot completada"></span> COMPLETADA</div>
+    <div class="item"><span class="dot cancelada"></span> CANCELADA</div>
+  </div>
   <!-- 🔹 Calendario -->
   <div class="calendar-container">
     <full-calendar #calendar [options]="calendarOptions"></full-calendar>
   </div>
   <!-- 🔹 Modal -->
-<div *ngIf="mostrarModal" class="modal-backdrop">
-  <div class="modal">
+  <div *ngIf="mostrarModal" class="modal-backdrop">
+    <div class="modal">
 
-    <!-- Header -->
-    <div class="modal-header">
-      <h2>{{ titulo }}</h2>
-      <button class="close-btn" (click)="cerrar()">✕</button>
-    </div>
-
-    <!-- 🔥 RIESGO -->
-    <div *ngIf="modoEdicion && riesgo !== undefined" 
-        class="riesgo-box" 
-        [ngClass]="nivel">
-      ⚠ Riesgo: {{ riesgo }}% ({{ nivel }})
-    </div>
-
-    <!-- Form -->
-    <form [formGroup]="ordenMantencionForm" class="form">
-
-      <div class="form-group">
-        <label>Título</label>
-        <input type="text" formControlName="titulo" placeholder="Ej: Mantención preventiva" />
+      <!-- Header -->
+      <div class="modal-header">
+        <h2>{{ titulo }}</h2>
+        <button class="close-btn" (click)="cerrar()">✕</button>
       </div>
 
-      <div class="form-group">
-        <label>Descripción</label>
-        <textarea formControlName="observaciones" placeholder="Detalle de la mantención"></textarea>
+      <!-- 🔥 RIESGO -->
+      <div *ngIf="modoEdicion && riesgo !== undefined" 
+          class="riesgo-box" 
+          [ngClass]="nivel">
+        ⚠ Riesgo: {{ riesgo }}% ({{ nivel }})
       </div>
 
-      <div class="form-group">
-        <label>Tipo de Mantenimiento</label>
-        <select formControlName="tipoMantenimiento">
-          <option value="null" disabled>Seleccione tipo</option>
-          <option value ="PREVENTIVO">PREVENTIVO</option>
-          <option value ="CORRECTIVO">CORRECTIVO</option>
-          <option value ="PREDICTIVO">PREDICTIVO</option>
-        </select>
-      </div>
+      <!-- Form -->
+      <form [formGroup]="ordenMantencionForm" class="form">
 
-      <div class="form-group">
-        <label>Activo</label>
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" formControlName="titulo" placeholder="Ej: Mantención preventiva" />
+        </div>
 
-        <mat-form-field appearance="outline" class="full-width custom-autocomplete">
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea formControlName="observaciones" placeholder="Detalle de la mantención"></textarea>
+        </div>
 
-          <input 
-            type="text"
-            matInput
-            [matAutocomplete]="auto"
-            #trigger="matAutocompleteTrigger"
-            [formControl]="activoControl"
-            (focus)="onFocusActivo()"
-            placeholder="Seleccione un activo">
+        <div class="form-group">
+          <label>Tipo de Mantenimiento</label>
+          <select formControlName="tipoMantenimiento">
+            <option value="null" disabled>Seleccione tipo</option>
+            <option value ="PREVENTIVO">PREVENTIVO</option>
+            <option value ="CORRECTIVO">CORRECTIVO</option>
+            <option value ="PREDICTIVO">PREDICTIVO</option>
+          </select>
+        </div>
 
-          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
-            <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
-              {{ activo.nombre }}
-            </mat-option>
-          </mat-autocomplete>
+        <div class="form-group">
+          <label>Activo</label>
 
-        </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width custom-autocomplete">
 
-      </div>
+            <input 
+              type="text"
+              matInput
+              [matAutocomplete]="auto"
+              #trigger="matAutocompleteTrigger"
+              [formControl]="activoControl"
+              (focus)="onFocusActivo()"
+              placeholder="Seleccione un activo">
 
-      <div class="form-group">
-        <label>Fecha y Hora</label>
-        <input type="datetime-local" formControlName="fechaHora" />
-      </div>
+            <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
+              <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
+                {{ activo.nombre }}
+              </mat-option>
+            </mat-autocomplete>
 
-      <div class="form-group">
-        <label>Duración minutos</label>
-        <input type="text" formControlName="duracionMinutos" />
-      </div>
+          </mat-form-field>
 
-      <!-- Acciones -->
-      <div class="acciones">
+        </div>
 
-        <button class="btn ghost" type="button" (click)="cerrar()">
-          Cancelar
-        </button>
+        <div class="form-group">
+          <label>Fecha y Hora</label>
+          <input type="datetime-local" formControlName="fechaHora" />
+        </div>
 
-        <ng-container *ngIf="estadoOrden !== 'COMPLETADA'">
-          <button 
-            *ngIf="modoEdicion"
-            class="btn danger"
+        <div class="form-group">
+          <label>Duración minutos</label>
+          <input type="text" formControlName="duracionMinutos" />
+        </div>
+        <!-- REPUESTOS -->
+        <div class="repuestos-header">
+          <h3>Repuestos</h3>
+          <button
             type="button"
-            (click)="eliminar()">
-            Eliminar
+            class="btn primary"
+            (click)="abrirModalRepuesto()">
+            + Agregar repuesto
           </button>
-  
-          <!-- 🔥 NUEVO BOTÓN -->
-          <button 
-            *ngIf="modoEdicion" 
-            class="btn"
-            [ngClass]="estadoOrden === 'EN_EJECUCION' ? 'danger' : 'success'"
-            type="button"
-            (click)="toggleMantencion()">
-  
-            {{ estadoOrden === 'EN_EJECUCION' 
-                ? '⏹ Terminar mantención' 
-                : '▶ Iniciar mantención' }}
+        </div>
+
+        <!-- Acciones -->
+        <div class="acciones">
+
+          <button class="btn ghost" type="button" (click)="cerrar()">
+            Cancelar
           </button>
-          <ng-container *ngIf="estadoOrden !== 'EN_EJECUCION'">
+
+          <ng-container *ngIf="estadoOrden !== 'COMPLETADA'">
             <button 
-              class="btn primary"
+              *ngIf="modoEdicion"
+              class="btn danger"
               type="button"
-              (click)="guardar()"
-              [disabled]="ordenMantencionForm.invalid">
-              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              (click)="eliminar()">
+              Eliminar
             </button>
+    
+            <!-- 🔥 NUEVO BOTÓN -->
+            <button 
+              *ngIf="modoEdicion" 
+              class="btn"
+              [ngClass]="estadoOrden === 'EN_EJECUCION' ? 'danger' : 'success'"
+              type="button"
+              (click)="toggleMantencion()">
+    
+              {{ estadoOrden === 'EN_EJECUCION' 
+                  ? '⏹ Terminar mantención' 
+                  : '▶ Iniciar mantención' }}
+            </button>
+            <ng-container *ngIf="estadoOrden !== 'EN_EJECUCION'">
+              <button 
+                class="btn primary"
+                type="button"
+                (click)="guardar()"
+                [disabled]="ordenMantencionForm.invalid">
+                {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              </button>
+            </ng-container>
+
           </ng-container>
 
-        </ng-container>
+        </div>
 
+      </form>
+
+    </div>
+  </div>
+  <!-- 🔹 Modal Repuestos -->
+  <div *ngIf="mostrarModalRepuesto" class="mini-modal-backdrop">
+    <div class="mini-modal grande">
+
+      <!-- HEADER -->
+      <div class="mini-modal-header">
+        <h3>Gestión de Repuestos</h3>
+        <button
+          type="button"
+          class="close-btn"
+          (click)="cerrarModalRepuesto()">
+          ✕
+        </button>
       </div>
 
-    </form>
+      <!-- AGREGAR -->
+      <form [formGroup]="repuestoForm" class="form-repuesto">
 
+        <!-- REPUESTO -->
+        <div class="form-group">
+          <label>Repuesto</label>
+          <select formControlName="repuestoId">
+            <option [ngValue]="null">              Seleccione
+            </option>
+            <option *ngFor="let r of repuestos" [value]="r.id">
+              {{ r.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <!-- CANTIDAD -->
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input
+            type="number"
+            formControlName="cantidad"
+            min="1" />
+        </div>
+
+        <!-- BTN -->
+        <div class="acciones">
+          <button
+            type="button"
+            class="btn primary"
+            (click)="confirmarAgregarRepuesto()">
+            + Agregar
+          </button>
+        </div>
+      </form>
+
+      <!-- TABLA -->
+      <div class="tabla-repuestos">
+        <div *ngIf="repuestosFormArray.controls.length === 0" class="sin-datos">
+          No hay repuestos agregados
+        </div>
+        <div *ngFor="let item of repuestosFormArray.controls; let i = index" [formGroup]="getRepuestoGroup(i)" class="fila-repuesto">
+
+          <!-- NOMBRE -->
+          <div>
+            {{
+              obtenerNombreRepuesto(
+                item.value.repuestoId
+              )
+            }}
+          </div>
+
+          <!-- CANTIDAD -->
+          <div>
+            x{{ item.value.cantidad }}
+          </div>
+
+          <!-- ELIMINAR -->
+          <button
+            type="button"
+            class="btn danger"
+            (click)="eliminarRepuesto(i)">
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="acciones footer">        <button
+          type="button"
+          class="btn ghost"
+          (click)="cerrarModalRepuesto()">
+          Cerrar
+        </button>
+      </div>
+    </div>
   </div>
-</div>
 </div>

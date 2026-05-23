@@ -10,6 +10,7 @@ public class OrdenRepuestoResponse {
     private Long id;
     private Long ordenId;
     private Long repuestoId;
+    private String repuestoNombre;
     private Integer cantidad;
     private BigDecimal costoUnitario;
     private BigDecimal costoTotal;

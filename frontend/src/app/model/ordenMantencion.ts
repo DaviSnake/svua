@@ -1,3 +1,5 @@
+import { OrdenRepuesto } from "./ordenRepuesto";
+
 export interface OrdenMantencion {
   id?: number;
   titulo?: string;
@@ -11,4 +13,6 @@ export interface OrdenMantencion {
   costo?: string;
   activoId?: string;
   usuarioId?: string;
+  // 🔥 NUEVO
+  repuestos?: OrdenRepuesto[];
 }

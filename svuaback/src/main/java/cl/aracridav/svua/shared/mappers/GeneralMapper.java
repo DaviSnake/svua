@@ -1,6 +1,7 @@
 package cl.aracridav.svua.shared.mappers;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -240,6 +241,7 @@ public class GeneralMapper {
       .nombre(repuesto.getNombre())
       .descripcion(repuesto.getDescripcion())
       .costoUnitario(repuesto.getCostoUnitario())
+      .stockActual(repuesto.getStockActual())
       .stockMinimo(repuesto.getStockMinimo())
       .activo(repuesto.getActivo())
       .empresa(empresaDTO)
@@ -277,10 +279,34 @@ public class GeneralMapper {
     oMantenimientoResponse.setObservaciones(oMantenimiento.getObservaciones());
     oMantenimientoResponse.setActivoId(oMantenimiento.getActivo().getId());
     oMantenimientoResponse.setUsuarioId(oMantenimiento.getUsuario().getId());
-          
+
+    // 🔥 REPUESTOS
+    List<OrdenRepuestoResponse> repuestos = oMantenimiento.getRepuestosUtilizados()
+        .stream()
+        .map(this::mapRepuesto)
+        .toList();
+
+    oMantenimientoResponse.setRepuestos(repuestos);          
 
     return oMantenimientoResponse;
   }
+
+  private OrdenRepuestoResponse mapRepuesto(OrdenRepuesto r) {
+
+    OrdenRepuestoResponse dto = new OrdenRepuestoResponse();
+
+    dto.setId(r.getId());
+
+    dto.setRepuestoId(r.getRepuesto().getId());
+    dto.setRepuestoNombre(r.getRepuesto().getNombre());
+
+    dto.setCantidad(r.getCantidad());
+
+    dto.setCostoUnitario(r.getCostoUnitario());
+    dto.setCostoTotal(r.getCostoTotal());
+
+    return dto;
+}
 
   public OrdenRepuestoResponse mapOrdenRepuestoResponse(OrdenRepuesto oRepuesto) {
 
