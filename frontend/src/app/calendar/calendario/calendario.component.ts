@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, OnInit, ViewChild } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
 
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
@@ -7,6 +7,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import esLocale from '@fullcalendar/core/locales/es';
+import listPlugin from '@fullcalendar/list';
 
 import { OrdenMantencionService } from '../../services/orden-mantencion.service';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -63,10 +64,96 @@ export class CalendarioComponent implements OnInit {
     }, 300);
   }
 
+  // =====================================================
+  // 🧠 RESPONSIVE CALENDAR VIEW
+  // =====================================================
+
+  private getCalendarView(): string {
+
+    const width = window.innerWidth;
+
+    if (width < 768) return 'listWeek';      // 📱 mobile
+    if (width < 1024) return 'timeGridDay';  // 📲 tablet
+
+    return 'timeGridWeek';                   // 💻 desktop
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+
+    const api = this.calendarComponent?.getApi();
+    if (!api) return;
+
+    api.changeView(this.getCalendarView());
+
+    setTimeout(() => api.updateSize(), 100);
+  }
+
+  // =====================================================
+  // 🎨 EVENT RENDER (TOOLTIP + STYLE)
+  // =====================================================
+
+  private onEventDidMount(info: any) {
+
+    const isMobile = window.innerWidth < 768;
+
+    const estado = info.event.extendedProps?.estado;
+    const tipo = info.event.extendedProps?.tipoMantenimiento;
+    const duracion = info.event.extendedProps?.duracionMinutos;
+
+    info.el.style.boxShadow = this.getShadowPorEstado(estado);
+    info.el.style.borderRadius = '6px';
+    info.el.style.border = 'none';
+    info.el.style.cursor = 'pointer';
+    info.el.style.transition = 'all .2s ease';
+
+    // 🚫 MOBILE: sin tooltip ni hover
+    if (isMobile) return;
+
+    const tooltip = document.createElement('div');
+
+    tooltip.innerHTML = `
+      <strong>${estado}</strong><br>
+      Tipo: ${tipo}<br>
+      Duración: ${duracion} min
+    `;
+
+    Object.assign(tooltip.style, {
+      position: 'absolute',
+      bottom: '110%',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: '#111827',
+      color: '#fff',
+      padding: '8px 10px',
+      borderRadius: '8px',
+      fontSize: '12px',
+      whiteSpace: 'nowrap',
+      boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+      opacity: '0',
+      pointerEvents: 'none',
+      transition: 'opacity .2s ease',
+      zIndex: '9999'
+    });
+
+    info.el.appendChild(tooltip);
+
+    info.el.addEventListener('mouseenter', () => {
+      tooltip.style.opacity = '1';
+      info.el.style.transform = 'scale(1.03)';
+    });
+
+    info.el.addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+      info.el.style.transform = 'scale(1)';
+    });
+  }
+
+
   // 🔹 CALENDARIO (inicializado desde el inicio 🔥)
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-    initialView: 'timeGridWeek',
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+    initialView: this.getCalendarView(),
     initialDate: new Date(), // ✅ semana actual
     editable: true,
     locale: esLocale,
