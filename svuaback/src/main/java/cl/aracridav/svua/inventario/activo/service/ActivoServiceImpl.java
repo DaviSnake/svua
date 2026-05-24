@@ -170,6 +170,10 @@ public class ActivoServiceImpl implements ActivoService {
             );
         }
 
+        if (request.getCuentaContable() != null) {
+            activo.setCuentaContable(request.getCuentaContable());
+        }
+
         Activo actualizado = activoRepository.save(activo);
 
         return mapper.mapActivoResponse(actualizado);
