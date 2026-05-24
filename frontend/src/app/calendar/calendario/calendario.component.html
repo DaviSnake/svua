@@ -14,9 +14,23 @@
     <div class="item"><span class="dot completada"></span> COMPLETADA</div>
     <div class="item"><span class="dot cancelada"></span> CANCELADA</div>
   </div>
+  
   <!-- 🔹 Calendario -->
   <div class="calendar-container">
-    <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+    <full-calendar
+      #calendar
+      [options]="calendarOptions"
+      (touchend)="onCalendarTouchEnd()"
+    ></full-calendar>
+
+    <!-- 👇 AQUÍ VA EL BOTÓN -->
+    <button
+      class="fab-create"
+      *ngIf="isMobile() && !mostrarModal"
+      (click)="openCreateFromFab()"
+    >
+      +
+    </button>
   </div>
   <!-- 🔹 Modal -->
   <div *ngIf="mostrarModal" class="modal-backdrop">
@@ -114,8 +128,8 @@
               *ngIf="modoEdicion"
               class="btn danger"
               type="button"
-              (click)="eliminar()">
-              Eliminar
+              (click)="cancelarOrden()">
+              Cancelar Orden
             </button>
     
             <!-- 🔥 NUEVO BOTÓN -->

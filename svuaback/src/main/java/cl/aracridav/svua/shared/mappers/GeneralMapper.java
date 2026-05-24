@@ -280,13 +280,16 @@ public class GeneralMapper {
     oMantenimientoResponse.setActivoId(oMantenimiento.getActivo().getId());
     oMantenimientoResponse.setUsuarioId(oMantenimiento.getUsuario().getId());
 
-    // 🔥 REPUESTOS
-    List<OrdenRepuestoResponse> repuestos = oMantenimiento.getRepuestosUtilizados()
-        .stream()
-        .map(this::mapRepuesto)
-        .toList();
+    if (oMantenimiento.getRepuestosUtilizados() != null){
+      // 🔥 REPUESTOS
+      List<OrdenRepuestoResponse> repuestos = oMantenimiento.getRepuestosUtilizados()
+          .stream()
+          .map(this::mapRepuesto)
+          .toList();
 
-    oMantenimientoResponse.setRepuestos(repuestos);          
+        oMantenimientoResponse.setRepuestos(repuestos);          
+    }
+
 
     return oMantenimientoResponse;
   }

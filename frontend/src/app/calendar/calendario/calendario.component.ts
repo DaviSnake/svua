@@ -64,6 +64,10 @@ export class CalendarioComponent implements OnInit {
     }, 300);
   }
 
+  isMobile(): boolean {
+    return window.innerWidth < 768;
+  }
+
   // =====================================================
   // 🧠 RESPONSIVE CALENDAR VIEW
   // =====================================================
@@ -95,59 +99,66 @@ export class CalendarioComponent implements OnInit {
 
   private onEventDidMount(info: any) {
 
-    const isMobile = window.innerWidth < 768;
+  const isMobile = window.innerWidth < 768;
 
-    const estado = info.event.extendedProps?.estado;
-    const tipo = info.event.extendedProps?.tipoMantenimiento;
-    const duracion = info.event.extendedProps?.duracionMinutos;
+  const estado = info.event.extendedProps?.estado;
+  const tipo = info.event.extendedProps?.tipoMantenimiento;
+  const duracion = info.event.extendedProps?.duracionMinutos;
 
-    info.el.style.boxShadow = this.getShadowPorEstado(estado);
-    info.el.style.borderRadius = '6px';
-    info.el.style.border = 'none';
+  info.el.style.boxShadow = this.getShadowPorEstado(estado);
+  info.el.style.borderRadius = '6px';
+  info.el.style.border = 'none';
+  info.el.style.cursor = 'pointer';
+  info.el.style.transition = 'all .2s ease';
+
+  // 👇 AQUÍ VA TU BLOQUE
+  if (isMobile) {
+
     info.el.style.cursor = 'pointer';
-    info.el.style.transition = 'all .2s ease';
-
-    // 🚫 MOBILE: sin tooltip ni hover
-    if (isMobile) return;
-
-    const tooltip = document.createElement('div');
-
-    tooltip.innerHTML = `
-      <strong>${estado}</strong><br>
-      Tipo: ${tipo}<br>
-      Duración: ${duracion} min
-    `;
-
-    Object.assign(tooltip.style, {
-      position: 'absolute',
-      bottom: '110%',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      background: '#111827',
-      color: '#fff',
-      padding: '8px 10px',
-      borderRadius: '8px',
-      fontSize: '12px',
-      whiteSpace: 'nowrap',
-      boxShadow: '0 4px 12px rgba(0,0,0,.25)',
-      opacity: '0',
-      pointerEvents: 'none',
-      transition: 'opacity .2s ease',
-      zIndex: '9999'
-    });
-
-    info.el.appendChild(tooltip);
-
-    info.el.addEventListener('mouseenter', () => {
-      tooltip.style.opacity = '1';
-      info.el.style.transform = 'scale(1.03)';
-    });
-
-    info.el.addEventListener('mouseleave', () => {
-      tooltip.style.opacity = '0';
-      info.el.style.transform = 'scale(1)';
-    });
+    info.el.title = 'Toca para ver / crear';
   }
+
+  // 🚫 MOBILE: sin tooltip hover
+  if (isMobile) return;
+
+  const tooltip = document.createElement('div');
+
+  tooltip.innerHTML = `
+    <strong>${estado}</strong><br>
+    Tipo: ${tipo}<br>
+    Duración: ${duracion} min
+  `;
+
+  Object.assign(tooltip.style, {
+    position: 'absolute',
+    bottom: '110%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: '#111827',
+    color: '#fff',
+    padding: '8px 10px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    whiteSpace: 'nowrap',
+    boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+    opacity: '0',
+    pointerEvents: 'none',
+    transition: 'opacity .2s ease',
+    zIndex: '9999'
+  });
+
+  info.el.appendChild(tooltip);
+
+  info.el.addEventListener('mouseenter', () => {
+    tooltip.style.opacity = '1';
+    info.el.style.transform = 'scale(1.03)';
+  });
+
+  info.el.addEventListener('mouseleave', () => {
+    tooltip.style.opacity = '0';
+    info.el.style.transform = 'scale(1)';
+  });
+}
 
 
   // 🔹 CALENDARIO (inicializado desde el inicio 🔥)
@@ -156,6 +167,8 @@ export class CalendarioComponent implements OnInit {
     initialView: this.getCalendarView(),
     initialDate: new Date(), // ✅ semana actual
     editable: true,
+    selectable: true,   // 🔥 CLAVE
+    navLinks: true,
     locale: esLocale,
     height: 'auto',   // 🔥 IMPORTANTE
     expandRows: true, // 🔥 IMPORTANTE
@@ -242,7 +255,9 @@ export class CalendarioComponent implements OnInit {
     eventDrop: (info) => this.onEventDrop(info),
 
     // 🔵 EDITAR
-    eventClick: (info) => this.onEventClick(info)
+    eventClick: (info) => this.onEventClick(info),
+
+    select: (info) => this.onSelectRange(info),
   };
 
   getShadowPorEstado(estado?: string): string {
@@ -317,6 +332,28 @@ export class CalendarioComponent implements OnInit {
     this.cargarRepustos();
 
   }
+
+  onSelectRange(info: any) {
+
+  const fecha = info.start;
+
+  const ahora = new Date();
+
+  if (fecha < ahora) {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'warning',
+      title: 'No puedes usar fechas pasadas',
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    return;
+  }
+
+  this.abrirModalCreacion(fecha);
+}
 
   // 🔥 CARGAR EVENTOS (solo actualiza events)
   cargarEventos() {
@@ -620,37 +657,54 @@ export class CalendarioComponent implements OnInit {
     }
   }
 
-  // ❌ ELIMINAR
-  eliminar() {
+  private abrirModalCreacion(fecha: Date) {
+
+    this.ordenMantencionForm.reset();
+    this.activoControl.reset();
+
+    this.ordenMantencionForm.patchValue({
+      fechaHora: this.formatFechaLocal(fecha)
+    });
+
+    this.modoEdicion = false;
+    this.mostrarModal = true;
+
+    setTimeout(() => {
+      this.calendarComponent?.getApi()?.updateSize();
+    }, 100);
+  }
+
+  // ❌ CANCELAR ORDEN
+  cancelarOrden() {
     Swal.fire({
-      title: '¿Eliminar orden?',
-      text: 'Esta acción no se puede deshacer',
-      icon: 'warning',
+      title: 'Cancelar orden',
+      input: 'textarea',
+      inputLabel: 'Motivo',
+      inputPlaceholder: 'Escribe el motivo...',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
+      confirmButtonText: 'Cancelar orden',
+      confirmButtonColor: '#ef4444'
+    }).then(result => {
 
-      if (result.isConfirmed) {
+      if (!result.isConfirmed) return;
 
-        this.ordenMantencionService.eliminar(this.eventoSeleccionadoId)
-          .subscribe(() => {
+      const motivo = result.value;
 
-            Swal.fire({
-              title: 'Eliminado',
-              text: 'La orden fue eliminada correctamente',
-              icon: 'success',
-              timer: 1500,
-              showConfirmButton: false
-            });
+      this.ordenMantencionService.cancelar(
+        this.eventoSeleccionadoId,
+        motivo,
+        this.usuario.sub
+      ).subscribe(() => {
+        this.cargarEventos();
+        this.cerrar();
 
-            this.cargarEventos();
-            this.cerrar();
-          });
-
-      }
+        Swal.fire({
+          icon: 'success',
+          title: 'Orden cancelada',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      });
 
     });
   }
@@ -994,6 +1048,39 @@ export class CalendarioComponent implements OnInit {
     );
     return repuesto?.nombre || '';
   }
+
+  onCalendarTouchEnd() {
+    clearTimeout(this.longPressTimer);
+  }
+
+  // =====================================================
+  // 📱 MOBILE LONG PRESS
+  // =====================================================
+  private longPressTimer: any;
+  private touchStartDate: Date | null = null;
+
+  openCreateFromFab() {
+    this.handleDateInteraction(new Date());
+  }
+  handleDateInteraction(date: Date) {
+    const now = new Date();
+
+    if (date < now) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No puedes usar fechas pasadas',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      return;
+    }
+
+    this.abrirModalCreacion(date);
+  }
+
+
 
   formatFechaLocal(date: Date): string {
     const pad = (n: number) => n.toString().padStart(2, '0');

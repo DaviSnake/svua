@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ReprogramarOrdenRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrdenMantenimientoController {
 
-    private final OrdenMantenimientoService service;
+    private final OrdenMantenimientoService ordenMantenimientoService;
 
     @PreAuthorize(
         "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
@@ -39,7 +40,7 @@ public class OrdenMantenimientoController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(service.crearOrden(request));
+                .body(ordenMantenimientoService.crearOrden(request));
     }
 
     @PreAuthorize(
@@ -48,7 +49,21 @@ public class OrdenMantenimientoController {
     )
     @GetMapping
     public ResponseEntity<List<OrdenMantenimientoResponse>> listar() {
-        return ResponseEntity.ok(service.listarOrdenesEmpresa());
+        return ResponseEntity.ok(ordenMantenimientoService.listarOrdenesEmpresa());
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('ORDEN_MANT_VIEW')) "
+    )
+    @PutMapping("/{id}/cancelar")
+        public ResponseEntity<Void> cancelar(
+            @PathVariable Long id,
+            @RequestParam String motivo,
+            @RequestParam Long usuarioId
+    ) {
+        ordenMantenimientoService.cancelarOrden(id, motivo, usuarioId);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize(
@@ -58,14 +73,14 @@ public class OrdenMantenimientoController {
     @PutMapping("/{ordenId}")
     public ResponseEntity<OrdenMantenimientoResponse> actualizarOrden(
         @PathVariable Long ordenId,
-        @RequestBody OrdenMantenimientoRequest request) {
-        return ResponseEntity.ok(service.actualizarOrden(ordenId, request));
+        @RequestBody ActualizarOrdenMantenimientoRequest request) {
+        return ResponseEntity.ok(ordenMantenimientoService.actualizar(ordenId, request));
     }
 
     @PutMapping("/{id}/ejecutar")
     public ResponseEntity<OrdenEjecucionResponse> ejecutarOrden(@PathVariable Long id) {
 
-        OrdenEjecucionResponse orden = service.ejecutarOrden(id);
+        OrdenEjecucionResponse orden = ordenMantenimientoService.ejecutarOrden(id);
 
         return ResponseEntity.ok(orden);
     }
@@ -73,7 +88,7 @@ public class OrdenMantenimientoController {
     @PutMapping("/{id}/detener")
     public ResponseEntity<OrdenEjecucionResponse> detenerOrden(@PathVariable Long id) {
 
-        OrdenEjecucionResponse orden = service.detenerOrden(id);
+        OrdenEjecucionResponse orden = ordenMantenimientoService.detenerOrden(id);
 
         return ResponseEntity.ok(orden);
     }
@@ -83,7 +98,7 @@ public class OrdenMantenimientoController {
             @PathVariable Long id,
             @RequestParam("archivo") MultipartFile archivo) {
 
-        service.detenerOrden(id, archivo);
+        ordenMantenimientoService.detenerOrden(id, archivo);
 
         return ResponseEntity.ok().build();
     }
@@ -94,7 +109,7 @@ public class OrdenMantenimientoController {
             @RequestBody ReprogramarOrdenRequest request
     ) {
         return ResponseEntity.ok(
-            service.reprogramarOrden(id, request.getNuevaFecha(), request.getMotivo())
+            ordenMantenimientoService.reprogramarOrden(id, request.getNuevaFecha(), request.getMotivo())
         );
     }
 

@@ -46,6 +46,11 @@ export class OrdenMantencionService {
     return this.http.put(`${this.apiUrl}/ordenes-mantenimiento/${id}/reprogramar`, body);
   }
 
+  cancelar(id: number, motivo: string, usuarioId: number) {
+    return this.http.put(
+      `${this.apiUrl}/ordenes-mantenimiento/${id}/cancelar?motivo=${motivo}&usuarioId=${usuarioId}`, {});
+  }
+
   eliminar(id: number) {
     return this.http.delete(`${this.apiUrl}/ordenes-mantenimiento/${id}`);
   }

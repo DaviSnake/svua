@@ -8,14 +8,15 @@ import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "orden_repuesto")
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class OrdenRepuesto extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

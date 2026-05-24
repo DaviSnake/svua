@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
+import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
@@ -61,7 +63,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     /*
      * =========================================
-     * ESTADOS
+     * EJECUTAR ORDEN
      * =========================================
      */
 
@@ -70,6 +72,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.EN_EJECUCION);
     }
 
+    /*
+     * =========================================
+     * CERRAR ORDEN
+     * =========================================
+     */
     @Override
     public OrdenEjecucionResponse cerrarOrden(Long id, BigDecimal costo, String obs) {
         OrdenMantenimiento orden = obtenerOrden(id);
@@ -78,11 +85,21 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return cambiarEstado(orden, EstadoOrden.COMPLETADA);
     }
 
+    /*
+     * =========================================
+     * DETENER ORDEN
+     * =========================================
+     */
     @Override
     public OrdenEjecucionResponse detenerOrden(Long idOrden) {
         return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.COMPLETADA);
     }
 
+    /*
+     * =========================================
+     * DETENER ORDEN CON CHECK LIST
+     * =========================================
+     */
     @Override
     @Transactional
     public OrdenEjecucionResponse detenerOrden(Long id, MultipartFile archivo) {
@@ -100,18 +117,40 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return cambiarEstado(orden, EstadoOrden.COMPLETADA);
     }
 
-    @Override
-    public OrdenMantenimiento cancelarOrden(Long id, String motivo) {
-        OrdenMantenimiento orden = obtenerOrden(id);
 
-        if (orden.getEstado() == EstadoOrden.COMPLETADA) {
-            throw new BusinessException("No se puede cancelar una orden cerrada");
+    /*
+     * =========================================
+     * CANCELAR ORDEN
+     * =========================================
+     */
+    @Override
+    @Transactional
+    public void cancelarOrden(Long id, String motivo, Long usuarioId) {
+
+        OrdenMantenimiento orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        // 🚫 solo se puede cancelar si está PROGRAMADA o PENDIENTE
+        if (!(orden.getEstado() == EstadoOrden.PROGRAMADA
+                || orden.getEstado() == EstadoOrden.PENDIENTE)) {
+            throw new RuntimeException(
+                    "Solo se pueden cancelar órdenes en estado PROGRAMADA o PENDIENTE"
+            );
         }
 
+        // 🔥 cambiar estado
         orden.setEstado(EstadoOrden.CANCELADA);
-        orden.setObservaciones(motivo);
 
-        return ordenRepository.save(orden);
+        // 🔥 opcional: registrar quién canceló
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        orden.setUsuarioFinalizacion(usuario);
+
+        // 🔥 opcional: guardar motivo (si lo agregas en entidad o tabla de auditoría)
+        // orden.setMotivoCancelacion(motivo);
+
+        ordenRepository.save(orden);
     }
 
     /*
@@ -176,14 +215,122 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
      */
 
     @Override
-    public OrdenMantenimientoResponse actualizarOrden(Long id, OrdenMantenimientoRequest req) {
+    @Transactional
+    public OrdenMantenimientoResponse actualizar(Long id, ActualizarOrdenMantenimientoRequest request) {
 
-        OrdenMantenimiento orden = obtenerOrden(id);
+        OrdenMantenimiento orden = ordenRepository.findById(id)
+            .orElseThrow(() ->
+                new RuntimeException("Orden no encontrada")
+            );
 
-        orden.setTitulo(req.getTitulo());
-        orden.setFechaProgramada(req.getFechaProgramada());
+        // =====================================================
+        // VALIDAR ESTADO
+        // =====================================================
 
-        return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+        if (
+            orden.getEstado() == EstadoOrden.EN_EJECUCION ||
+            orden.getEstado() == EstadoOrden.CANCELADA ||
+            orden.getEstado() == EstadoOrden.COMPLETADA
+        ) {
+            throw new RuntimeException(
+                "No se puede editar la orden"
+            );
+        }
+
+        // =====================================================
+        // ACTUALIZAR DATOS PRINCIPALES
+        // =====================================================
+        orden.setTitulo(request.getTitulo());
+        orden.setObservaciones(request.getObservaciones());
+
+        orden.setTipoMantenimiento(
+            request.getTipoMantenimiento()
+        );
+
+        // =====================================================
+        // ACTUALIZAR REPUESTOS
+        // =====================================================
+
+        for (OrdenRepuesto old : orden.getRepuestosUtilizados()) {
+            Repuesto repuesto = old.getRepuesto();
+
+            repuesto.setStockActual(
+                repuesto.getStockActual() + old.getCantidad()
+            );
+
+            repuestoRepository.save(repuesto);
+        }
+
+        // 🔥 limpiar actuales
+        orden.getRepuestosUtilizados().clear();
+
+        if (
+            request.getRepuestos() != null &&
+            !request.getRepuestos().isEmpty()
+        ) {
+
+            List<OrdenRepuesto> nuevosRepuestos =
+                new ArrayList<>();
+
+            for (OrdenRepuestoRequest r : request.getRepuestos()) {
+
+                Repuesto repuesto =
+                    repuestoRepository.findById(
+                        r.getRepuestoId()
+                    ).orElseThrow(() ->
+                        new RuntimeException(
+                            "Repuesto no encontrado"
+                        )
+                    );
+
+                int cantidad = r.getCantidad();
+
+                // 🚨 VALIDAR STOCK
+                if (repuesto.getStockActual() < cantidad) {
+                    throw new BusinessException("Stock insuficiente para: " + repuesto.getNombre());
+                }
+
+                // 🔥 RESTAR STOCK
+                repuesto.setStockActual(repuesto.getStockActual() - cantidad);
+
+                repuestoRepository.save(repuesto);
+
+                OrdenRepuesto ordenRepuesto =
+                    OrdenRepuesto.builder()
+                        .orden(orden)
+                        .repuesto(repuesto)
+                        .cantidad(r.getCantidad())
+                        .empresa(orden.getEmpresa())
+                        .usuario(orden.getUsuario())
+                        .build();
+
+                nuevosRepuestos.add(ordenRepuesto);
+            }
+
+            orden.getRepuestosUtilizados()
+                .addAll(nuevosRepuestos);
+        }
+
+        // =====================================================
+        // CALCULAR COSTO TOTAL
+        // =====================================================
+
+        BigDecimal total = orden.getRepuestosUtilizados()
+        .stream()
+        .map(r -> Optional.ofNullable(r.getCostoTotal())
+            .orElse(BigDecimal.ZERO))
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        orden.setCosto(total);
+
+        // =====================================================
+        // GUARDAR
+        // =====================================================
+
+        OrdenMantenimiento actualizada =
+            ordenRepository.save(orden);
+
+        return mapper.mapOrdenMantenimientoResponse(actualizada);
     }
 
     @Override

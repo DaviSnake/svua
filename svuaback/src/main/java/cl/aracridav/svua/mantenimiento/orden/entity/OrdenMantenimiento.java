@@ -71,7 +71,7 @@ public class OrdenMantenimiento extends BaseEntity {
     @JoinColumn(name = "id_usuario_finalizacion")
     private Usuario usuarioFinalizacion;
 
-    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrdenRepuesto> repuestosUtilizados;
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
