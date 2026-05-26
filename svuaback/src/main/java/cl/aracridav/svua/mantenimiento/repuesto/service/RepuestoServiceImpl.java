@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
@@ -30,6 +31,7 @@ public class RepuestoServiceImpl implements RepuestoService {
      * =========================================
      */
     @Override
+    @Transactional
     public RepuestoResponse crear(RepuestoRequest request) {
 
         Long empresaId = resolveEmpresaId(request.getEmpresaId());
@@ -49,13 +51,12 @@ public class RepuestoServiceImpl implements RepuestoService {
      * =========================================
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<RepuestoResponse> listarRepuestos(Pageable pageable) {
 
         Page<RepuestoResponse> RepuestoResponse = null;
 
         Long empresaId = resolveEmpresaId(null);
-
-        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         if (esSuperAdmin()) {
             RepuestoResponse =  repository.findAll(pageable)
@@ -63,7 +64,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         }
 
         if (esAdminEmpresa()) {
-            RepuestoResponse = repository.findByEmpresa(empresa, pageable)
+            RepuestoResponse = repository.findByEmpresaId(empresaId, pageable)
                     .map(mapper::mapRepuestoResponse);
         }
 
@@ -77,6 +78,7 @@ public class RepuestoServiceImpl implements RepuestoService {
      * =========================================
      */
     @Override
+    @Transactional(readOnly = true)
     public RepuestoResponse obtener(Long id) {
 
         return mapper.mapRepuestoResponse(obtenerRepuesto(id));
@@ -88,6 +90,7 @@ public class RepuestoServiceImpl implements RepuestoService {
      * =========================================
      */
     @Override
+    @Transactional
     public RepuestoResponse actualizar(Long id, RepuestoRequest request) {
 
         Repuesto repuesto = obtenerRepuesto(id);

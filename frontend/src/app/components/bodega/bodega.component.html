@@ -37,29 +37,31 @@
 
   <!-- TABLA -->
   <h2>Bodegas</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Ubicacion fisica</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let bodega of bodegas">
-        <td>{{ bodega.id }}</td>
-        <td>{{ bodega.nombre }}</td>
-        <td>{{ bodega.ubicacionFisica }}</td>
-        <td>{{ bodega.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(bodega)">Editar</button>
-          <button *ngIf="bodega.activo" class="btn-eliminar" (click)="eliminar(bodega.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Ubicacion fisica</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bodega of bodegas">
+          <td>{{ bodega.id }}</td>
+          <td>{{ bodega.nombre }}</td>
+          <td>{{ bodega.ubicacionFisica }}</td>
+          <td>{{ bodega.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(bodega)">Editar</button>
+            <button *ngIf="bodega.activo" class="btn-eliminar" (click)="eliminar(bodega.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">

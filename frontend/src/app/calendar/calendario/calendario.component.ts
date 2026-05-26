@@ -451,7 +451,7 @@ export class CalendarioComponent implements OnInit {
     this.modoEdicion = false;
     this.aplicarEstadoFormulario();
 
-    this.ordenMantencionForm.reset();
+    this.limpiarFormulario();
     // 🔥 LIMPIAR AUTOCOMPLETE
     this.activoControl.reset();
 
@@ -617,7 +617,7 @@ export class CalendarioComponent implements OnInit {
       return;
     }
 
-    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos, fechaHora } = this.ordenMantencionForm.value;
+    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos, fechaHora } = this.ordenMantencionForm.getRawValue();
 
     const data = {
       titulo,
@@ -630,7 +630,7 @@ export class CalendarioComponent implements OnInit {
       usuarioId: this.usuario.sub,
       planMantenimientoId: "1",
       // 🔥 NUEVO
-      repuestos: this.repuestosFormArray.value
+      repuestos: this.repuestosFormArray.getRawValue()
     };
 
     if (this.modoEdicion) {
@@ -659,7 +659,7 @@ export class CalendarioComponent implements OnInit {
 
   private abrirModalCreacion(fecha: Date) {
 
-    this.ordenMantencionForm.reset();
+    this.limpiarFormulario();
     this.activoControl.reset();
 
     this.ordenMantencionForm.patchValue({
@@ -740,6 +740,16 @@ export class CalendarioComponent implements OnInit {
         return '#6b7280'; // gris
     }
   }
+
+  get isReadOnly(): boolean {
+    return ['PROGRAMADA', 'COMPLETADA', 'CANCELADA', 'EN_EJECUCION'].includes(this.estadoOrden);
+  }
+
+  ngOnChanges() {
+  this.aplicarEstadoFormulario();
+}
+
+
 
   getColor(
     estado?: string,
@@ -938,7 +948,7 @@ export class CalendarioComponent implements OnInit {
   }
 
   aplicarEstadoFormulario() {
-    if (this.puedeEditar()) {
+    if (!this.isReadOnly) {
       this.ordenMantencionForm.enable();
       this.activoControl.enable();
     } else {
@@ -1080,7 +1090,11 @@ export class CalendarioComponent implements OnInit {
     this.abrirModalCreacion(date);
   }
 
-
+  limpiarFormulario(): void {
+    this.ordenMantencionForm.reset();
+    this.repuestosFormArray.clear();
+    this.activoControl.reset();
+  }
 
   formatFechaLocal(date: Date): string {
     const pad = (n: number) => n.toString().padStart(2, '0');

@@ -270,3 +270,183 @@ td button {
   color: white;
   font-weight: bold;
 }
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.modal-content input {
+  width: 100%;
+}
+
+/* ===================================
+   RESPONSIVE MOBILE
+=================================== */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+    margin: 20px auto;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  /* FORM */
+  form {
+    padding: 15px;
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-grid,
+  .card-section {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  /* ACCIONES */
+  .acciones {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+
+  /* TABLA RESPONSIVE */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: white;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  td {
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    word-break: break-word;
+  }
+
+  td::before {
+    font-weight: bold;
+    color: #2c3e50;
+    min-width: 120px;
+  }
+
+  td:nth-child(1)::before {
+    content: "Código";
+  }
+
+  td:nth-child(2)::before {
+    content: "Nombre";
+  }
+
+  td:nth-child(3)::before {
+    content: "Descripción";
+  }
+
+  td:nth-child(4)::before {
+    content: "Tipo";
+  }
+
+  td:nth-child(5)::before {
+    content: "Marca";
+  }
+
+  td:nth-child(6)::before {
+    content: "Modelo";
+  }
+
+  td:nth-child(7)::before {
+    content: "Ubicación";
+  }
+
+  td:nth-child(8)::before {
+    content: "Proveedor";
+  }
+
+  td:nth-child(9)::before {
+    content: "Empresa";
+  }
+
+  td:nth-child(10)::before {
+    content: "Acciones";
+  }
+
+  td button {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  /* MODAL */
+  .modal-content {
+    width: 95%;
+    max-width: 500px;
+
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .modal-content h3 {
+    text-align: center;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  /* PAGINACION */
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
+  }
+}

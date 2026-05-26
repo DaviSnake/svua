@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -65,7 +66,7 @@ public class AuthController {
         Authentication auth;
 
         Usuario usuario = usuarioRepository
-            .findByEmail(request.getEmail())
+            .findByEmailWithEmpresa(request.getEmail())
             .orElseThrow(() ->
                     new BusinessException("Credenciales inválidas"));
 
@@ -140,6 +141,7 @@ public class AuthController {
             .build();
     }
 
+    @Transactional
     @PostMapping("/refresh")
     public AuthLoginResponse refreshToken(@RequestBody RefreshTokenRequest request,
                                         HttpServletRequest httpRequest

@@ -226,3 +226,154 @@ td button:last-child:hover {
   color: white;
   font-weight: bold;
 }
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.modal-content input {
+  width: 100%;
+}
+
+/* =========================
+   RESPONSIVE MOBILE
+========================= */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+    margin: 20px auto;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  /* FORMULARIO */
+  form {
+    grid-template-columns: 1fr !important;
+    padding: 15px;
+  }
+
+  .card-section {
+    gap: 12px;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  /* BOTONES */
+  .acciones {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+
+  /* TABLA RESPONSIVE */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    box-shadow: none;
+    background: transparent;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: white;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    padding: 10px 0;
+    gap: 10px;
+  }
+
+  td::before {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  td:nth-child(1)::before {
+    content: "Nombre";
+  }
+
+  td:nth-child(2)::before {
+    content: "Email";
+  }
+
+  td:nth-child(3)::before {
+    content: "Empresa";
+  }
+
+  td:nth-child(4)::before {
+    content: "Rol";
+  }
+
+  td:nth-child(5)::before {
+    content: "Estado";
+  }
+
+  td:nth-child(6)::before {
+    content: "Acciones";
+  }
+
+  td button {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* MODAL */
+  .modal-content {
+    width: 95%;
+    max-width: 400px;
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  /* PAGINACION */
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
+  }
+}

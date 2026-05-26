@@ -130,6 +130,7 @@ th {
 td {
   padding: 12px;
   border-bottom: 1px solid #eee;
+  word-break: break-word;
 }
 
 tbody td {
@@ -191,4 +192,138 @@ tbody tr:hover {
   background: #3498db;
   color: white;
   font-weight: bold;
+}
+
+/* ===================================
+   RESPONSIVE PROVEEDORES
+=================================== */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+    margin: 20px auto;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  /* FORM */
+  form {
+    padding: 15px;
+    grid-template-columns: 1fr !important;
+  }
+
+  .card-section,
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  /* ACCIONES */
+  .acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+
+  /* TABLA -> CARDS */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: white;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    padding: 10px 0;
+    gap: 10px;
+    word-break: break-word;
+  }
+
+  td::before {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  td:nth-child(1)::before { content: "Código"; }
+  td:nth-child(2)::before { content: "Nombre"; }
+  td:nth-child(3)::before { content: "Rut"; }
+  td:nth-child(4)::before { content: "Contacto"; }
+  td:nth-child(5)::before { content: "Teléfono"; }
+  td:nth-child(6)::before { content: "Email"; }
+  td:nth-child(7)::before { content: "Empresa"; }
+  td:nth-child(8)::before { content: "Acciones"; }
+
+  td button {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  /* PAGINACION */
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
+  }
+}
+
+/* EXTRA móvil pequeño */
+@media (max-width: 480px) {
+
+  h2 {
+    font-size: 20px;
+  }
+
+  form {
+    padding: 12px;
+  }
+
+  tbody tr {
+    padding: 12px;
+  }
 }

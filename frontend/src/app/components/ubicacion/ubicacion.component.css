@@ -192,3 +192,13 @@ tbody tr:hover {
   color: white;
   font-weight: bold;
 }
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .modal-content input {
+    width: 100%;
+  }
+}

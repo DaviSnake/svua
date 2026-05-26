@@ -66,3 +66,74 @@
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
 }
+
+.charts-grid .card {
+  overflow: hidden;
+}
+
+/* ==============================
+   RESPONSIVE DASHBOARD
+============================== */
+
+@media (max-width: 768px) {
+
+  .dashboard {
+    padding: 12px;
+  }
+
+  /* KPI GRID -> más compacto */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .kpi-card {
+    padding: 12px;
+  }
+
+  .kpi-card h4 {
+    font-size: 13px;
+  }
+
+  .kpi-card p {
+    font-size: 18px;
+  }
+
+  /* ICONO más pequeño */
+  .kpi-card span {
+    font-size: 18px;
+  }
+
+  /* CHARTS -> 1 columna en móvil */
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .card h3 {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  /* evita overflow de canvas charts */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* KPI en 1 columna en teléfonos pequeños */
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-card p {
+    font-size: 20px;
+  }
+}

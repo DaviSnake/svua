@@ -40,31 +40,33 @@
 
   <!-- TABLA -->
   <h2>Ubicaciones</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Descripción</th>
-        <th>Dirección</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let ubicacion of ubicaciones">
-        <td>{{ ubicacion.id }}</td>
-        <td>{{ ubicacion.nombre }}</td>
-        <td>{{ ubicacion.descripcion }}</td>
-        <td>{{ ubicacion.direccion }}</td>
-        <td>{{ ubicacion.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(ubicacion)">Editar</button>
-          <button *ngIf="ubicacion.activo" class="btn-eliminar" (click)="eliminar(ubicacion.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Dirección</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ubicacion of ubicaciones">
+          <td>{{ ubicacion.id }}</td>
+          <td>{{ ubicacion.nombre }}</td>
+          <td>{{ ubicacion.descripcion }}</td>
+          <td>{{ ubicacion.direccion }}</td>
+          <td>{{ ubicacion.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(ubicacion)">Editar</button>
+            <button *ngIf="ubicacion.activo" class="btn-eliminar" (click)="eliminar(ubicacion.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">

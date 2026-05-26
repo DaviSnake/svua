@@ -50,44 +50,46 @@
     
     <!-- TABLA -->
     <h2>Usuarios</h2>
-    <table>
-    
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Empresa</th>
-          <th>Rol</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-    
-      <tbody>
-        <tr *ngFor="let usuario of usuarios">
-    
-          <td>{{ usuario.nombre }}</td>
-          <td>{{ usuario.email }}</td>
-          <td>{{ usuario.empresaNombre }}</td>
-          <td>
-            <span [ngClass]="{
-              'badge-admin': usuario.rol === 'SUPER_ADMIN',
-              'badge-user': usuario.rol === 'USUARIO'
-            }">
-              {{ usuario.rol }}
-            </span>
-          </td>
-          <td>{{ usuario.activo ? "Activo" : "Inactivo"}}</td>
-    
-          <td>
-            <button (click)="editar(usuario)">Editar</button>
-            <button (click)="confirmarEliminar(usuario.id!)" [disabled]="!usuario.activo">Eliminar</button>
-          </td>
-    
-        </tr>
-      </tbody>
-    
-    </table>
+    <div class="table-wrapper">
+      <table>
+      
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Empresa</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+      
+        <tbody>
+          <tr *ngFor="let usuario of usuarios">
+      
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.empresaNombre }}</td>
+            <td>
+              <span [ngClass]="{
+                'badge-admin': usuario.rol === 'SUPER_ADMIN',
+                'badge-user': usuario.rol === 'USUARIO'
+              }">
+                {{ usuario.rol }}
+              </span>
+            </td>
+            <td>{{ usuario.activo ? "Activo" : "Inactivo"}}</td>
+      
+            <td>
+              <button (click)="editar(usuario)">Editar</button>
+              <button (click)="confirmarEliminar(usuario.id!)" [disabled]="!usuario.activo">Eliminar</button>
+            </td>
+      
+          </tr>
+        </tbody>
+      
+      </table>
+    </div>
 </div>
 
 <div class="paginacion">

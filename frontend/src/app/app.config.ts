@@ -7,6 +7,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 // 👇 IMPORTANTE
 import { registerLocaleData } from '@angular/common';
 import localeEsCl from '@angular/common/locales/es-CL';
+import { sessionExpiredInterceptor } from './interceptors/session-expired.interceptor';
 
 // 👇 registrar locale
 registerLocaleData(localeEsCl);
@@ -15,7 +16,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }), 
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, sessionExpiredInterceptor])),
 
     // 👇 ESTO ES LA CLAVE
     { provide: LOCALE_ID, useValue: 'es-CL' }

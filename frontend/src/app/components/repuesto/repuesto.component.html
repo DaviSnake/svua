@@ -49,35 +49,37 @@
 
   <!-- TABLA -->
   <h2>Repuestos</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Descripión</th>
-        <th>Costo Unitario</th>
-        <th>Stock Actual</th>
-        <th>Stock Mínimo</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let repuesto of repuestos">
-        <td>{{ repuesto.codigo }}</td>
-        <td>{{ repuesto.nombre }}</td>
-        <td>{{ repuesto.descripcion }}</td>
-        <td class="text-right">{{ repuesto.costoUnitario | number:'1.0-0':'es-CL' }}</td>
-        <td class="text-right">{{ repuesto.stockActual | number:'1.0-0':'es-CL' }}</td>
-        <td class="text-right">{{ repuesto.stockMinimo | number:'1.0-0':'es-CL' }}</td>
-        <td>{{ repuesto.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(repuesto)">Editar</button>
-          <button *ngIf="repuesto.activo" class="btn-eliminar" (click)="eliminar(repuesto.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Descripión</th>
+          <th>Costo Unitario</th>
+          <th>Stock Actual</th>
+          <th>Stock Mínimo</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let repuesto of repuestos">
+          <td>{{ repuesto.codigo }}</td>
+          <td>{{ repuesto.nombre }}</td>
+          <td>{{ repuesto.descripcion }}</td>
+          <td class="text-right">{{ repuesto.costoUnitario | number:'1.0-0':'es-CL' }}</td>
+          <td class="text-right">{{ repuesto.stockActual | number:'1.0-0':'es-CL' }}</td>
+          <td class="text-right">{{ repuesto.stockMinimo | number:'1.0-0':'es-CL' }}</td>
+          <td>{{ repuesto.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(repuesto)">Editar</button>
+            <button *ngIf="repuesto.activo" class="btn-eliminar" (click)="eliminar(repuesto.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">

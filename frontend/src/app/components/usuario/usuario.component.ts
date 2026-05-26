@@ -125,7 +125,7 @@ export class UsuarioComponent implements OnInit {
 
     const usuario: Usuario = this.usuarioForm.value;
 
-    if (usuario.password !== this.usuarioForm.value.confirmarPassword){
+    if (usuario.password !== this.usuarioForm.value.confirmarPassword && !this.editando){
       Swal.fire({
         title: 'Validación',
         text: 'Los Password deben coincidir',

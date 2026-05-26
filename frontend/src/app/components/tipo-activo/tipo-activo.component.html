@@ -45,31 +45,33 @@
 
   <!-- TABLA -->
   <h2>Tipo Activos</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Descripción</th>
-        <th>Vida Util Meses</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let tipoActivo of tipoActivos">
-        <td>{{ tipoActivo.id }}</td>
-        <td>{{ tipoActivo.nombre }}</td>
-        <td>{{ tipoActivo.descripcion }}</td>
-        <td class="text-right">{{ tipoActivo.vidaUtilReferencialMeses | number:'1.0-0' }}</td>
-        <td>{{ tipoActivo.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(tipoActivo)">Editar</button>
-          <button *ngIf="tipoActivo.activo" class="btn-eliminar" (click)="eliminar(tipoActivo.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Vida Util Meses</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tipoActivo of tipoActivos">
+          <td>{{ tipoActivo.id }}</td>
+          <td>{{ tipoActivo.nombre }}</td>
+          <td>{{ tipoActivo.descripcion }}</td>
+          <td class="text-right">{{ tipoActivo.vidaUtilReferencialMeses | number:'1.0-0' }}</td>
+          <td>{{ tipoActivo.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(tipoActivo)">Editar</button>
+            <button *ngIf="tipoActivo.activo" class="btn-eliminar" (click)="eliminar(tipoActivo.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">

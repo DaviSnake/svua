@@ -55,7 +55,7 @@ input:focus, select:focus {
 }
 
 .span-2 {
-  grid-column: span 3;
+  grid-column: span 2;
 }
 
 /* BOTONES */
@@ -158,4 +158,165 @@ td button:last-child {
 
 td button:last-child:hover {
   background: #c0392b;
+}
+
+/* ===================================
+   RESPONSIVE EMPRESAS
+=================================== */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+    margin: 20px auto;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  /* FORM GENERAL */
+  form {
+    grid-template-columns: 1fr !important;
+    padding: 15px;
+  }
+
+  .card-section {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* inputs full width */
+  input,
+  select,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  .span-2 {
+    grid-column: auto !important;
+  }
+
+  .full-width {
+    grid-column: auto !important;
+  }
+
+  /* ADMIN SECTION */
+  .admin-section {
+    grid-column: 1 / -1;
+  }
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .admin-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ACCIONES */
+  .acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+
+  /* FILTRO */
+  .filtro {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* TABLA -> CARDS */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: white;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    padding: 10px 0;
+    gap: 10px;
+    word-break: break-word;
+  }
+
+  td::before {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  td:nth-child(1)::before { content: "Nombre"; }
+  td:nth-child(2)::before { content: "RUT"; }
+  td:nth-child(3)::before { content: "Email"; }
+  td:nth-child(4)::before { content: "Plan"; }
+  td:nth-child(5)::before { content: "Acciones"; }
+
+  td button {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  /* PAGINACION si la agregas después */
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
+  }
+}
+
+/* ===========================
+   EXTRA MOBILE PEQUEÑO
+=========================== */
+@media (max-width: 480px) {
+
+  h2 {
+    font-size: 20px;
+  }
+
+  form {
+    padding: 12px;
+  }
+
+  tbody tr {
+    padding: 12px;
+  }
 }

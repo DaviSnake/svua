@@ -197,3 +197,78 @@ tbody tr:hover {
   text-align: right;
 }
 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* =========================
+   RESPONSIVE TIPO ACTIVO
+========================= */
+
+/* WRAPPER TABLA (IMPORTANTE EN MÓVIL) */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* TABLET */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  /* FORM EN 1 COLUMNA */
+  .card-section {
+    grid-template-columns: 1fr;
+  }
+
+  form {
+    padding: 15px;
+    gap: 10px;
+  }
+
+  input, select {
+    font-size: 13px;
+    padding: 9px;
+  }
+
+  /* TABLA MÁS COMPACTA */
+  th, td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .btn-editar,
+  .btn-eliminar {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* MÓVIL PEQUEÑO */
+@media (max-width: 480px) {
+
+  h2 {
+    font-size: 18px;
+  }
+
+  table {
+    font-size: 11px;
+  }
+
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  button {
+    font-size: 12px;
+  }
+}
+

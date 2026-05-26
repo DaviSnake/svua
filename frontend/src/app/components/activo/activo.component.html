@@ -103,40 +103,42 @@
     
   <!-- TABLA -->
   <h2>Activos</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Descripcion</th>
-        <th>Tipo Activo</th>
-        <th>Marca</th>
-        <th>Modelo</th>
-        <th>Ubicación</th>
-        <th>Proveedor</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let activo of activos">
-        <td>{{ activo.codigoInterno }}</td>
-        <td>{{ activo.nombre }}</td>
-        <td>{{ activo.descripcion }}</td>
-        <td>{{ activo.tipoActivo.nombre }}</td>
-        <td>{{ activo.marca }}</td>
-        <td>{{ activo.modelo }}</td>
-        <td>{{ activo.ubicacion.nombre }}</td>
-        <td>{{ activo.proveedor.nombre }}</td>
-        <td>{{ activo.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(activo)">Editar</button>
-          <button *ngIf="activo.estadoActual !== 'BAJA'" class="btn-eliminar" (click)="darDeBaja(activo.id!)">Dar Baja</button>
-          <button class="btn-ver" (click)="abrirModalActivo(activo)">Ver</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Descripcion</th>
+          <th>Tipo Activo</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Ubicación</th>
+          <th>Proveedor</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let activo of activos">
+          <td>{{ activo.codigoInterno }}</td>
+          <td>{{ activo.nombre }}</td>
+          <td>{{ activo.descripcion }}</td>
+          <td>{{ activo.tipoActivo.nombre }}</td>
+          <td>{{ activo.marca }}</td>
+          <td>{{ activo.modelo }}</td>
+          <td>{{ activo.ubicacion.nombre }}</td>
+          <td>{{ activo.proveedor.nombre }}</td>
+          <td>{{ activo.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(activo)">Editar</button>
+            <button *ngIf="activo.estadoActual !== 'BAJA'" class="btn-eliminar" (click)="darDeBaja(activo.id!)">Dar Baja</button>
+            <button class="btn-ver" (click)="abrirModalActivo(activo)">Ver</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">

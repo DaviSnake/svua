@@ -106,7 +106,8 @@
           <input type="text" formControlName="duracionMinutos" />
         </div>
         <!-- REPUESTOS -->
-        <div class="repuestos-header">
+        <div class="repuestos-header" 
+        *ngIf="!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION'].includes(estadoOrden)">
           <h3>Repuestos</h3>
           <button
             type="button"
@@ -123,9 +124,9 @@
             Cancelar
           </button>
 
-          <ng-container *ngIf="estadoOrden !== 'COMPLETADA'">
+          <ng-container *ngIf="!['COMPLETADA', 'CANCELADA'].includes(estadoOrden)">
             <button 
-              *ngIf="modoEdicion"
+              *ngIf="modoEdicion && estadoOrden !== 'EN_EJECUCION'"
               class="btn danger"
               type="button"
               (click)="cancelarOrden()">
