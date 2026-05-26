@@ -28,7 +28,7 @@ import { RepuestoService } from '../../services/repuesto.service';
   standalone: true,
   imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule],
   templateUrl: './calendario.component.html',
-  styleUrl: './calendario.component.css'
+  styleUrls: ['./calendario.component.css']
 })
 export class CalendarioComponent implements OnInit {
 
