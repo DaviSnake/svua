@@ -8,6 +8,7 @@ import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
 import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
+import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
@@ -61,6 +62,18 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "ruta_archivo")
     private String rutaArchivo;
 
+    @Column(name = "horas_estimadas_proveedor", precision = 15, scale = 2)
+    private BigDecimal horasEstimadasProveedor;
+
+    @Column(name = "horas_reales_proveedor", precision = 15, scale = 2)
+    private BigDecimal horasRealesProveedor;
+
+    @Column(name = "valor_hora_proveedor", precision = 15, scale = 2)
+    private BigDecimal valorHoraProveedor;
+
+    @Column(name = "costo_mano_obra_proveedor", precision = 15, scale = 2)
+    private BigDecimal costoManoObraProveedor;
+
     // 🔥 NUEVO: quién ejecuta (inicia)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_ejecucion")
@@ -92,4 +105,8 @@ public class OrdenMantenimiento extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_plan", nullable = false, updatable = false)
     private PlanMantenimiento planMantenimiento;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_proveedor")
+    private Proveedor proveedor;
 }
