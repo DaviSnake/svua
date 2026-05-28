@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
@@ -41,4 +42,6 @@ public interface OrdenMantenimientoService {
     public OrdenMantenimientoResponse actualizar(
             Long id,
             ActualizarOrdenMantenimientoRequest request);
+
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses();
 }

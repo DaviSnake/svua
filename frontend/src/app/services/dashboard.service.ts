@@ -33,8 +33,13 @@ export class DashboardService {
   }
 
   getDashboardIndicadores() {
-  return this.http.get<DashboardResponse>(`${this.apiUrl}/dashboard`
-  );
-}
+    return this.http.get<DashboardResponse>(`${this.apiUrl}/dashboard`
+    );
+  }
+
+  getCostos() {
+    return this.http.get<any>(`${this.apiUrl}/grafico/costos`
+    );
+  }
 
 }

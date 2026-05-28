@@ -10,8 +10,12 @@ import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -25,6 +29,7 @@ import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
@@ -382,6 +387,69 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 .stream()
                 .map(mapper::mapOrdenMantenimientoResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses() {
+
+        Long empresaId = SecurityUtils.getEmpresaId();
+
+        LocalDateTime fechaInicio = LocalDateTime.now()
+            .minusMonths(5)
+            .withDayOfMonth(1)
+            .withHour(0)
+            .withMinute(0)
+            .withSecond(0);
+
+        List<Object[]> resultados =
+            ordenRepository
+                .obtenerCostosUltimosMeses(fechaInicio, empresaId);
+
+        Map<Integer, BigDecimal> costosPorMes = new HashMap<>();
+
+        for (Object[] r : resultados) {
+
+            Integer mes = (Integer) r[1];
+
+            BigDecimal total = r[2] != null
+                ? (BigDecimal) r[2]
+                : BigDecimal.ZERO;
+
+            costosPorMes.put(mes, total);
+        }
+
+        List<String> categorias = new ArrayList<>();
+        List<BigDecimal> series = new ArrayList<>();
+
+        DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern(
+                "MMM",
+                Locale.forLanguageTag("es-CL")
+            );
+
+        for (int i = 5; i >= 0; i--) {
+
+            LocalDate fecha = LocalDate.now().minusMonths(i);
+
+            int mes = fecha.getMonthValue();
+
+            categorias.add(
+                    fecha.format(formatter).toUpperCase()
+            );
+
+            series.add(
+                    costosPorMes.getOrDefault(
+                            mes,
+                            BigDecimal.ZERO
+                    )
+            );
+        }
+
+        return CostosGraficoReponse.builder()
+                .categorias(categorias)
+                .series(series)
+                .build();
     }
 
     /*

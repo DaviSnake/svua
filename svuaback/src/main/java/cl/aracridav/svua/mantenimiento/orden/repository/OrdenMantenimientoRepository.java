@@ -184,4 +184,32 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
     """)
     List<OrdenMantenimiento> findFallasMTBF(@Param("empresaId") Long empresaId);
 
+    @Query("""
+        SELECT 
+            YEAR(o.fechaProgramada),
+            MONTH(o.fechaProgramada),
+            COALESCE(SUM(o.costoTotal), 0)
+        FROM OrdenMantenimiento o
+        WHERE o.fechaProgramada >= :fechaInicio
+        GROUP BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
+        ORDER BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
+    """)
+    List<Object[]> obtenerCostosUltimosMeses(
+        @Param("fechaInicio") LocalDateTime fechaInicio);
+
+    @Query("""
+        SELECT 
+            YEAR(o.fechaProgramada),
+            MONTH(o.fechaProgramada),
+            COALESCE(SUM(o.costoTotal), 0)
+        FROM OrdenMantenimiento o
+        WHERE o.fechaProgramada >= :fechaInicio
+        AND o.activo.empresa.id = :empresaId
+        GROUP BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
+        ORDER BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
+    """)
+    List<Object[]> obtenerCostosUltimosMeses(
+        @Param("fechaInicio") LocalDateTime fechaInicio,
+        @Param("empresaId") Long empresaId);
+
 }

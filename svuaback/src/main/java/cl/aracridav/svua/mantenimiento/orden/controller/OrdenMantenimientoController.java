@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ReprogramarOrdenRequest;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.service.OrdenMantenimientoService;
@@ -110,6 +111,15 @@ public class OrdenMantenimientoController {
     ) {
         return ResponseEntity.ok(
             ordenMantenimientoService.reprogramarOrden(id, request.getNuevaFecha(), request.getMotivo())
+        );
+    }
+
+    @GetMapping("/grafico/costos")
+    public ResponseEntity<CostosGraficoReponse> obtenerGraficoCostos() {
+
+        return ResponseEntity.ok(
+            ordenMantenimientoService
+                .obtenerGraficoCostosUltimos6Meses()
         );
     }
 
