@@ -1,11 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DashboardResponse } from './models/reportes.model';
 import { DashboardService } from '../../services/dashboard.service';
+import { NgChartsModule } from 'ng2-charts';
+import { ChartConfiguration, ChartType } from 'chart.js';
 
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [],
+  imports: [NgChartsModule],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })
@@ -17,8 +19,44 @@ export class ReportesComponent implements OnInit {
 
    dataCostos: any;
 
+   public lineChartType: ChartType = 'line';
 
-   ngOnInit(): void {
+   public lineChartData: ChartConfiguration['data'] = {
+    labels: [],
+    datasets: [
+      {
+        data: [],
+        label: 'Costos ($)',
+        fill: true,
+        tension: 0.4,
+        borderColor: '#3f51b5',
+        backgroundColor: 'rgba(63,81,181,0.2)'
+      }
+    ]
+  };
+
+  public lineChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    plugins: {
+      legend: {
+        display: true
+      }
+    },
+
+    scales: {
+      y: {
+        ticks: {
+          callback: (value) =>
+            '$ ' + new Intl.NumberFormat('es-CL').format(Number(value))
+        }
+      }
+    }
+  };
+
+
+  ngOnInit(): void {
     this.cargarDashboard();
     this.cargarCostos();
   }
@@ -31,30 +69,32 @@ export class ReportesComponent implements OnInit {
     });
   }
 
-  cargarCostos() {
+  cargarCostos(): void {
     this.dashboardService.getCostos().subscribe({
       next: (res) => {
+        console.log(res);
 
-        this.dataCostos = {
-          series: [
-            {
-              name: 'Costos',
-              dataCostos: res.series
-            }
-          ],
-
-          chart: {
-            type: 'bar',
-            height: 350
-          },
-
-          xaxis: {
-            categories: res.categorias
-          }
-        };
-
+        this.setData(res);
+      },
+      error: (err) => {
+        console.error(err);
       }
     });
+  }
+  setData(res: any): void {
+    this.lineChartData = {
+      labels: res.categorias,
+      datasets: [
+        {
+          data: res.series,
+          label: 'Costos ($)',
+          fill: true,
+          tension: 0.4,
+          borderColor: '#3f51b5',
+          backgroundColor: 'rgba(63,81,181,0.2)'
+        }
+      ]
+    };
   }
 
 }

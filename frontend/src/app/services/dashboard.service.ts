@@ -38,7 +38,7 @@ export class DashboardService {
   }
 
   getCostos() {
-    return this.http.get<any>(`${this.apiUrl}/grafico/costos`
+    return this.http.get<any>(`${this.apiUrl}/ordenes-mantenimiento/grafico/costos`
     );
   }
 

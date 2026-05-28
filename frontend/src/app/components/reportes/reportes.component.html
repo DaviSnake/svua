@@ -1,11 +1,11 @@
 <div class="dashboard-header">
 
   <div>
-    <h1 class="dashboard-title">
+    <h1 class="section-title">
       Centro de Monitoreo de Mantenimiento
     </h1>
 
-    <p class="dashboard-subtitle">
+    <p class="section-subtitle">
       Indicadores operacionales y desempeño en tiempo real
     </p>
   </div>
@@ -46,3 +46,27 @@
 
 </div>
 
+<div class="chart-section">
+
+  <h2 class="section-title">
+    Evolución de Costos de Mantención
+  </h2>
+
+  <p class="section-subtitle">
+    Indicador de Costos Operativos
+  </p>
+
+  <div class="chart-card">
+
+    <div class="chart-container">
+      <canvas
+        baseChart
+        [data]="lineChartData"
+        [type]="lineChartType"
+        [options]="lineChartOptions">
+      </canvas>
+    </div>
+
+  </div>
+
+</div>
