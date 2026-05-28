@@ -243,6 +243,7 @@ public class GeneralMapper {
       .costoUnitario(repuesto.getCostoUnitario())
       .stockActual(repuesto.getStockActual())
       .stockMinimo(repuesto.getStockMinimo())
+      .tipoRepuesto(repuesto.getTipo())
       .activo(repuesto.getActivo())
       .empresa(empresaDTO)
       .build();
@@ -275,10 +276,16 @@ public class GeneralMapper {
     oMantenimientoResponse.setFechaEjecucion(oMantenimiento.getFechaEjecucion());
     oMantenimientoResponse.setTipoMantenimiento(oMantenimiento.getTipoMantenimiento());
     oMantenimientoResponse.setEstado(oMantenimiento.getEstado());
-    oMantenimientoResponse.setCosto(oMantenimiento.getCosto());
+    oMantenimientoResponse.setCostoTotal(oMantenimiento.getCostoTotal());
+    oMantenimientoResponse.setHorasEstimadas(oMantenimiento.getHorasEstimadasProveedor());
+    oMantenimientoResponse.setHorasReal(oMantenimiento.getHorasRealesProveedor());
+    oMantenimientoResponse.setValorHora(oMantenimiento.getValorHoraProveedor());
+    oMantenimientoResponse.setCostoManoObraEstimada(oMantenimiento.getCostoManoObraEstimadasProveedor());
+    oMantenimientoResponse.setCostoManoObra(oMantenimiento.getCostoManoObraProveedor());
     oMantenimientoResponse.setObservaciones(oMantenimiento.getObservaciones());
     oMantenimientoResponse.setActivoId(oMantenimiento.getActivo().getId());
     oMantenimientoResponse.setUsuarioId(oMantenimiento.getUsuario().getId());
+    oMantenimientoResponse.setProveedorId(oMantenimiento.getProveedor().getId());
 
     if (oMantenimiento.getRepuestosUtilizados() != null){
       // 🔥 REPUESTOS

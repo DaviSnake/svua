@@ -41,4 +41,8 @@ public class Repuesto extends BaseEntity {
     @Column(nullable = false)
     private Boolean activo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false)
+    private TipoRepuesto tipo;
+
 }

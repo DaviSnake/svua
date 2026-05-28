@@ -2,6 +2,7 @@ package cl.aracridav.svua.mantenimiento.orden.service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +39,8 @@ import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.proveedor.entity.Proveedor;
+import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
@@ -57,6 +60,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     private final OrdenRepuestoRepository ordenRepuestoRepository;
     private final ActivoRepository activoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ProveedorRepository proveedorRepository;
     private final PlanMantenimientoRepository planRepository;
     private final EmpresaRepository empresaRepository;
     private final GeneralMapper mapper;
@@ -80,7 +84,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     @Override
     public OrdenEjecucionResponse cerrarOrden(Long id, BigDecimal costo, String obs) {
         OrdenMantenimiento orden = obtenerOrden(id);
-        orden.setCosto(costo);
+        orden.setCostoTotal(costo);
         orden.setObservaciones(obs);
         return cambiarEstado(orden, EstadoOrden.COMPLETADA);
     }
@@ -165,6 +169,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         Activo activo = obtenerActivo(req.getActivoId());
         Empresa empresa = obtenerEmpresaActual();
         Usuario usuario = obtenerUsuario(req.getUsuarioId());
+        Proveedor proveedor = obtenerProveedor(req.getProveedorId());
         validarNoExisteOrdenPendiente(activo.getId());
 
         OrdenMantenimiento orden = construirOrden(
@@ -172,6 +177,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 obtenerEmpresaActual(),
                 activo,
                 obtenerUsuario(req.getUsuarioId()),
+                proveedor,
                 obtenerPlan(req.getPlanMantenimientoId())
         );
 
@@ -300,6 +306,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                         .orden(orden)
                         .repuesto(repuesto)
                         .cantidad(r.getCantidad())
+                        .costoUnitario(repuesto.getCostoUnitario())
+                        .costoTotal(
+                            r.getCostoUnitario().multiply(
+                                BigDecimal.valueOf(r.getCantidad())
+                            )
+                        )
                         .empresa(orden.getEmpresa())
                         .usuario(orden.getUsuario())
                         .build();
@@ -321,7 +333,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             .orElse(BigDecimal.ZERO))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        orden.setCosto(total);
+        orden.setCostoTotal(total);
 
         // =====================================================
         // GUARDAR
@@ -386,11 +398,56 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         orden.setEstado(nuevoEstado);
 
+        if (nuevoEstado == EstadoOrden.COMPLETADA) {
+            BigDecimal horasSistema = BigDecimal.valueOf(orden.getDuracionSegundos())
+                .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+
+            orden.setHorasRealesProveedor(horasSistema);
+    
+            orden.setCostoManoObraProveedor(
+                calcularCosto(
+                    horasSistema,
+                    orden.getValorHoraProveedor()
+                )
+            );
+        }
+
+        orden.setCostoTotal(
+            calcularCostoTotal(orden)
+        );
+
         OrdenMantenimiento guardada = ordenRepository.save(orden);
 
         actualizarEstadoActivo(guardada, nuevoEstado);
 
         return mapper.mapOrdenEjecucionResponse(guardada);
+    }
+
+    private BigDecimal calcularCosto(BigDecimal horas, BigDecimal valorHora) {
+
+        if (horas == null || valorHora == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return horas.multiply(valorHora);
+    }
+
+    private BigDecimal calcularCostoTotal(OrdenMantenimiento orden) {
+
+        BigDecimal costoManoObra = Optional.ofNullable(
+            orden.getCostoManoObraProveedor()
+        ).orElse(BigDecimal.ZERO);
+
+        BigDecimal costoRepuestos = orden.getRepuestosUtilizados()
+            .stream()
+            .map(r ->
+                Optional.ofNullable(r.getCostoUnitario())
+                    .orElse(BigDecimal.ZERO)
+                    .multiply(BigDecimal.valueOf(r.getCantidad()))
+            )
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return costoManoObra.add(costoRepuestos);
     }
 
     private void actualizarEstadoActivo(OrdenMantenimiento orden, EstadoOrden estado) {
@@ -521,6 +578,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 .orElseThrow(() -> new BusinessException("Usuario no existe"));
     }
 
+    private Proveedor obtenerProveedor(Long id) {
+        return proveedorRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Proveedor no existe"));
+    }
+
     private PlanMantenimiento obtenerPlan(Long id) {
         return planRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Plan no existe"));
@@ -597,6 +659,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             Empresa empresa,
             Activo activo,
             Usuario usuario,
+            Proveedor proveedor,
             PlanMantenimiento plan) {
 
         OrdenMantenimiento orden = new OrdenMantenimiento();
@@ -612,11 +675,16 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         orden.setTipoMantenimiento(req.getTipoMantenimiento());
         orden.setEstado(EstadoOrden.PROGRAMADA);
-        orden.setCosto(req.getCosto());
+        orden.setCostoTotal(req.getCostoTotal());
+        orden.setHorasEstimadasProveedor(req.getHorasEstimadas());
+        orden.setValorHoraProveedor(req.getValorHora());
+        orden.setCostoManoObraEstimadasProveedor(req.getCostoManoObraEstimada());
+        orden.setCostoManoObraProveedor(req.getCostoManoObra());
         orden.setObservaciones(req.getObservaciones());
 
         orden.setActivo(activo);
         orden.setUsuario(usuario);
+        orden.setProveedor(proveedor);
         orden.setPlanMantenimiento(plan);
         orden.setEmpresa(empresa);
 

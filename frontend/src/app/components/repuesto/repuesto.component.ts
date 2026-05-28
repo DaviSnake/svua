@@ -59,6 +59,7 @@ export class RepuestoComponent implements OnInit {
       costoUnitario: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       stockActual: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       stockMinimo: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      tipoRepuesto: [null, Validators.required],
       empresaId: [null, Validators.required],
       empresa: [''],
       activo: [true] // 👈 checkbox
@@ -203,6 +204,7 @@ export class RepuestoComponent implements OnInit {
       costoUnitario: repuesto.costoUnitario,
       stockActual: repuesto.stockActual,
       stockMinimo: repuesto.stockMinimo,
+      tipoRepuesto: repuesto.tipoRepuesto,
       empresaId: repuesto.empresa.id,
       activo: repuesto.activo
     });

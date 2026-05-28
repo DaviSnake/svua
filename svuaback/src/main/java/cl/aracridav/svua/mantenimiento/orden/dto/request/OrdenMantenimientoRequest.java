@@ -17,10 +17,15 @@ public class OrdenMantenimientoRequest {
     private Long duracionMinutos;
     private TipoMantenimiento tipoMantenimiento;
     private EstadoOrden estado;
-    private BigDecimal costo;
+    private BigDecimal costoTotal;
+    private BigDecimal horasEstimadas;
+    private BigDecimal valorHora;
+    private BigDecimal costoManoObraEstimada;
+    private BigDecimal costoManoObra;
     private String observaciones;
     private Long activoId;
     private Long usuarioId;
+    private Long proveedorId;
     private Long planMantenimientoId;
     private List<OrdenRepuestoRequest> repuestos;
 

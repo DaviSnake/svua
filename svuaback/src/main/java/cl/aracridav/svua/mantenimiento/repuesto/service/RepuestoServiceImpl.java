@@ -177,6 +177,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         repuesto.setCostoUnitario(request.getCostoUnitario());
         repuesto.setStockActual(request.getStockActual());
         repuesto.setStockMinimo(request.getStockMinimo());
+        repuesto.setTipo(request.getTipoRepuesto());
         repuesto.setActivo(
             request.getActivo() != null ? request.getActivo() : true
         );
@@ -193,6 +194,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         repuesto.setCostoUnitario(request.getCostoUnitario());
         repuesto.setStockActual(request.getStockActual());
         repuesto.setStockMinimo(request.getStockMinimo());
+        repuesto.setTipo(request.getTipoRepuesto());
         repuesto.setActivo(request.getActivo());
     }
 }

@@ -22,6 +22,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
 import { RepuestoService } from '../../services/repuesto.service';
+import { ProveedorService } from '../../services/proveedor.service';
+import { FormUtils } from '../../shared/form-utils';
 
 @Component({
   selector: 'app-calendario',
@@ -35,7 +37,8 @@ export class CalendarioComponent implements OnInit {
   private ordenMantencionService = inject(OrdenMantencionService);
   private activoService = inject(ActivoService);
   private repuestoService = inject(RepuestoService);
-  authService = inject(AuthService);
+  private proveedorService = inject(ProveedorService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
   usuario: any;
@@ -44,6 +47,8 @@ export class CalendarioComponent implements OnInit {
 
   repuestos: any[] = [];
 
+  proveedores: any[] = [];
+
   activoControl = new FormControl();
   activosFiltrados: Activo[] = [];
 
@@ -51,6 +56,7 @@ export class CalendarioComponent implements OnInit {
 
   riesgo!: number;
   nivel!: string;
+  costoTotal!: string;
 
   orden!: OrdenResponse;
 
@@ -308,9 +314,16 @@ export class CalendarioComponent implements OnInit {
       observaciones: [''],
       lugar: [''],
       estado: [''],
+      costoTotal: [''],
       duracionMinutos: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
+      proveedorId: [null, Validators.required],
+      valorHora: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
+      horasEstimadas: ['',[Validators.required, Validators.pattern(/^\d+([.,]\d+)?$/)]],
+      horas: [''],
+      costoManoObraEstimada: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
+      costoManoObra: [''],
       tipoMantenimiento: [null, Validators.required],
       repuestos: this.fb.array([])
     });
@@ -327,11 +340,26 @@ export class CalendarioComponent implements OnInit {
       });
     });
 
+    this.ordenMantencionForm.get('duracionMinutos')?.valueChanges
+      .subscribe(valor => {
+
+        this.transformarAHora(); // 👈 lo que quieras ejecutar
+      });
+
+    this.ordenMantencionForm.get('valorHora')?.valueChanges
+      .subscribe(valor => {
+
+        this.calcularCostoManoObra(); // 👈 lo que quieras ejecutar
+      });
+
     this.cargarEventos();
     this.cargarActivos();
     this.cargarRepustos();
+    this.cargarProveedores();
 
   }
+
+  
 
   onSelectRange(info: any) {
 
@@ -353,7 +381,44 @@ export class CalendarioComponent implements OnInit {
   }
 
   this.abrirModalCreacion(fecha);
-}
+  }
+
+  transformarAHora(){
+    const horas = (this.ordenMantencionForm.get('duracionMinutos')?.value || 0) / 60;
+
+    this.ordenMantencionForm.patchValue({
+      horasEstimadas: horas
+    });
+  }
+
+  calcularCostoManoObra(){
+    const valorHora = (this.ordenMantencionForm.get('valorHora')?.value || 0);
+    const horaEstimada = (this.ordenMantencionForm.get('horasEstimadas')?.value || 0);
+    const costoManoObraEstimada = valorHora * horaEstimada;
+
+    this.ordenMantencionForm.patchValue({
+      costoManoObraEstimada: costoManoObraEstimada
+    });
+  }
+
+  cargarProveedores() {
+      this.proveedorService.getAll(this.page, this.size).subscribe({
+        next: (data) => {
+          this.proveedores = data.content;
+  
+          //console.log("DATA:", this.proveedores)
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.message || 'Error desconocido'
+          });
+  
+          console.log("ERROR:", err);
+        }
+      });
+    }
 
   // 🔥 CARGAR EVENTOS (solo actualiza events)
   cargarEventos() {
@@ -377,14 +442,20 @@ export class CalendarioComponent implements OnInit {
           tipoMantenimiento: ordenMantencion.tipoMantenimiento,
           duracionMinutos: ordenMantencion.duracionMinutos,
           observaciones: ordenMantencion.observaciones,
-          costo: ordenMantencion.costo,
+          costoTotal: ordenMantencion.costoTotal,
           activoId: ordenMantencion.activoId,
           usuarioId: ordenMantencion.usuarioId,
+          proveedorId: ordenMantencion.proveedorId,
+          valorHora: ordenMantencion.valorHora,
+          horasEstimadas: ordenMantencion.horasEstimadas,
+          horasReal: ordenMantencion.horasReal,
+          costoManoObraEstimada: ordenMantencion.costoManoObraEstimada,
+          costoManoObra: ordenMantencion.costoManoObra,
           repuestos: ordenMantencion.repuestos
         }
       }));
-
     });
+
   }
 
   // 🔥 CARGAR ACTIVOS
@@ -563,6 +634,8 @@ export class CalendarioComponent implements OnInit {
 
     const activoId = info.event.extendedProps?.activoId;
 
+    this.costoTotal = info.event.extendedProps?.costoTotal;
+
     if (activoId) {
       this.cargarRiesgo(activoId);
     }
@@ -599,6 +672,13 @@ export class CalendarioComponent implements OnInit {
       estado: this.estadoOrden,
       duracionMinutos: info.event.extendedProps?.duracionMinutos || '',
       tipoMantenimiento: info.event.extendedProps?.tipoMantenimiento || '',
+      proveedorId: info.event.extendedProps?.proveedorId || '',
+      costoTotal: info.event.extendedProps?.costoTotal || '',
+      valorHora: info.event.extendedProps?.valorHora || '',
+      horasEstimadas: info.event.extendedProps?.horasEstimadas || '',
+      horas: info.event.extendedProps?.horasReal || '',
+      costoManoObraEstimada: info.event.extendedProps?.costoManoObraEstimada || '',
+      costoManoObra: info.event.extendedProps?.costoManoObra || '',
       fechaHora: fechaLocal
     });
 
@@ -612,12 +692,22 @@ export class CalendarioComponent implements OnInit {
 
   // 💾 GUARDAR (CREAR / EDITAR)
   guardar() {
-    if (this.ordenMantencionForm.invalid) {
-      this.ordenMantencionForm.markAllAsTouched();
+    if (!FormUtils.esValido(this.ordenMantencionForm)) {
+      const campo = FormUtils.getPrimerCampoInvalido(this.ordenMantencionForm);
+      FormUtils.marcarComoTocados(this.ordenMantencionForm);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario incompleto',
+        text: `Revisa el campo: ${campo}`
+      });
+
+      console.log(FormUtils.getErrores(this.ordenMantencionForm));
+
       return;
     }
 
-    const { titulo, observaciones, activoId, tipoMantenimiento, duracionMinutos, fechaHora } = this.ordenMantencionForm.getRawValue();
+    const { titulo, observaciones, activoId, proveedorId, tipoMantenimiento, duracionMinutos, 
+            fechaHora, valorHora, horasEstimadas, costoManoObraEstimada } = this.ordenMantencionForm.getRawValue();
 
     const data = {
       titulo,
@@ -627,8 +717,12 @@ export class CalendarioComponent implements OnInit {
       estado: "PROGRAMADA",
       observaciones,
       activoId,
+      proveedorId,
       usuarioId: this.usuario.sub,
       planMantenimientoId: "1",
+      valorHora, 
+      horasEstimadas, 
+      costoManoObraEstimada: costoManoObraEstimada,
       // 🔥 NUEVO
       repuestos: this.repuestosFormArray.getRawValue()
     };
@@ -719,6 +813,8 @@ export class CalendarioComponent implements OnInit {
     }, 200);
   }
 
+  
+
   getColorPorEstado(estado?: string): string {
     switch (estado) {
       case 'PENDIENTE':
@@ -746,8 +842,8 @@ export class CalendarioComponent implements OnInit {
   }
 
   ngOnChanges() {
-  this.aplicarEstadoFormulario();
-}
+    this.aplicarEstadoFormulario();
+  }
 
 
 
@@ -918,9 +1014,9 @@ export class CalendarioComponent implements OnInit {
     });
   }
 
-  displayActivo(activo: any): string {
-    return activo ? activo.nombre : '';
-  }
+  displayActivo = (activo: any): string => {
+    return activo?.nombre ?? '';
+  };
 
   onFocusActivo() {
     // 🔥 fuerza a emitir para mostrar todos
@@ -928,6 +1024,7 @@ export class CalendarioComponent implements OnInit {
   }
 
   setActivoSeleccionado(activoId: number) {
+
     if (!this.activos || this.activos.length === 0) {
       setTimeout(() => this.setActivoSeleccionado(activoId), 200);
       return;
@@ -936,7 +1033,13 @@ export class CalendarioComponent implements OnInit {
     const activo = this.activos.find(a => a.id === activoId);
 
     if (activo) {
-      this.activoControl.setValue(activo);
+
+      this.activosFiltrados = [...this.activos];
+
+      setTimeout(() => {
+        this.activoControl.setValue(activo);
+      });
+
     }
   }
 
@@ -1052,6 +1155,8 @@ export class CalendarioComponent implements OnInit {
     this.cerrarModalRepuesto();
   }
 
+
+
   obtenerNombreRepuesto(id: number): string {
     const repuesto = this.repuestos.find(
       r => Number(r.id) === Number(id)
@@ -1070,6 +1175,7 @@ export class CalendarioComponent implements OnInit {
   private touchStartDate: Date | null = null;
 
   openCreateFromFab() {
+    this.aplicarEstadoFormulario();
     this.handleDateInteraction(new Date());
   }
   handleDateInteraction(date: Date) {
@@ -1090,11 +1196,20 @@ export class CalendarioComponent implements OnInit {
     this.abrirModalCreacion(date);
   }
 
+  formatearMiles(valor: any): string {
+
+    if (valor === null || valor === undefined || valor === '') {
+      return '';
+    }
+
+    return Number(valor).toLocaleString('es-CL');
+  }
+
   limpiarFormulario(): void {
     this.ordenMantencionForm.reset();
     this.repuestosFormArray.clear();
     this.activoControl.reset();
-  }
+  }  
 
   formatFechaLocal(date: Date): string {
     const pad = (n: number) => n.toString().padStart(2, '0');

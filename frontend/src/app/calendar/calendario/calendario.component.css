@@ -439,6 +439,104 @@ textarea {
   pointer-events: none;
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.modal {
+  width: 900px;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-lg {
+  width: 1000px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group.full {
+  grid-column: span 2;
+}
+
+.acciones {
+  grid-column: span 2;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.full {
+  width: 100%;
+}
+
+.info-box-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.riesgo-box {
+  flex: 1;
+  min-width: 220px;
+
+  padding: 1rem;
+  border-radius: 12px;
+
+  font-weight: 600;
+  font-size: 1rem;
+
+  display: flex;
+  align-items: center;
+}
+
+.costo-total {
+  width: 100%;
+
+  margin: 1rem auto;
+
+  padding: 1.2rem;
+
+  border-radius: 14px;
+
+  background: #f4fdf6;
+  border: 2px solid #22c55e;
+
+  color: #15803d;
+
+  font-size: 2rem;
+  font-weight: 700;
+
+  text-align: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* colores iguales a tu backend */
 .pendiente { background: #eab308; }
 .programada { background: #3b82f6; }

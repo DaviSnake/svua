@@ -10,9 +10,15 @@ export interface OrdenMantencion {
   end?: string;
   estado?: string;
   tipoMantenimiento?: string;
-  costo?: string;
+  costoTotal?: string;
   activoId?: string;
   usuarioId?: string;
+  proveedorId?: string;
+  valorHora?: string;
+  horasEstimadas?: string;
+  horasReal?: string;
+  costoManoObraEstimada?: string;
+  costoManoObra?: string;
   // 🔥 NUEVO
   repuestos?: OrdenRepuesto[];
 }

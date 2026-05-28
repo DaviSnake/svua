@@ -151,7 +151,7 @@ public class PlanMantenimientoServiceImpl implements PlanMantenimientoService {
         orden.setFechaProgramada(LocalDateTime.now());
         orden.setTipoMantenimiento(plan.getTipoMantenimiento());
         orden.setEstado(EstadoOrden.PENDIENTE);
-        orden.setCosto(BigDecimal.ZERO);
+        orden.setCostoTotal(BigDecimal.ZERO);
 
         ordenRepository.save(orden);
     }

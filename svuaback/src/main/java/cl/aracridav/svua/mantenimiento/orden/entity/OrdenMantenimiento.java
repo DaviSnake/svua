@@ -22,10 +22,15 @@ import lombok.*;
 @Entity
 @Table(name = "orden_mantenimiento")
 public class OrdenMantenimiento extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_orden")
     private Long id;
+
+    // =========================
+    // FECHAS DEL PROCESO
+    // =========================
 
     @Column(name = "fecha_programada", nullable = false)
     private LocalDateTime fechaProgramada;
@@ -39,28 +44,52 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "fecha_fin_ejecucion")
     private LocalDateTime fechaFinEjecucion;
 
+    // =========================
+    // TIEMPO REAL DE EJECUCIÓN
+    // =========================
+
     @Column(name = "duracion_segundos")
     private Long duracionSegundos;
+
+    // =========================
+    // TIPO Y ESTADO
+    // =========================
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_mantenimiento", nullable = false)
     private TipoMantenimiento tipoMantenimiento;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "estado", nullable = false)
     private EstadoOrden estado;
 
-    @Column(precision = 15, scale = 2)
-    private BigDecimal costo;
+    // =========================
+    // INFORMACIÓN GENERAL
+    // =========================
 
-    @Column(length = 255)
+    @Column(name = "titulo", length = 255)
     private String titulo;
 
-    @Column(length = 255)
+    @Column(name = "observaciones", length = 255)
     private String observaciones;
 
     @Column(name = "ruta_archivo")
     private String rutaArchivo;
+
+    // =========================
+    // COSTOS INTERNOS (si aplica)
+    // =========================
+
+    @Column(name = "costo_total", precision = 15, scale = 2)
+    private BigDecimal costoTotal;
+
+    // =========================
+    // PROVEEDOR (HH + COSTOS)
+    // =========================
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_proveedor")
+    private Proveedor proveedor;
 
     @Column(name = "horas_estimadas_proveedor", precision = 15, scale = 2)
     private BigDecimal horasEstimadasProveedor;
@@ -71,18 +100,32 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "valor_hora_proveedor", precision = 15, scale = 2)
     private BigDecimal valorHoraProveedor;
 
+    @Column(name = "costo_mano_obra_estimadas_proveedor", precision = 15, scale = 2)
+    private BigDecimal costoManoObraEstimadasProveedor;
+
     @Column(name = "costo_mano_obra_proveedor", precision = 15, scale = 2)
     private BigDecimal costoManoObraProveedor;
 
-    // 🔥 NUEVO: quién ejecuta (inicia)
+    // =========================
+    // USUARIOS
+    // =========================
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_ejecucion")
     private Usuario usuarioEjecucion;
 
-    // 🔥 NUEVO: quién finaliza (detiene o cancela)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_finalizacion")
     private Usuario usuarioFinalizacion;
+
+    // creador de la orden
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
+    private Usuario usuario;
+
+    // =========================
+    // RELACIONES OPERATIVAS
+    // =========================
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrdenRepuesto> repuestosUtilizados;
@@ -93,20 +136,15 @@ public class OrdenMantenimiento extends BaseEntity {
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrdenReprogramacion> reprogramaciones;
 
+    // =========================
+    // CONTEXTO OPERATIVO
+    // =========================
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_activo", nullable = false, updatable = false)
     private Activo activo;
 
-    // 👇 este usuario ahora representa el creador de la orden
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
-    private Usuario usuario;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_plan", nullable = false, updatable = false)
     private PlanMantenimiento planMantenimiento;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
 }

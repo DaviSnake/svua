@@ -20,10 +20,16 @@ public class OrdenMantenimientoResponse {
     private LocalDateTime fechaEjecucion;
     private TipoMantenimiento tipoMantenimiento;
     private EstadoOrden estado;
-    private BigDecimal costo;
+    private BigDecimal costoTotal;
+    private BigDecimal horasEstimadas;
+    private BigDecimal horasReal;
+    private BigDecimal valorHora;
+    private BigDecimal costoManoObraEstimada;
+    private BigDecimal costoManoObra;
     private String observaciones;
     private Long activoId;
     private Long usuarioId;
+    private Long proveedorId;
     private List<OrdenRepuestoResponse> repuestos;
 
 }
