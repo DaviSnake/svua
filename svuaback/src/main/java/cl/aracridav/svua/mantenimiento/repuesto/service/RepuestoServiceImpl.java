@@ -174,6 +174,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         repuesto.setCodigo(request.getCodigo());
         repuesto.setNombre(request.getNombre());
         repuesto.setDescripcion(request.getDescripcion());
+        repuesto.setCuentaContable(request.getCuentaContable());
         repuesto.setCostoUnitario(request.getCostoUnitario());
         repuesto.setStockActual(request.getStockActual());
         repuesto.setStockMinimo(request.getStockMinimo());

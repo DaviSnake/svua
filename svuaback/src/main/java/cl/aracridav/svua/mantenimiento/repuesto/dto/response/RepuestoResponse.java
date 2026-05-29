@@ -14,6 +14,7 @@ public class RepuestoResponse {
     private String codigo;
     private String nombre;
     private String descripcion;
+    private String cuentaContable;
     private BigDecimal costoUnitario;
     private Integer stockActual;
     private Integer stockMinimo;

@@ -313,7 +313,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                         .cantidad(r.getCantidad())
                         .costoUnitario(repuesto.getCostoUnitario())
                         .costoTotal(
-                            r.getCostoUnitario().multiply(
+                            repuesto.getCostoUnitario().multiply(
                                 BigDecimal.valueOf(r.getCantidad())
                             )
                         )

@@ -5,6 +5,7 @@ export interface Repuesto {
   codigo: string;
   nombre: string;
   descripcion: string;
+  cuentaContable: string;
   costoUnitario: number;
   stockActual: number;
   stockMinimo: number;

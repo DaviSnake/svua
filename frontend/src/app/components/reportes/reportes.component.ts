@@ -72,8 +72,6 @@ export class ReportesComponent implements OnInit {
   cargarCostos(): void {
     this.dashboardService.getCostos().subscribe({
       next: (res) => {
-        console.log(res);
-
         this.setData(res);
       },
       error: (err) => {

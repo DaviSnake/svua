@@ -349,7 +349,11 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.get('valorHora')?.valueChanges
       .subscribe(valor => {
 
-        this.calcularCostoManoObra(); // 👈 lo que quieras ejecutar
+        if (!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION']
+              .includes(this.estadoOrden)) {
+
+          this.calcularCostoManoObra();
+        }
       });
 
     this.cargarEventos();
@@ -381,6 +385,35 @@ export class CalendarioComponent implements OnInit {
   }
 
   this.abrirModalCreacion(fecha);
+  }
+
+  formatearMiles(
+    event: any,
+    controlName: string,
+    callback?: () => void
+  ): void {
+
+    let valor = event.target.value;
+
+    // quitar puntos
+    valor = valor.replace(/\./g, '');
+
+    // dejar solo números
+    valor = valor.replace(/\D/g, '');
+
+    // actualizar form
+    this.ordenMantencionForm
+      .get(controlName)
+      ?.setValue(valor, { emitEvent: false });
+
+    // mostrar con formato
+    event.target.value = Number(valor || 0)
+      .toLocaleString('es-CL');
+
+    // ejecutar callback opcional
+    if (callback) {
+      callback();
+    }
   }
 
   transformarAHora(){
@@ -674,7 +707,7 @@ export class CalendarioComponent implements OnInit {
       tipoMantenimiento: info.event.extendedProps?.tipoMantenimiento || '',
       proveedorId: info.event.extendedProps?.proveedorId || '',
       costoTotal: info.event.extendedProps?.costoTotal || '',
-      valorHora: info.event.extendedProps?.valorHora || '',
+      valorHora: this.formatearMilesBlock(info.event.extendedProps?.valorHora) || '',
       horasEstimadas: info.event.extendedProps?.horasEstimadas || '',
       horas: info.event.extendedProps?.horasReal || '',
       costoManoObraEstimada: info.event.extendedProps?.costoManoObraEstimada || '',
@@ -1196,7 +1229,7 @@ export class CalendarioComponent implements OnInit {
     this.abrirModalCreacion(date);
   }
 
-  formatearMiles(valor: any): string {
+  formatearMilesBlock(valor: any): string {
 
     if (valor === null || valor === undefined || valor === '') {
       return '';

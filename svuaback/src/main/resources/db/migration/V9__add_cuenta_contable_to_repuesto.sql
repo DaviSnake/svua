@@ -1,0 +1,2 @@
+ALTER TABLE repuesto
+ADD COLUMN cuenta_contable VARCHAR(255) NOT NULL DEFAULT '';

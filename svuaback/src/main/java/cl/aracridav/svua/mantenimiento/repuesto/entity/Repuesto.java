@@ -45,4 +45,7 @@ public class Repuesto extends BaseEntity {
     @Column(name = "tipo", nullable = false)
     private TipoRepuesto tipo;
 
+    @Column(name = "cuenta_contable")
+    private String cuentaContable;
+
 }

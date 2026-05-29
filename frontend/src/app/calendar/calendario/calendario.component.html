@@ -118,7 +118,15 @@
 
         <div class="form-group">
           <label>Duración (min)</label>
-          <input type="number" formControlName="duracionMinutos" />
+          <input
+            type="text"
+            formControlName="duracionMinutos"
+            (input)="formatearMiles(
+              $event,
+              'duracionMinutos',
+              calcularCostoManoObra.bind(this)
+            )"
+          />
         </div>
 
       </div>
@@ -140,12 +148,20 @@
           </select>
         </div>
 
-        <input
-          type="text"
-          [value]="formatearMiles(
-            ordenMantencionForm.get('valorHora')?.value)"
-          readonly
-        />
+        <div class="form-group">
+          <label>Valor hora</label>
+
+          <input
+            type="text"
+            formControlName="valorHora"
+            (input)="formatearMiles(
+              $event,
+              'valorHora',
+              calcularCostoManoObra.bind(this)
+            )"
+          />
+        </div>
+
 
         <div class="form-group">
           <label>Horas estimadas</label>
@@ -154,17 +170,21 @@
             readonly />
         </div>
 
-        <input
-          type="text"
-          [value]="formatearMiles(
-            ordenMantencionForm.get('costoManoObraEstimada')?.value)"
-          readonly
-        />
+        <div class="form-group">
+          <label>Costo mano de obra estimada</label>
+          <input
+            type="text"
+            [value]="formatearMilesBlock(
+              ordenMantencionForm.get('costoManoObraEstimada')?.value)"
+            readonly          />
+
+        </div>
+
         <div *ngIf="['COMPLETADA'].includes(estadoOrden)" class="form-group">
           <label>Horas</label>
           <input
             type="text"
-            [value]="formatearMiles(
+            [value]="formatearMilesBlock(
               ordenMantencionForm.get('horas')?.value)"
             readonly
           />
@@ -174,7 +194,7 @@
           <label>Costo mano de obra</label>
           <input
             type="text"
-            [value]="formatearMiles(
+            [value]="formatearMilesBlock(
               ordenMantencionForm.get('costoManoObra')?.value)"
             readonly
           />

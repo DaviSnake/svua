@@ -11,6 +11,7 @@ public class RepuestoRequest {
     private String codigo;
     private String nombre;
     private String descripcion;
+    private String cuentaContable;
     private BigDecimal costoUnitario;
     private Integer stockMinimo;
     private Integer stockActual;

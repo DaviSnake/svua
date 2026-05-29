@@ -240,6 +240,7 @@ public class GeneralMapper {
       .codigo(repuesto.getCodigo())
       .nombre(repuesto.getNombre())
       .descripcion(repuesto.getDescripcion())
+      .cuentaContable(repuesto.getCuentaContable())
       .costoUnitario(repuesto.getCostoUnitario())
       .stockActual(repuesto.getStockActual())
       .stockMinimo(repuesto.getStockMinimo())
