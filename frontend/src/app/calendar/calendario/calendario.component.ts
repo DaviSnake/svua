@@ -322,7 +322,7 @@ export class CalendarioComponent implements OnInit {
       valorHora: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
       horasEstimadas: ['',[Validators.required, Validators.pattern(/^\d+([.,]\d+)?$/)]],
       horas: [''],
-      costoManoObraEstimada: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
+      costoManoObraEstimada: [''],
       costoManoObra: [''],
       tipoMantenimiento: [null, Validators.required],
       repuestos: this.fb.array([])
@@ -750,11 +750,21 @@ export class CalendarioComponent implements OnInit {
 
     if (this.modoEdicion) {
       // 🔵 EDITAR
-      this.ordenMantencionService.actualizar(this.eventoSeleccionadoId, data)
-        .subscribe(() => {
+      this.ordenMantencionService
+      .actualizar(this.eventoSeleccionadoId, data)
+      .subscribe({
+        next: () => {
           this.cargarEventos();
           this.cerrar();
-        });
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.error || 'Error desconocido'
+          });
+        }
+      });
     } else {
       const activoSeleccionado = this.activoControl.value;
 
@@ -764,11 +774,20 @@ export class CalendarioComponent implements OnInit {
 
       // 🟢 CREAR
       this.ordenMantencionService.crear(data)
-        .subscribe(() => {
+      .subscribe({
+        next: () => {
           this.repuestosFormArray.clear();
           this.cargarEventos();
           this.cerrar();
-        });
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.error || 'Error desconocido'
+          });
+        }
+      });
     }
   }
 
