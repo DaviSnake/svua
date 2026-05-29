@@ -343,7 +343,11 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.get('duracionMinutos')?.valueChanges
       .subscribe(valor => {
 
-        this.transformarAHora(); // 👈 lo que quieras ejecutar
+        if (!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION']
+              .includes(this.estadoOrden)) {
+
+          this.transformarAHora(); // 👈 lo que quieras ejecutar          
+        }
       });
 
     this.ordenMantencionForm.get('valorHora')?.valueChanges
@@ -387,33 +391,19 @@ export class CalendarioComponent implements OnInit {
   this.abrirModalCreacion(fecha);
   }
 
-  formatearMiles(
-    event: any,
-    controlName: string,
-    callback?: () => void
-  ): void {
+  formatearMiles(event: any, controlName: string): void {
 
     let valor = event.target.value;
 
-    // quitar puntos
     valor = valor.replace(/\./g, '');
-
-    // dejar solo números
     valor = valor.replace(/\D/g, '');
 
-    // actualizar form
     this.ordenMantencionForm
       .get(controlName)
-      ?.setValue(valor, { emitEvent: false });
+      ?.setValue(valor);
 
-    // mostrar con formato
     event.target.value = Number(valor || 0)
       .toLocaleString('es-CL');
-
-    // ejecutar callback opcional
-    if (callback) {
-      callback();
-    }
   }
 
   transformarAHora(){

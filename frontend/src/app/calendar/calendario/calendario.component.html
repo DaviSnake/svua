@@ -121,11 +121,7 @@
           <input
             type="text"
             formControlName="duracionMinutos"
-            (input)="formatearMiles(
-              $event,
-              'duracionMinutos',
-              calcularCostoManoObra.bind(this)
-            )"
+            (input)="formatearMiles($event, 'duracionMinutos')"
           />
         </div>
 
@@ -154,11 +150,7 @@
           <input
             type="text"
             formControlName="valorHora"
-            (input)="formatearMiles(
-              $event,
-              'valorHora',
-              calcularCostoManoObra.bind(this)
-            )"
+            (input)="formatearMiles($event, 'valorHora')"
           />
         </div>
 
@@ -200,13 +192,13 @@
           />
         </div>
 
-        <h3 *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)">Repuestos</h3>
+        <h3 *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)">Repuestos o Fungibles</h3>
 
         <button type="button"
                 class="btn primary full"
                 *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
                 (click)="abrirModalRepuesto()">
-          + Agregar repuesto
+          + Agregar repuesto o fungible
         </button>
 
       </div>
@@ -258,7 +250,7 @@
 
       <!-- HEADER -->
       <div class="mini-modal-header">
-        <h3>Gestión de Repuestos</h3>
+        <h3>Gestión de Repuestos y Fungibles</h3>
         <button
           type="button"
           class="close-btn"
@@ -272,7 +264,7 @@
 
         <!-- REPUESTO -->
         <div class="form-group">
-          <label>Repuesto</label>
+          <label>Repuesto o Fungible</label>
           <select formControlName="repuestoId">
             <option [ngValue]="null">              Seleccione
             </option>
