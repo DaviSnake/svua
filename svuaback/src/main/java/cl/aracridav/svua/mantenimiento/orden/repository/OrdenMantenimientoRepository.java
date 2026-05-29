@@ -205,6 +205,7 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         FROM OrdenMantenimiento o
         WHERE o.fechaProgramada >= :fechaInicio
         AND o.activo.empresa.id = :empresaId
+        AND o.estado = 'COMPLETADA'
         GROUP BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
         ORDER BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
     """)
