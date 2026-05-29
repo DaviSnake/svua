@@ -166,8 +166,7 @@
           <label>Costo mano de obra estimada</label>
           <input
             type="text"
-            [value]="formatearMilesBlock(
-              ordenMantencionForm.get('costoManoObraEstimada')?.value)"
+            formControlName="costoManoObraEstimada"
             readonly          />
 
         </div>

@@ -353,11 +353,7 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.get('valorHora')?.valueChanges
       .subscribe(valor => {
 
-        if (!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION']
-              .includes(this.estadoOrden)) {
-
-          this.calcularCostoManoObra();
-        }
+        this.calcularCostoManoObra();
       });
 
     this.cargarEventos();
@@ -415,12 +411,14 @@ export class CalendarioComponent implements OnInit {
   }
 
   calcularCostoManoObra(){
-    const valorHora = (this.ordenMantencionForm.get('valorHora')?.value || 0);
+    let valorHora = String(this.ordenMantencionForm.get('valorHora')?.value || 0);
+    valorHora = valorHora.replace(/\./g, '');
+    valorHora = valorHora.replace(/\D/g, '');
     const horaEstimada = (this.ordenMantencionForm.get('horasEstimadas')?.value || 0);
-    const costoManoObraEstimada = valorHora * horaEstimada;
+    const costoManoObraEstimada = Number(valorHora) * horaEstimada;
 
     this.ordenMantencionForm.patchValue({
-      costoManoObraEstimada: costoManoObraEstimada
+      costoManoObraEstimada: this.formatearMilesBlock(costoManoObraEstimada)
     });
   }
 
