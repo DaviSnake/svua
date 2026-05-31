@@ -36,6 +36,13 @@ public class Notificacion extends BaseEntity {
     @Column(nullable = false)
     private Boolean leida;
 
+    @Column(name = "referencia_id")
+    private Long referenciaId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_referencia")
+    private TipoReferencia tipoReferencia;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_notificacion")
     private TipoNotificacion tipoNotificacion;

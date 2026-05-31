@@ -319,7 +319,7 @@ export class CalendarioComponent implements OnInit {
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
       proveedorId: [null, Validators.required],
-      valorHora: ['',[Validators.required, Validators.pattern('^[0-9]+$')]],
+      valorHora: ['',[Validators.required, Validators.pattern('^[0-9]{1,3}(\\.[0-9]{3})*(,[0-9]+)?$')]],
       horasEstimadas: ['',[Validators.required, Validators.pattern(/^\d+([.,]\d+)?$/)]],
       horas: [''],
       costoManoObraEstimada: [''],
@@ -700,7 +700,8 @@ export class CalendarioComponent implements OnInit {
       horas: info.event.extendedProps?.horasReal || '',
       costoManoObraEstimada: info.event.extendedProps?.costoManoObraEstimada || '',
       costoManoObra: info.event.extendedProps?.costoManoObra || '',
-      fechaHora: fechaLocal
+      fechaHora: fechaLocal,
+      repuestos: info.event.extendedProps?.repuestos || ''
     });
 
     // 🔥 AQUÍ LA MAGIA
@@ -713,6 +714,7 @@ export class CalendarioComponent implements OnInit {
 
   // 💾 GUARDAR (CREAR / EDITAR)
   guardar() {
+    this.ordenMantencionForm.enable();
     if (!FormUtils.esValido(this.ordenMantencionForm)) {
       const campo = FormUtils.getPrimerCampoInvalido(this.ordenMantencionForm);
       FormUtils.marcarComoTocados(this.ordenMantencionForm);

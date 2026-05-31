@@ -44,6 +44,7 @@ import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.notificacion.service.NotificacionService;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
@@ -68,6 +69,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     private final ProveedorRepository proveedorRepository;
     private final PlanMantenimientoRepository planRepository;
     private final EmpresaRepository empresaRepository;
+    private final NotificacionService notificacionService;
     private final GeneralMapper mapper;
 
     /*
@@ -304,7 +306,9 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 // 🔥 RESTAR STOCK
                 repuesto.setStockActual(repuesto.getStockActual() - cantidad);
 
-                repuestoRepository.save(repuesto);
+                Repuesto repuestoGuardado = repuestoRepository.save(repuesto);
+
+                notificacionService.verificarStockMinimo(repuestoGuardado);
 
                 OrdenRepuesto ordenRepuesto =
                     OrdenRepuesto.builder()
@@ -817,7 +821,9 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                     - req.getCantidad()
             );
 
-            repuestoRepository.save(repuesto);
+            Repuesto repuestoGuardado =repuestoRepository.save(repuesto);
+
+            notificacionService.verificarStockMinimo(repuestoGuardado);
         }
 
         ordenRepuestoRepository.saveAll(lista);

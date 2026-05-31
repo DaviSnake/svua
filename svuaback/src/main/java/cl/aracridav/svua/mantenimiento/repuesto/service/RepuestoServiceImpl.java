@@ -12,6 +12,7 @@ import cl.aracridav.svua.mantenimiento.repuesto.dto.request.RepuestoRequest;
 import cl.aracridav.svua.mantenimiento.repuesto.dto.response.RepuestoResponse;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.notificacion.service.NotificacionService;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
 import cl.aracridav.svua.shared.util.SecurityUtils;
@@ -23,6 +24,7 @@ public class RepuestoServiceImpl implements RepuestoService {
 
     private final RepuestoRepository repository;
     private final EmpresaRepository empresaRepository;
+    private final NotificacionService notificacionService;
     private final GeneralMapper mapper;
 
     /*
@@ -42,7 +44,12 @@ public class RepuestoServiceImpl implements RepuestoService {
 
         Repuesto repuesto = construirRepuesto(request, empresa);
 
-        return mapper.mapRepuestoResponse(repository.save(repuesto));
+        Repuesto repuestoGuardado = repository.save(repuesto);
+
+        notificacionService.verificarStockMinimo(repuestoGuardado);
+
+        return mapper.mapRepuestoResponse(repuestoGuardado);
+
     }
 
     /*
@@ -99,7 +106,11 @@ public class RepuestoServiceImpl implements RepuestoService {
 
         actualizarCampos(repuesto, request);
 
-        return mapper.mapRepuestoResponse(repository.save(repuesto));
+        Repuesto repuestoGuardado = repository.save(repuesto);
+
+        notificacionService.verificarStockMinimo(repuestoGuardado);
+
+        return mapper.mapRepuestoResponse(repuestoGuardado);
     }
 
     /*
@@ -117,6 +128,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         repository.save(repuesto);
     }
 
+    
     /*
      * =========================================
      * HELPERS
