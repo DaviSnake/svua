@@ -271,7 +271,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 repuesto.getStockActual() + old.getCantidad()
             );
 
-            repuestoRepository.save(repuesto);
+            Repuesto repuestoGuardado = repuestoRepository.save(repuesto);
+
+            if (request.getRepuestos().isEmpty()) {
+                notificacionService.verificarStockMinimo(repuestoGuardado);
+            }
+
         }
 
         // 🔥 limpiar actuales

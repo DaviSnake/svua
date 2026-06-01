@@ -15,7 +15,7 @@ import { NotificacionStateService } from '../../services/notificacion-state.serv
 export class NotificacionComponent implements OnInit {
 
   notificacionService = inject(NotificacionService);
-  notificacionState = inject(NotificacionStateService);
+  notificacionStateService = inject(NotificacionStateService);
   router = inject(Router);
 
   notificaciones: Notificacion[] = [];
@@ -25,10 +25,17 @@ export class NotificacionComponent implements OnInit {
   }
 
   cargarNotificaciones(): void {
-    this.notificacionService.listarNotificaciones()
+
+    this.notificacionService
+      .listarNotificaciones()
       .subscribe({
         next: data => {
-          this.notificaciones = data;
+
+          this.notificaciones = data.map(n => ({
+            ...n,
+            expandida: false
+          }));
+
         }
       });
   }
@@ -41,7 +48,7 @@ export class NotificacionComponent implements OnInit {
     .subscribe({
       next: () => {
         this.cargarNotificaciones();
-        this.notificacionState.notificarActualizacion();
+        this.notificacionStateService.notificarActualizacion();
       },
       error: (error) => {
         console.error('Error al marcar notificación como leída', error);
@@ -60,10 +67,27 @@ export class NotificacionComponent implements OnInit {
 
         this.cargarNotificaciones();
 
-        this.notificacionState
+        this.notificacionStateService
           .notificarActualizacion();
 
       });
+  }
+
+  toggleMensaje(n: any): void {
+
+    n.expandida = !n.expandida;
+
+    if (!n.leida) {
+
+      this.notificacionService
+        .marcarComoLeida(n.id)
+        .subscribe(() => {
+
+          n.leida = true;
+
+          this.notificacionStateService.notificarActualizacion();
+        });
+    }
   }
 
 }

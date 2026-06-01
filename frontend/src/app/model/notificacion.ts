@@ -7,4 +7,5 @@ export interface Notificacion {
   referenciaId?: number;
   tipoReferencia?: string;
   fechaCreacion: string;
+  expandida: boolean;
 }

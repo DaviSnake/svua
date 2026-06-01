@@ -8,44 +8,54 @@
     </span>
   </div>
 
-  <div
+    <div
     *ngFor="let n of notificaciones"
     class="notificacion-card"
-    [class.no-leida]="!n.leida"
-    (click)="abrirNotificacion(n)">
+    [class.no-leida]="!n.leida">
 
-    <div class="icono">
+        <div
+            class="cabecera-notificacion"
+            (click)="toggleMensaje(n)">
 
-      <i *ngIf="n.tipoNotificacion === 'STOCK_BAJO'"
-         class='bx bx-package'></i>
+            <div class="icono">
 
-      <i *ngIf="n.tipoNotificacion === 'MANTENIMIENTO_HOY'"
-         class='bx bx-wrench'></i>
+            <i *ngIf="n.tipoNotificacion === 'STOCK_BAJO'"
+                class='bx bx-package'></i>
 
-      <i *ngIf="n.tipoNotificacion === 'ORDEN_VENCIDA'"
-         class='bx bx-error-circle'></i>
+            <i *ngIf="n.tipoNotificacion === 'MANTENIMIENTO_HOY'"
+                class='bx bx-wrench'></i>
 
-    </div>
+            <i *ngIf="n.tipoNotificacion === 'ORDEN_VENCIDA'"
+                class='bx bx-error-circle'></i>
 
-    <div class="contenido">
+            </div>
 
-      <div class="titulo-row">
+            <div class="contenido">
 
-        <h4>{{ n.titulo }}</h4>
+                <div class="titulo-row">
+                    <h4>{{ n.titulo }}</h4>
 
-        <small>
-          {{ n.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
-        </small>
+                    <small>
+                    {{ n.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+                    </small>
+                </div>
+                <!-- Mensaje oculto/visible -->
+                <p
+                    class="mensaje"
+                    *ngIf="n.expandida">
+                    {{ n.mensaje }}
+                </p>
 
-      </div>
+            </div>
 
-      <p>
-        {{ n.mensaje }}
-      </p>
+            <div class="acciones">
+            <i
+                class='bx'
+                [ngClass]="n.expandida ? 'bx-chevron-up' : 'bx-chevron-down'">
+            </i>
+            </div>
 
-    </div>
-
-    <div class="acciones">
+        </div>
 
         <button
         class="btn-eliminar"
@@ -53,10 +63,5 @@
         <i class='bx bx-trash'></i>
         </button>
 
-        <i class='bx bx-chevron-right'></i>
-
     </div>
-
-  </div>
-
 </div>

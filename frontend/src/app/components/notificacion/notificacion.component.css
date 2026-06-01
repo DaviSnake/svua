@@ -28,7 +28,7 @@
 
 .notificacion-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 18px;
 
   background: white;
@@ -78,15 +78,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
 }
 
 .titulo-row h4 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 15px;
 }
 
 .titulo-row small {
   color: #888;
+  white-space: nowrap;
+  font-size: 12px;
 }
 
 .contenido p {
@@ -107,6 +110,10 @@
 }
 
 .no-leida h4 {
+  font-weight: 700;
+}
+
+.no-leida .titulo-row h4 {
   font-weight: 700;
 }
 
@@ -156,4 +163,27 @@
 .acciones .bx-chevron-right {
   font-size: 24px;
   color: #bdbdbd;
+}
+
+.cabecera-notificacion {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.mensaje {
+  margin-top: 8px;
+  color: #555;
+  line-height: 1.5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
