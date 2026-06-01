@@ -319,7 +319,7 @@ export class CalendarioComponent implements OnInit {
       fechaHora: ['', Validators.required], // 🔥 nuevo
       activoId: [null, Validators.required],
       proveedorId: [null, Validators.required],
-      valorHora: ['',[Validators.required, Validators.pattern('^[0-9]{1,3}(\\.[0-9]{3})*(,[0-9]+)?$')]],
+      valorHora: ['',[Validators.required, Validators.pattern('^([0-9]+|[0-9]{1,3}(\.[0-9]{3})*)(,[0-9]+)?$')]],
       horasEstimadas: ['',[Validators.required, Validators.pattern(/^\d+([.,]\d+)?$/)]],
       horas: [''],
       costoManoObraEstimada: [''],

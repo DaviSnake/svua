@@ -31,6 +31,8 @@ import cl.aracridav.svua.mantenimiento.plan.dto.response.PlanMantenimientoRepons
 import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.repuesto.dto.response.RepuestoResponse;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
+import cl.aracridav.svua.notificacion.dto.response.NotificacionResponse;
+import cl.aracridav.svua.notificacion.entity.Notificacion;
 import cl.aracridav.svua.proveedor.dto.response.ProveedorResponse;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.dto.response.EmpresaDTO;
@@ -386,5 +388,25 @@ public class GeneralMapper {
 
       return dto;
   }
+
+  public NotificacionResponse mapNotificacionResponse(
+    Notificacion notificacion) {
+
+    return NotificacionResponse.builder()
+      .id(notificacion.getId())
+      .titulo(notificacion.getTitulo())
+      .mensaje(notificacion.getMensaje())
+      .leida(notificacion.getLeida())
+      .referenciaId(notificacion.getReferenciaId())
+      .tipoReferencia(
+        notificacion.getTipoReferencia() != null
+                ? notificacion.getTipoReferencia().name()
+                : null)
+      .tipoNotificacion(
+        notificacion.getTipoNotificacion().name())
+      .fechaCreacion(
+        notificacion.getFechaCreacion())
+      .build();
+    }
 
 }

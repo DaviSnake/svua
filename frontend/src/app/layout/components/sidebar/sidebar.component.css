@@ -295,3 +295,27 @@ i.bx-exit:hover {
 .submenu li a {
   padding-left: 18px; /* separa del "tronco" */
 }
+
+.menu-item {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  background: #ef4444;
+  color: white;
+
+  min-width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+  font-size: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

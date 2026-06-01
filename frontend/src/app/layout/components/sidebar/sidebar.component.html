@@ -90,6 +90,20 @@
       <span class="tooltip">Carga Masiva</span>
     </li>
 
+    <!-- NOTIFICACIONES -->
+    <li class="menu-item" routerLinkActive="active">
+      <a routerLink="/inicio/notificaciones" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-bell'></i>
+        <span *ngIf="!isCollapsed">Notificaciones</span>
+        @if(cantidadNoLeidas > 0){
+          <span class="badge">
+            {{ cantidadNoLeidas }}
+          </span>
+        }
+      </a>
+      <span class="tooltip">Notificaciones</span>
+    </li>
+
   </ul>
 
   <!-- FOOTER -->

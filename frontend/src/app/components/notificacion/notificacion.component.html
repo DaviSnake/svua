@@ -1,0 +1,62 @@
+<div class="notificaciones-container">
+
+  <div class="header">
+    <h2>Notificaciones</h2>
+
+    <span class="badge">
+      {{ notificaciones.length }}
+    </span>
+  </div>
+
+  <div
+    *ngFor="let n of notificaciones"
+    class="notificacion-card"
+    [class.no-leida]="!n.leida"
+    (click)="abrirNotificacion(n)">
+
+    <div class="icono">
+
+      <i *ngIf="n.tipoNotificacion === 'STOCK_BAJO'"
+         class='bx bx-package'></i>
+
+      <i *ngIf="n.tipoNotificacion === 'MANTENIMIENTO_HOY'"
+         class='bx bx-wrench'></i>
+
+      <i *ngIf="n.tipoNotificacion === 'ORDEN_VENCIDA'"
+         class='bx bx-error-circle'></i>
+
+    </div>
+
+    <div class="contenido">
+
+      <div class="titulo-row">
+
+        <h4>{{ n.titulo }}</h4>
+
+        <small>
+          {{ n.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+        </small>
+
+      </div>
+
+      <p>
+        {{ n.mensaje }}
+      </p>
+
+    </div>
+
+    <div class="acciones">
+
+        <button
+        class="btn-eliminar"
+        (click)="eliminarNotificacion($event, n)">
+        <i class='bx bx-trash'></i>
+        </button>
+
+        <i class='bx bx-chevron-right'></i>
+
+    </div>
+
+  </div>
+
+</div>

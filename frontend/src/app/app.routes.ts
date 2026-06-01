@@ -19,6 +19,7 @@ import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { AuditoriasComponent } from './components/auditorias/auditorias.component';
+import { NotificacionComponent } from './components/notificacion/notificacion.component';
 
 export const routes: Routes = [
     {
@@ -195,6 +196,17 @@ export const routes: Routes = [
             {
                 path: 'cargaMasiva',
                 component: CargaMasivaComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'notificaciones',
+                component: NotificacionComponent
             }
         ]
     },

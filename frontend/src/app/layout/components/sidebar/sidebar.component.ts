@@ -1,8 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { NotificacionService } from '../../../services/notificacion.service';
+import { interval, Subscription } from 'rxjs';
+import { NotificacionStateService } from '../../../services/notificacion-state.service';
 
 type MenuKey = 'gestion' | 'organizacion' | 'analisis';
 
@@ -13,9 +16,11 @@ type MenuKey = 'gestion' | 'organizacion' | 'analisis';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy  {
 
   authService = inject(AuthService);
+  notificacionService = inject(NotificacionService);
+  notificacionState = inject(NotificacionStateService);
   router = inject(Router);
 
   usuario: any;
@@ -34,6 +39,10 @@ export class SidebarComponent implements OnInit {
   esAdmin = false;
   esAdminEmpresa = false;
 
+  cantidadNoLeidas = 0;
+
+  private intervaloNotificaciones?: Subscription;
+
   ngOnInit() {
 
     // usuario
@@ -51,6 +60,23 @@ export class SidebarComponent implements OnInit {
       .subscribe((event: any) => {
         this.detectarRuta(event.url);
       });
+
+      this.cargarCantidadNoLeidas();
+      this.intervaloNotificaciones =
+        interval(30000).subscribe(() => {
+          this.cargarCantidadNoLeidas();
+      });
+
+      this.notificacionState.actualizarCantidad$
+      .subscribe(() => {
+        this.cargarCantidadNoLeidas();
+      });
+  }
+
+  ngOnDestroy(): void {
+
+    this.intervaloNotificaciones?.unsubscribe();
+
   }
 
   // 🔥 detectar menú activo por URL
@@ -112,6 +138,16 @@ export class SidebarComponent implements OnInit {
     this.isCollapsed = !this.isCollapsed;
   }
 
+  cargarCantidadNoLeidas(): void {
+    this.notificacionService
+      .obtenerCantidadNoLeidas()
+      .subscribe({
+        next: cantidad => {
+          this.cantidadNoLeidas = cantidad;
+        }
+      });
+  }
+
   logout() {
    this.authService.logout().subscribe({
       next: () => {
@@ -124,5 +160,7 @@ export class SidebarComponent implements OnInit {
         this.router.navigate(['/login']);
       }
     });
+
+    this.intervaloNotificaciones?.unsubscribe();
   }
 }
