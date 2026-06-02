@@ -28,4 +28,6 @@ public class EmpresaResponse {
 
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
+
+    private Boolean demo;
 }

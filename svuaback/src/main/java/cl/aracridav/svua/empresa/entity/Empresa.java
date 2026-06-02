@@ -67,4 +67,7 @@ public class Empresa {
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
+
+    @Column(nullable = false)
+    private Boolean demo;
 }

@@ -76,6 +76,7 @@ public class GeneralMapper {
       .maxActivos(empresa.getMaxActivos())
       .fechaCreacion(empresa.getFechaCreacion())
       .fechaActualizacion(empresa.getFechaActualizacion())
+      .demo(empresa.getDemo())
       .build();
   }
 

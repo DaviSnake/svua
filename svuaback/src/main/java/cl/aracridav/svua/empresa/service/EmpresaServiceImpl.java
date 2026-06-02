@@ -221,6 +221,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setTelefono(request.getTelefono());
         empresa.setDireccion(request.getDireccion());
         empresa.setFechaCreacion(LocalDateTime.now());
+        empresa.setDemo(false);
 
         return empresa;
     }

@@ -346,7 +346,8 @@ export class CalendarioComponent implements OnInit {
         if (!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION']
               .includes(this.estadoOrden)) {
 
-          this.transformarAHora(); // 👈 lo que quieras ejecutar          
+          this.transformarAHora(); // 👈 lo que quieras ejecutar    
+          this.calcularCostoManoObra();      
         }
       });
 
