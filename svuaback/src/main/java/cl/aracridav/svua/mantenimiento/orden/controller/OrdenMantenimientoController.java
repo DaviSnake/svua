@@ -1,8 +1,13 @@
 package cl.aracridav.svua.mantenimiento.orden.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,14 +99,30 @@ public class OrdenMantenimientoController {
         return ResponseEntity.ok(orden);
     }
 
-    @PostMapping("/{id}/detenerConArchivo")
+    @PostMapping("/{id}/preDetenerConArchivo")
     public ResponseEntity<Void> detener(
             @PathVariable Long id,
             @RequestParam("archivo") MultipartFile archivo) {
 
-        ordenMantenimientoService.detenerOrden(id, archivo);
+        ordenMantenimientoService.preDetenerOrden(id, archivo);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/archivo")
+    public ResponseEntity<Resource> verArchivo(
+            @PathVariable Long id) throws IOException {
+
+        Resource resource =
+                ordenMantenimientoService.obtenerArchivo(id);
+
+        String contentType =
+                Files.probeContentType(
+                        Paths.get(resource.getFile().getAbsolutePath()));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 
     @PutMapping("/{id}/reprogramar")

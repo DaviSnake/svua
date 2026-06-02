@@ -18,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -108,12 +110,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     /*
      * =========================================
-     * DETENER ORDEN CON CHECK LIST
+     * PRE DETENER ORDEN CON CHECK LIST
      * =========================================
      */
     @Override
     @Transactional
-    public OrdenEjecucionResponse detenerOrden(Long id, MultipartFile archivo) {
+    public OrdenEjecucionResponse preDetenerOrden(Long id, MultipartFile archivo) {
 
         validarArchivo(archivo);
 
@@ -125,7 +127,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setRutaArchivo(ruta);
 
         // 🔥 reutilizamos CORE
-        return cambiarEstado(orden, EstadoOrden.COMPLETADA);
+        return cambiarEstado(orden, EstadoOrden.PRE_COMPLETADA);
     }
 
 
@@ -359,6 +361,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return mapper.mapOrdenMantenimientoResponse(actualizada);
     }
 
+    /*
+     * =========================================
+     * REPROGRAMAR
+     * =========================================
+     */
+
     @Override
     public OrdenMantenimientoResponse reprogramarOrden(Long id, LocalDateTime nuevaFecha, String motivo) {
 
@@ -372,6 +380,33 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setFechaProgramada(nuevaFecha);
 
         return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
+    }
+
+    /*
+     * =========================================
+     * OBTENER ARCHIIVO
+     * =========================================
+     */
+
+    @Override
+    public Resource obtenerArchivo(Long id) {
+
+        try {
+
+            OrdenMantenimiento orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Orden no encontrada"));
+
+            Path path = Paths.get(orden.getRutaArchivo());
+
+            if (!Files.exists(path)) {
+                throw new BusinessException("Archivo no encontrado");
+            }
+
+            return new UrlResource(path.toUri());
+
+        } catch (IOException e) {
+            throw new BusinessException("Error al leer archivo");
+        }
     }
 
     /*
@@ -475,7 +510,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         orden.setEstado(nuevoEstado);
 
-        if (nuevoEstado == EstadoOrden.COMPLETADA) {
+        if (nuevoEstado == EstadoOrden.PRE_COMPLETADA) {
             BigDecimal horasSistema = BigDecimal.valueOf(orden.getDuracionSegundos())
                 .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
 
@@ -487,17 +522,19 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                     orden.getValorHoraProveedor()
                 )
             );
+
+            notificacionService.ordenPreCompletada(orden);
         }
 
         orden.setCostoTotal(
             calcularCostoTotal(orden)
         );
 
-        OrdenMantenimiento guardada = ordenRepository.save(orden);
+        OrdenMantenimiento ordenGuardada = ordenRepository.save(orden);
 
-        actualizarEstadoActivo(guardada, nuevoEstado);
+        actualizarEstadoActivo(ordenGuardada, nuevoEstado);
 
-        return mapper.mapOrdenEjecucionResponse(guardada);
+        return mapper.mapOrdenEjecucionResponse(ordenGuardada);
     }
 
     private BigDecimal calcularCosto(BigDecimal horas, BigDecimal valorHora) {
@@ -545,6 +582,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         switch (estado) {
 
             case EN_EJECUCION -> iniciarOrden(orden);
+            case PRE_COMPLETADA -> preFinalizarOrden(orden);
             case COMPLETADA -> finalizarOrden(orden);
             case CANCELADA -> cancelarOrdenInterno(orden);
             default -> throw new IllegalArgumentException("Unexpected value: " + estado);
@@ -562,13 +600,22 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setUsuarioEjecucion(getUsuarioActual());
     }
 
-    private void finalizarOrden(OrdenMantenimiento orden) {
+    private void preFinalizarOrden(OrdenMantenimiento orden) {
 
         if (orden.getFechaEjecucion() == null) {
             throw new BusinessException("Debe iniciar la orden primero");
         }
 
         calcularDuracion(orden);
+        orden.setUsuarioPreFinalizacion(getUsuarioActual());
+    }
+
+    private void finalizarOrden(OrdenMantenimiento orden) {
+
+        if (orden.getFechaEjecucion() == null) {
+            throw new BusinessException("Debe iniciar la orden primero");
+        }
+
         orden.setUsuarioFinalizacion(getUsuarioActual());
     }
 

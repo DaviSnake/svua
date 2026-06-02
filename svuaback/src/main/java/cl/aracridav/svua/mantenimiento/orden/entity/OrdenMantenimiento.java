@@ -115,6 +115,10 @@ public class OrdenMantenimiento extends BaseEntity {
     private Usuario usuarioEjecucion;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_pre_finalizacion")
+    private Usuario usuarioPreFinalizacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_finalizacion")
     private Usuario usuarioFinalizacion;
 

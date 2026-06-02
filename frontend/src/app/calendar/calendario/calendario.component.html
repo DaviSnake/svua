@@ -11,6 +11,7 @@
     <div class="item"><span class="dot pendiente"></span> PENDIENTE</div>
     <div class="item"><span class="dot programada"></span> PROGRAMADA</div>
     <div class="item"><span class="dot ejecucion"></span> EN EJECUCIÓN</div>
+    <div class="item"><span class="dot precompletada"></span> PRE COMPLETADA</div>
     <div class="item"><span class="dot completada"></span> COMPLETADA</div>
     <div class="item"><span class="dot cancelada"></span> CANCELADA</div>
   </div>
@@ -171,7 +172,7 @@
 
         </div>
 
-        <div *ngIf="['COMPLETADA'].includes(estadoOrden)" class="form-group">
+        <div *ngIf="['PRE_COMPLETADA','COMPLETADA'].includes(estadoOrden)" class="form-group">
           <label>Horas</label>
           <input
             type="text"
@@ -181,7 +182,7 @@
           />
         </div>
 
-        <div *ngIf="['COMPLETADA'].includes(estadoOrden)" class="form-group">
+        <div *ngIf="['PRE_COMPLETADA','COMPLETADA'].includes(estadoOrden)" class="form-group">
           <label>Costo mano de obra</label>
           <input
             type="text"
@@ -191,11 +192,11 @@
           />
         </div>
 
-        <h3 *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)">Repuestos o Fungibles</h3>
+        <h3 *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)">Repuestos o Fungibles</h3>
 
         <button type="button"
                 class="btn primary full"
-                *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
+                *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
                 (click)="abrirModalRepuesto()">
           + Agregar repuesto o fungible
         </button>
@@ -211,7 +212,7 @@
           Cancelar
         </button>
 
-        <button *ngIf="!['COMPLETADA','CANCELADA'].includes(estadoOrden)
+        <button *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA'].includes(estadoOrden)
                   && modoEdicion
                   && estadoOrden !== 'EN_EJECUCION'"
                 type="button"
@@ -220,18 +221,23 @@
           Cancelar Orden
         </button>
 
+        <button
+        *ngIf="estadoOrden === 'PRE_COMPLETADA'"
+        class="btn success"
+        (click)="validarChecklist()">
+        ✓ Validar checklist
+      </button>
+
         <button *ngIf="!['COMPLETADA','CANCELADA'].includes(estadoOrden)
                 && modoEdicion"
                 type="button"
                 class="btn"
-                [ngClass]="estadoOrden === 'EN_EJECUCION' ? 'danger' : 'success'"
+                [ngClass]="obtenerClaseEstado(estadoOrden)"
                 (click)="toggleMantencion()">
-          {{ estadoOrden === 'EN_EJECUCION'
-              ? '⏹ Terminar'
-              : '▶ Iniciar' }}
+          {{ obtenerTextoBoton(estadoOrden) }}
         </button>
 
-        <button *ngIf="!['COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
+        <button *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
           type="button"
           class="btn primary"
           (click)="guardar()">
@@ -333,5 +339,39 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- 🔹 Modal Archivo -->
+   <div
+  class="modal-backdrop"
+    *ngIf="mostrarModalArchivo">
+
+    <div class="modal">
+
+      <div class="modal-header">
+
+        <h3>Checklist de mantención</h3>
+
+        <button
+          class="btn-cerrar"
+          (click)="cerrarModalArchivo()">
+          ✕
+        </button>
+
+      </div>
+
+      <div class="modal-body">
+
+        <iframe
+        *ngIf="archivoUrl"
+        [src]="archivoUrl"
+        width="100%"
+        height="700">
+      </iframe>
+
+      </div>
+
+    </div>
+
   </div>
 </div>

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { OrdenMantencion } from '../model/ordenMantencion';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { OrdenResponse } from '../model/ordenResponse';
 
@@ -31,7 +31,7 @@ export class OrdenMantencionService {
   }
 
   detenerConArchivo(id: number, formData: FormData) {
-    return this.http.post(`${this.apiUrl}/ordenes-mantenimiento/${id}/detenerConArchivo`, formData);
+    return this.http.post(`${this.apiUrl}/ordenes-mantenimiento/${id}/preDetenerConArchivo`, formData);
   }
 
   actualizar(id: number, ordenMantencion: OrdenMantencion) {
@@ -65,5 +65,14 @@ export class OrdenMantencionService {
   getRiesgo(id: number) {
     return this.http.get(`${this.apiUrl}/activos/${id}/riesgo`);
   }
+
+  verArchivo(id: number): Observable<Blob> {
+  return this.http.get(
+    `${environment.apiUrl}/ordenes-mantenimiento/${id}/archivo`,
+    {
+      responseType: 'blob'
+    }
+  );
+}
 
 }

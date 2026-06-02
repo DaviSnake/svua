@@ -24,6 +24,7 @@ import Swal from 'sweetalert2';
 import { RepuestoService } from '../../services/repuesto.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { FormUtils } from '../../shared/form-utils';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-calendario',
@@ -39,6 +40,7 @@ export class CalendarioComponent implements OnInit {
   private repuestoService = inject(RepuestoService);
   private proveedorService = inject(ProveedorService);
   private authService = inject(AuthService);
+  private sanitizer = inject(DomSanitizer);
   private fb = inject(FormBuilder);
 
   usuario: any;
@@ -299,6 +301,9 @@ export class CalendarioComponent implements OnInit {
 
   modoEdicion = false;
   eventoSeleccionadoId!: number;
+
+  archivoUrl!: SafeResourceUrl;
+  mostrarModalArchivo = false;
 
   page = 0;
   size = 100000;
@@ -869,6 +874,9 @@ export class CalendarioComponent implements OnInit {
       case 'EN_EJECUCION':
         return '#f97316'; // naranja
 
+      case 'PRE_COMPLETADA':
+        return '#14b8a6'; // teal
+
       case 'COMPLETADA':
         return '#22c55e'; // verde
 
@@ -880,52 +888,68 @@ export class CalendarioComponent implements OnInit {
     }
   }
 
+  obtenerClaseEstado(estado?: string): string {
+
+    switch (estado) {
+
+      case 'PENDIENTE':
+        return 'secondary';
+
+      case 'PROGRAMADA':
+        return 'primary';
+
+      case 'EN_EJECUCION':
+        return 'danger';
+
+      case 'PRE_COMPLETADA':
+        return 'warning';
+
+      case 'COMPLETADA':
+        return 'success';
+
+      case 'CANCELADA':
+        return 'dark';
+
+      default:
+        return 'success';
+    }
+  }
+
+  obtenerTextoBoton(estado?: string): string {
+
+    switch (estado) {
+
+      case 'EN_EJECUCION':
+        return '⏹ Terminar';
+
+      case 'PRE_COMPLETADA':
+        return '✔ Completar';
+
+      case 'COMPLETADA':
+        return '✓ Completada';
+
+      case 'CANCELADA':
+        return '✖ Cancelada';
+
+      default:
+        return '▶ Iniciar';
+    }
+  }
+
   get isReadOnly(): boolean {
-    return ['PROGRAMADA', 'COMPLETADA', 'CANCELADA', 'EN_EJECUCION'].includes(this.estadoOrden);
+    return ['PROGRAMADA', 'COMPLETADA', 'PRE_COMPLETADA', 'CANCELADA', 'EN_EJECUCION'].includes(this.estadoOrden);
   }
 
   ngOnChanges() {
     this.aplicarEstadoFormulario();
   }
 
-
-
-  getColor(
-    estado?: string,
-    tipoMantenimiento?: string
-  ): string {
-
-    switch (`${estado}-${tipoMantenimiento}`) {
-
-      case 'PENDIENTE-PREVENTIVO':
-        return '#eab308';
-
-      case 'PENDIENTE-CORRECTIVO':
-        return '#ef4444';
-
-      case 'PROGRAMADA-PREVENTIVO':
-        return '#3b82f6';
-
-      case 'EN_EJECUCION-CORRECTIVO':
-        return '#f97316';
-
-      case 'COMPLETADA-PREVENTIVO':
-      case 'COMPLETADA-CORRECTIVO':
-        return '#22c55e';
-
-      case 'CANCELADA-PREVENTIVO':
-      case 'CANCELADA-CORRECTIVO':
-        return '#6b7280';
-
-      default:
-        return '#9ca3af';
-    }
-  }
-
   toggleMantencion() {
     const id = this.eventoSeleccionadoId;
     if (this.estadoOrden === 'EN_EJECUCION') {
-      this.confirmarDetencionConArchivo(id);
+      this.confirmarPreDetencionConArchivo(id);
+    } else if (this.estadoOrden === 'PRE_COMPLETADA') {
+      this.detenerMantencion(id);
     } else {
       this.iniciarMantencion(id);
     }
@@ -978,37 +1002,56 @@ export class CalendarioComponent implements OnInit {
 
   detenerMantencionConArchivo(id: number, archivo: File) {
 
-  const formData = new FormData();
-  formData.append('archivo', archivo);
+    const formData = new FormData();
+    formData.append('archivo', archivo);
 
-  this.ordenMantencionService.detenerConArchivo(id, formData)
-    .subscribe({
-      next: () => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Mantención detenida',
-          timer: 1500,
-          showConfirmButton: false
-        });
+    this.ordenMantencionService.detenerConArchivo(id, formData)
+      .subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Mantención detenida',
+            timer: 1500,
+            showConfirmButton: false
+          });
 
-        console.log('Detenido OK');
-        this.cargarEventos();
-        this.cerrar();
-      },
-      error: (err: { error: { message: any; }; }) => {
-        Swal.fire({
-          icon: 'error',
-          title: err.error?.message || 'Error al detener'
-        });
-      }
-    });
-}
+          console.log('Detenido OK');
+          this.cargarEventos();
+          this.cerrar();
+        },
+        error: (err: { error: { message: any; }; }) => {
+          Swal.fire({
+            icon: 'error',
+            title: err.error?.message || 'Error al detener'
+          });
+        }
+      });
+  }
 
-  confirmarDetencionConArchivo(id: number) {
+  confirmarPreDetencionConArchivo(id: number) {
     Swal.fire({
-      title: 'Ingrese dcto de chequeo de mantención',
+      title: 'Pre Finalizar mantención',
       html: `
-        <input type="file" id="fileInput" class="swal2-file" />
+        <div style="text-align:left">
+          <p>
+            Está a punto de finalizar esta orden de mantención.
+          </p>
+
+          <ul style="margin-top:10px">
+            <li>La orden quedará marcada como pre finalizada, hasta que el supervisor la dé por finalizada.</li>
+            <li>Se registrará el documento de chequeo como respaldo.</li>
+            <li>La información quedará disponible para futuras auditorías y consultas.</li>
+          </ul>
+
+          <p style="margin-top:15px">
+            Para continuar, adjunte el documento de chequeo de mantención.
+          </p>
+          <small style="color:#64748b">
+            Formatos permitidos: PDF, JPG, JPEG y PNG.
+          </small>
+
+          <input type="file" id="fileInput" class="swal2-file"  accept=".pdf,.jpg,.jpeg,.png" />
+      </div>
       `,
       confirmButtonText: 'Guardar',
       showCancelButton: true,
@@ -1016,21 +1059,53 @@ export class CalendarioComponent implements OnInit {
       preConfirm: () => {
         const input = document.getElementById('fileInput') as HTMLInputElement;
 
-        if (!input || !input.files || input.files.length === 0) {
+        if (!input?.files?.length) {
           Swal.showValidationMessage('Debes subir un archivo');
           return false;
         }
 
-        return input.files[0]; // 🔥 devolvemos el archivo
+        return input.files[0];
       }
-    }).then((result) => {
+    }).then(result => {
 
       if (!result.isConfirmed) return;
 
-      const archivo: File = result.value;
-
-      this.detenerMantencionConArchivo(id, archivo);
+      this.detenerMantencionConArchivo(id, result.value);
     });
+  }
+
+  validarChecklist(): void {
+
+    this.ordenMantencionService
+    .verArchivo(this.eventoSeleccionadoId)
+    .subscribe({
+
+      next: (blob) => {
+
+        const url = URL.createObjectURL(blob);
+
+        this.archivoUrl =
+          this.sanitizer.bypassSecurityTrustResourceUrl(url);
+
+        this.mostrarModalArchivo = true;
+      },
+
+      error: () => {
+        Swal.fire(
+          'Error',
+          'No fue posible cargar el archivo',
+          'error'
+        );
+      }
+
+    });
+
+    this.mostrarModalArchivo = true;
+
+  }
+
+  cerrarModalArchivo(): void {
+    this.mostrarModalArchivo = false;
   }
 
   get titulo(): string {

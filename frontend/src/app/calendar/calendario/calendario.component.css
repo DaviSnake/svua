@@ -149,6 +149,33 @@ textarea {
   color: white;
 }
 
+.btn.secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn.secondary:hover {
+  background: #4b5563;
+}
+
+.btn.warning {
+  background: #14b8a6; /* turquesa para PRE_COMPLETADA */
+  color: white;
+}
+
+.btn.warning:hover {
+  background: #0d9488;
+}
+
+.btn.dark {
+  background: #374151;
+  color: white;
+}
+
+.btn.dark:hover {
+  background: #1f2937;
+}
+
 /* 🔥 AUTOCOMPLETE COMO INPUT NORMAL */
 .custom-autocomplete {
   width: 100%;
@@ -537,9 +564,12 @@ textarea {
   justify-content: center;
 }
 
+
+
 /* colores iguales a tu backend */
 .pendiente { background: #eab308; }
 .programada { background: #3b82f6; }
 .ejecucion { background: #f97316; }
+.precompletada { background: #14b8a6; }
 .completada { background: #22c55e; }
 .cancelada { background: #ef4444; }

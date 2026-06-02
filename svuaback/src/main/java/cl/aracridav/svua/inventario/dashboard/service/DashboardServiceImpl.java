@@ -82,7 +82,7 @@ public class DashboardServiceImpl implements DashboardService {
         // 📊 ORDENES POR ESTADO
         List<Object[]> estados = ordenRepository.countOrdenesPorEstado(empresaId);
 
-        List<Long> ordenesPorEstado = new ArrayList<>(List.of(0L, 0L, 0L, 0L, 0L, 0L));
+        List<Long> ordenesPorEstado = new ArrayList<>(List.of(0L, 0L, 0L, 0L, 0L, 0L, 0L));
 
         for (Object[] row : estados) {
             EstadoOrden estado = (EstadoOrden) row[0];
@@ -91,10 +91,11 @@ public class DashboardServiceImpl implements DashboardService {
             switch (estado) {
                 case PENDIENTE -> ordenesPorEstado.set(0, cantidad);
                 case EN_EJECUCION -> ordenesPorEstado.set(1, cantidad);
-                case COMPLETADA -> ordenesPorEstado.set(2, cantidad);
-                case PROGRAMADA -> ordenesPorEstado.set(3, cantidad);
-                case CANCELADA -> ordenesPorEstado.set(4, cantidad);
-                case ATRASADA -> ordenesPorEstado.set(5, cantidad);
+                case PRE_COMPLETADA -> ordenesPorEstado.set(2, cantidad);
+                case COMPLETADA -> ordenesPorEstado.set(3, cantidad);
+                case PROGRAMADA -> ordenesPorEstado.set(4, cantidad);
+                case CANCELADA -> ordenesPorEstado.set(5, cantidad);
+                case ATRASADA -> ordenesPorEstado.set(6, cantidad);
             }
         }
 

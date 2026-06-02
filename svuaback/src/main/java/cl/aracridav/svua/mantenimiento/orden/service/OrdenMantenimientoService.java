@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
@@ -27,7 +28,7 @@ public interface OrdenMantenimientoService {
 
     public OrdenEjecucionResponse detenerOrden(Long idOrden);
 
-    public OrdenEjecucionResponse detenerOrden(Long idOrden, MultipartFile archivo);
+    public OrdenEjecucionResponse preDetenerOrden(Long idOrden, MultipartFile archivo);
 
     public void cancelarOrden(Long id, String motivo, Long usuarioId);
 
@@ -44,4 +45,6 @@ public interface OrdenMantenimientoService {
             ActualizarOrdenMantenimientoRequest request);
 
     public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses();
+
+    public Resource obtenerArchivo(Long id);
 }

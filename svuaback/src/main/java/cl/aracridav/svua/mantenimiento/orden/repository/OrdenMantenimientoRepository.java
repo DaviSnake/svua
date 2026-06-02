@@ -199,15 +199,15 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
 
     @Query("""
         SELECT 
-            YEAR(o.fechaProgramada),
-            MONTH(o.fechaProgramada),
+            YEAR(o.fechaEjecucion),
+            MONTH(o.fechaEjecucion),
             COALESCE(SUM(o.costoTotal), 0)
         FROM OrdenMantenimiento o
-        WHERE o.fechaProgramada >= :fechaInicio
+        WHERE o.fechaEjecucion >= :fechaInicio
         AND o.activo.empresa.id = :empresaId
         AND o.estado = 'COMPLETADA'
-        GROUP BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
-        ORDER BY YEAR(o.fechaProgramada), MONTH(o.fechaProgramada)
+        GROUP BY YEAR(o.fechaEjecucion), MONTH(o.fechaEjecucion)
+        ORDER BY YEAR(o.fechaEjecucion), MONTH(o.fechaEjecucion)
     """)
     List<Object[]> obtenerCostosUltimosMeses(
         @Param("fechaInicio") LocalDateTime fechaInicio,

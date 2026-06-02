@@ -57,7 +57,7 @@ export class DashboardComponent implements OnInit {
 
     // Barras (órdenes)
     this.barData = {
-      labels: ['Pendientes', 'En Ejecucion', 'Completadas', 'Programadas', 'Canceladas'],
+      labels: ['Pendientes', 'En Ejecucion', 'Pre Completadas', 'Completadas', 'Programadas', 'Canceladas'],
       datasets: [{
         label: 'Órdenes', // 🔥 AQUÍ ESTÁ LA CLAVE
         data: this.data.ordenesPorEstado

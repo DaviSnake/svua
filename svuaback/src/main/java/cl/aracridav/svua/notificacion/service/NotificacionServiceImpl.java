@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
+import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.notificacion.dto.response.NotificacionResponse;
 import cl.aracridav.svua.notificacion.entity.Notificacion;
@@ -58,11 +59,11 @@ public class NotificacionServiceImpl implements NotificacionService {
 
         Optional<Notificacion> notificacionExistente =
         notificacionRepository
-                .findByReferenciaIdAndTipoReferenciaAndTipoNotificacion(
-                        repuesto.getId(),
-                        TipoReferencia.REPUESTO,
-                        TipoNotificacion.STOCK_BAJO
-                );
+            .findByReferenciaIdAndTipoReferenciaAndTipoNotificacion(
+                repuesto.getId(),
+                TipoReferencia.REPUESTO,
+                TipoNotificacion.STOCK_BAJO
+            );
 
         if (repuesto.getStockActual() <= repuesto.getStockMinimo()) {
 
@@ -92,6 +93,45 @@ public class NotificacionServiceImpl implements NotificacionService {
             );
         }
     }
+
+    /*
+     * =========================================
+     * VERIFICAR STOCK MINIMO
+     * =========================================
+     */
+    @Override
+    @Transactional
+    public void ordenPreCompletada(OrdenMantenimiento ordenMantenimiento) {
+
+        Empresa empresa = obtenerEmpresaActual();
+
+        Optional<Notificacion> notificacionExistente =
+        notificacionRepository
+            .findByReferenciaIdAndTipoReferenciaAndTipoNotificacion(
+                ordenMantenimiento.getId(),
+                TipoReferencia.MANTENIMIENTO,
+                TipoNotificacion.MANTENIMIENTO_HOY
+            );
+
+        if (notificacionExistente.isEmpty()) {
+            Notificacion notificacion = new Notificacion();
+                notificacion.setReferenciaId(ordenMantenimiento.getId());
+                notificacion.setTipoNotificacion(TipoNotificacion.MANTENIMIENTO_HOY);
+                notificacion.setTitulo("Orden Pre completada");
+                notificacion.setMensaje(
+                    "Se encuentra disponible para validación la orden de mantención" + ordenMantenimiento.getTitulo()
+                        + " (Código: " + ordenMantenimiento.getId() + "), actualmente en estado Pre Completada. "
+                        + "Favor revisar y aprobar su cierre si corresponde."
+                );
+                notificacion.setLeida(false);
+                notificacion.setTipoReferencia(TipoReferencia.MANTENIMIENTO);
+                notificacion.setFechaCreacion(LocalDateTime.now());
+                notificacion.setEmpresa(empresa);
+
+                notificacionRepository.save(notificacion);
+        }
+    }
+    
     /*
      * =========================================
      * CONTAR NO LEIDAS
