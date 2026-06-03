@@ -119,7 +119,7 @@ public class NotificacionServiceImpl implements NotificacionService {
                 notificacion.setTipoNotificacion(TipoNotificacion.MANTENIMIENTO_HOY);
                 notificacion.setTitulo("Orden Pre completada");
                 notificacion.setMensaje(
-                    "Se encuentra disponible para validación la orden de mantención" + ordenMantenimiento.getTitulo()
+                    "Se encuentra disponible para validación la orden de mantención " + ordenMantenimiento.getTitulo()
                         + " (Código: " + ordenMantenimiento.getId() + "), actualmente en estado Pre Completada. "
                         + "Favor revisar y aprobar su cierre si corresponde."
                 );

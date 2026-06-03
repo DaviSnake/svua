@@ -749,12 +749,14 @@ export class CalendarioComponent implements OnInit {
       proveedorId,
       usuarioId: this.usuario.sub,
       planMantenimientoId: "1",
-      valorHora, 
+      valorHora: valorHora.replace(".", ""), 
       horasEstimadas, 
-      costoManoObraEstimada: costoManoObraEstimada,
+      costoManoObraEstimada: costoManoObraEstimada.replace(".", ""),
       // 🔥 NUEVO
       repuestos: this.repuestosFormArray.getRawValue()
     };
+
+    console.log(data);
 
     if (this.modoEdicion) {
       // 🔵 EDITAR

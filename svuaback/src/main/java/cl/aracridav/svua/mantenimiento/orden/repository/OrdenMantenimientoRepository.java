@@ -213,4 +213,11 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         @Param("fechaInicio") LocalDateTime fechaInicio,
         @Param("empresaId") Long empresaId);
 
+    List<OrdenMantenimiento> findByEstadoAndTipoMantenimientoAndFechaProgramadaBetween(
+        EstadoOrden estado,
+        TipoMantenimiento tipoMantenimiento,
+        LocalDateTime desde,
+        LocalDateTime hasta
+    );
+
 }

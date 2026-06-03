@@ -38,5 +38,10 @@
     "name": "app.frontend.url",
     "type": "java.lang.String",
     "description": "A description for 'app.frontend.url'"
+  },
+  {
+    "name": "svua.scheduler.mantenciones.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'svua.scheduler.mantenciones.enabled'"
   }
 ]}
