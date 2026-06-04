@@ -39,8 +39,10 @@ import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
+import cl.aracridav.svua.mantenimiento.repuesto.entity.TipoRepuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
+import cl.aracridav.svua.proveedor.entity.TipoProveedor;
 import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.dto.response.ImportProgressDTO;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
@@ -303,7 +305,11 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String observaciones = getString(row, 6);
 
         Activo activo = obtenerActivoPorNombre(getRequiredString(row, 7, "Activo requerido"));
-        PlanMantenimiento plan = obtenerPlan(getRequiredLong(row, 8, "Plan requerido"));
+        Proveedor proveedor = obtenerProveedor(getString(row, 8));
+        BigDecimal valorHora = getBigDecimal(row, 9, "Valor Hora inválido");
+        BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido");
+        BigDecimal costoManoObraEstimada = getBigDecimal(row, 11, "Costo mano de obra estimada inválido");
+        PlanMantenimiento plan = obtenerPlan(Long.valueOf(1));
 
         return construirOrden(
             titulo,
@@ -314,6 +320,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             observaciones,
             activo,
             usuario,
+            proveedor,
+            valorHora,
+            horaEstimada,
+            costoManoObraEstimada,
             plan,
             empresa
         );
@@ -330,9 +340,19 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String descripcion = getString(row, 2);
 
         BigDecimal costo = getBigDecimal(row, 3, "Costo inválido");
-        Integer stockMinimo = getInteger(row, 4, "Stock mínimo inválido");
+        Integer StockActual = getInteger(row, 4, "Stock Actual inválido");
+        Integer stockMinimo = getInteger(row, 5, "Stock mínimo inválido");
 
-        return construirRepuesto(codigo, nombre, descripcion, costo, stockMinimo, empresa);
+        String cuentaContable = getString(row, 6);
+        TipoRepuesto tipoRepuesto = TipoRepuesto.valueOf(
+            row.getCell(7)
+            .getStringCellValue()
+            .trim()
+            .toUpperCase()
+        );
+
+
+        return construirRepuesto(codigo, nombre, descripcion, costo, StockActual, stockMinimo, cuentaContable, tipoRepuesto, empresa);
     }
 
     private void validarCodigoUnico(String codigo) {
@@ -386,6 +406,14 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         proveedor.setContacto(getString(row, 2));
         proveedor.setTelefono(getString(row, 3));
         proveedor.setEmail(getString(row, 4));
+        proveedor.setTipoProveedor(
+            TipoProveedor.valueOf(
+                row.getCell(5)
+                .getStringCellValue()
+                .trim()
+                .toUpperCase()
+            )
+        );
         proveedor.setEmpresa(empresa);
         proveedor.setActivo(true);
 
@@ -401,6 +429,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String observaciones,
         Activo activo,
         Usuario usuario,
+        Proveedor proveedor,
+        BigDecimal valorHora,
+        BigDecimal horasEstimada,
+        BigDecimal costoManoObraEstimada,
         PlanMantenimiento plan,
         Empresa empresa
     ) {
@@ -409,11 +441,17 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
         o.setTitulo(titulo);
         o.setFechaProgramada(fechaProgramada);
+        o.setFechaTermino(fechaProgramada.plusMinutes(duracionMinutos));
+        o.setDuracionSegundos(Long.valueOf(duracionMinutos * 60));
         o.setTipoMantenimiento(tipo);
         o.setEstado(estado);
         o.setObservaciones(observaciones);
         o.setActivo(activo);
         o.setUsuario(usuario);
+        o.setProveedor(proveedor);
+        o.setValorHoraProveedor(valorHora);
+        o.setHorasEstimadasProveedor(horasEstimada);
+        o.setCostoManoObraEstimadasProveedor(costoManoObraEstimada);
         o.setPlanMantenimiento(plan);
         o.setEmpresa(empresa);
 
@@ -425,7 +463,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String nombre,
         String descripcion,
         BigDecimal costo,
+        Integer stockActual,
         Integer stockMinimo,
+        String cuentaContable,
+        TipoRepuesto tipoRepuesto,
         Empresa empresa
     ) {
 
@@ -435,7 +476,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         repuesto.setNombre(nombre);
         repuesto.setDescripcion(descripcion);
         repuesto.setCostoUnitario(costo);
+        repuesto.setStockActual(stockActual);
         repuesto.setStockMinimo(stockMinimo);
+        repuesto.setCuentaContable(cuentaContable);
+        repuesto.setTipo(tipoRepuesto);
         repuesto.setActivo(true);
         repuesto.setEmpresa(empresa);
 
@@ -566,7 +610,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         }
     }
 
-    private Long getRequiredLong(Row row, int index, String mensaje) {
+    /*private Long getRequiredLong(Row row, int index, String mensaje) {
 
         Cell cell = row.getCell(index);
 
@@ -579,7 +623,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             case STRING -> Long.parseLong(cell.getStringCellValue());
             default -> throw new BusinessException("Número inválido en columna " + index);
         };
-    }
+    }*/
 
     private <T extends Enum<T>> T getEnum(
         Row row,

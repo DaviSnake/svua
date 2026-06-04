@@ -756,8 +756,6 @@ export class CalendarioComponent implements OnInit {
       repuestos: this.repuestosFormArray.getRawValue()
     };
 
-    console.log(data);
-
     if (this.modoEdicion) {
       // 🔵 EDITAR
       this.ordenMantencionService

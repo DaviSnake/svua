@@ -40,6 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/svua/auth/**").permitAll()
                 .requestMatchers("/api/v1/svua/public/**").permitAll()
+                .requestMatchers("/api/v1/svua/notificacion/no-leidas/count").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex

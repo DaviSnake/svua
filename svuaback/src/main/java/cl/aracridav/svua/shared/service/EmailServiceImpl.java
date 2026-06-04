@@ -211,7 +211,7 @@ public class EmailServiceImpl implements EmailService {
                                     Código
                                 </td>
                                 <td style="border:1px solid #ddd;padding:10px;">
-                                    %s
+                                    Orden de Trabajo N° %s
                                 </td>
                             </tr>
 

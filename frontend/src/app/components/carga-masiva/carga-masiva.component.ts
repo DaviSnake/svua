@@ -68,6 +68,8 @@ export class CargaMasivaComponent {
 
       this.cargaMasivaService.getProgress(jobId).subscribe(p => {
 
+        console.log(p.estado);
+
       if (p.estado === 'COMPLETADO' || p.estado === 'COMPLETADO_CON_ERRORES' || p.estado === 'ERROR') {
         clearInterval(this.interval);
 

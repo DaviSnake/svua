@@ -378,6 +378,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         guardarHistorialReprogramacion(orden, nuevaFecha, motivo);
 
         orden.setFechaProgramada(nuevaFecha);
+        orden.setFechaTermino(nuevaFecha.plusMinutes(orden.getDuracionSegundos()/60));
 
         return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
     }
@@ -800,6 +801,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setTipoMantenimiento(req.getTipoMantenimiento());
         orden.setEstado(EstadoOrden.PROGRAMADA);
         orden.setCostoTotal(req.getCostoTotal());
+        orden.setDuracionSegundos(req.getDuracionMinutos()*60);
         orden.setHorasEstimadasProveedor(req.getHorasEstimadas());
         orden.setValorHoraProveedor(req.getValorHora());
         orden.setCostoManoObraEstimadasProveedor(req.getCostoManoObraEstimada());
