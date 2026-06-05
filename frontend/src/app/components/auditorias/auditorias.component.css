@@ -44,6 +44,11 @@
   border-radius: 8px;
 }
 
+.resumen span {
+  display: block;
+  word-break: break-word;
+}
+
 .timeline {
   margin-top: 25px;
   border-left: 3px solid #e5e7eb;
@@ -109,4 +114,105 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
+}
+
+/* ======================================
+   TABLET
+   ====================================== */
+
+@media (max-width: 992px) {
+
+  .resumen {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .activo-card {
+    padding: 18px;
+  }
+
+}
+
+/* ======================================
+   MOVIL
+   ====================================== */
+
+@media (max-width: 768px) {
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+  .filtro-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .filtro-container input {
+    max-width: 100%;
+  }
+
+  .filtro-container small {
+    text-align: center;
+  }
+
+  .resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .activo-card {
+    padding: 15px;
+  }
+
+  .activo-header h2 {
+    font-size: 20px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .timeline {
+    padding-left: 15px;
+  }
+
+  .evento::before {
+    left: -22px;
+  }
+
+  .evento-detalle {
+    padding: 10px;
+  }
+
+}
+
+/* ======================================
+   MOVILES PEQUEÑOS
+   ====================================== */
+
+@media (max-width: 480px) {
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .activo-header h2 {
+    font-size: 18px;
+  }
+
+  .evento-fecha {
+    font-size: 11px;
+  }
+
+  .evento-detalle {
+    font-size: 13px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
 }
