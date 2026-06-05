@@ -1,1 +1,131 @@
-<app-paginaencontruccion />
+<div class="page-header">
+
+  <h1>Historial de Activos</h1>
+
+  <p>
+    Visualice el historial completo de cada activo, incluyendo estados,
+    mantenciones y costos asociados.
+  </p>
+
+</div>
+
+<!-- FILTRO -->
+<div class="filtro-container">
+
+  <input
+    type="text"
+    placeholder="Buscar por nombre o ID del activo..."
+    [(ngModel)]="textoBusqueda"
+    (input)="filtrarActivos()">
+
+    <small>
+        Activos encontrados: {{ historialesFiltrados.length }}
+    </small>
+
+</div>
+
+<div class="historial-container">
+
+  <div
+    class="activo-card"
+    *ngFor="let activo of historialesFiltrados">
+
+    <div class="activo-header">
+
+      <h2>{{ activo.nombreActivo }}</h2>
+
+      <div class="resumen">
+
+        <div>
+          <strong>Valor adquisición</strong>
+          <span>
+            {{ activo.valorAdquisicion | currency:'CLP':'symbol':'1.0-0' }}
+          </span>
+        </div>
+
+        <div>
+          <strong>Valor residual</strong>
+          <span>
+            {{ activo.valorResidual | currency:'CLP':'symbol':'1.0-0' }}
+          </span>
+        </div>
+
+        <div>
+          <strong>Mantenciones</strong>
+          <span>
+            {{ activo.cantidadMantenciones }}
+          </span>
+        </div>
+
+        <div>
+          <strong>Costo mantenciones</strong>
+          <span>
+            {{ activo.costoMantenciones | currency:'CLP':'symbol':'1.0-0' }}
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="timeline">
+
+      <div
+        class="evento"
+        *ngFor="let evento of activo.eventos">
+
+        <div class="evento-fecha">
+          {{ evento.fecha | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+
+        <div class="evento-detalle">
+
+          <span
+            class="badge"
+            [ngClass]="{
+              'activo': evento.tipo === 'ACTIVO',
+              'mantencion': evento.tipo === 'MANTENCION',
+              'estado': evento.tipo === 'ESTADO'
+            }">
+
+            {{ evento.tipo }}
+
+          </span>
+
+          <h4>
+            {{ evento.descripcion }}
+          </h4>
+
+          <div *ngIf="evento.usuario">
+            Usuario: {{ evento.usuario }}
+          </div>
+
+          <div *ngIf="evento.horasTrabajo">
+            Horas trabajo:
+            {{ evento.horasTrabajo }}
+          </div>
+
+          <div *ngIf="evento.valorHora">
+            Valor hora:
+            {{ evento.valorHora | currency:'CLP':'symbol':'1.0-0' }}
+          </div>
+
+          <div *ngIf="evento.costoManoObra">
+            Mano de obra:
+            {{ evento.costoManoObra | currency:'CLP':'symbol':'1.0-0' }}
+          </div>
+
+          <div *ngIf="evento.costoTotal">
+            Costo total:
+            {{ evento.costoTotal | currency:'CLP':'symbol':'1.0-0' }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

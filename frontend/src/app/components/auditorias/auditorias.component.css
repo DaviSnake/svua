@@ -1,0 +1,112 @@
+.page-header {
+  margin-bottom: 25px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.page-header p {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.historial-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.activo-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+
+.activo-header h2 {
+  margin-bottom: 15px;
+}
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.resumen div {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.timeline {
+  margin-top: 25px;
+  border-left: 3px solid #e5e7eb;
+  padding-left: 20px;
+}
+
+.evento {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.evento::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #2563eb;
+  border-radius: 50%;
+  position: absolute;
+  left: -27px;
+  top: 5px;
+}
+
+.evento-fecha {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.evento-detalle {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: white;
+  font-size: 12px;
+}
+
+.badge.activo {
+  background: #2563eb;
+}
+
+.badge.mantencion {
+  background: #059669;
+}
+
+.badge.estado {
+  background: #d97706;
+}
+
+.filtro-container {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.filtro-container input {
+  width: 100%;
+  max-width: 500px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
