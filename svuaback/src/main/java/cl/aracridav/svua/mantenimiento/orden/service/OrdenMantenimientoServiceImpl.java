@@ -29,6 +29,7 @@ import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
+import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ActualizarOrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
@@ -72,6 +73,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     private final PlanMantenimientoRepository planRepository;
     private final EmpresaRepository empresaRepository;
     private final NotificacionService notificacionService;
+    private final HistorialEstadoActivoService historialEstadoActivoService;
     private final GeneralMapper mapper;
 
     /*
@@ -82,7 +84,9 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     @Override
     public OrdenEjecucionResponse ejecutarOrden(Long idOrden) {
+        
         return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.EN_EJECUCION);
+
     }
 
     /*
@@ -505,6 +509,10 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     private OrdenEjecucionResponse cambiarEstado(OrdenMantenimiento orden, EstadoOrden nuevoEstado) {
 
+        Usuario usuario = getUsuarioActual();
+
+        EstadoActivo viejoEstado = orden.getActivo().getEstadoActual();
+        
         validarTransicion(orden.getEstado(), nuevoEstado);
 
         aplicarReglas(orden, nuevoEstado);
@@ -534,6 +542,21 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         OrdenMantenimiento ordenGuardada = ordenRepository.save(orden);
 
         actualizarEstadoActivo(ordenGuardada, nuevoEstado);
+
+        EstadoActivo nuevoActivo = (nuevoEstado == EstadoOrden.COMPLETADA)
+            ? EstadoActivo.OPERATIVO
+            : EstadoActivo.FUERA_SERVICIO;
+
+        String comentario = ordenGuardada.getEstado() == EstadoOrden.COMPLETADA
+            ? "Término mantención orden # " + orden.getId()
+            : "Inicio mantención orden # " + orden.getId();
+
+        if (nuevoEstado != EstadoOrden.PRE_COMPLETADA) {
+            historialEstadoActivoService.registrarCambioEstado(
+                ordenGuardada.getActivo().getId(), nuevoActivo, viejoEstado, comentario, usuario.getId()
+            );            
+        }
+
 
         return mapper.mapOrdenEjecucionResponse(ordenGuardada);
     }

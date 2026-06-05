@@ -91,8 +91,8 @@ export class UsuarioComponent implements OnInit {
     this.usuarioService.getAll(this.page, this.size).subscribe(data => {
       this.usuarios = data.content;
       this.usuariosFiltrados = data.content;
-      this.totalPages = data.totalPages;
-      this.totalElements = data.totalElements;
+      this.totalPages = data.page.totalPages;
+      this.totalElements = data.page.totalElements;
     });
   }
 

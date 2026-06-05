@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.activo.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import cl.aracridav.svua.depreciacion.entity.Depreciacion;
@@ -53,6 +54,9 @@ public class Activo extends BaseEntity {
 
     @Column(name = "fecha_adquisicion", nullable = false)
     private LocalDate fechaAdquisicion;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
     @Column(name = "valor_adquisicion", nullable = false)
     private BigDecimal valorAdquisicion;

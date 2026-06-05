@@ -14,7 +14,7 @@ export class ActivoService {
   private http = inject(HttpClient);
 
   getAll(page = 0, size = 10): Observable<Page<Activo>> {
-    return this.http.get<Page<Activo>>(`${this.apiUrl}/activos?page=${page}&size=${size}?page=0&size=3&sort=nombre,asc`);
+    return this.http.get<Page<Activo>>(`${this.apiUrl}/activos?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
   create(activo: any): Observable<Activo> {

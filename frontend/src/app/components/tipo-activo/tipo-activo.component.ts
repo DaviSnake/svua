@@ -66,8 +66,8 @@ export class TipoActivoComponent implements OnInit {
     this.tipoActivoService.getAll(this.page, this.size).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
-        this.totalPages = data.totalPages;
-        this.totalElements = data.totalElements;
+        this.totalPages = data.page.totalPages;
+        this.totalElements = data.page.totalElements;
       },
       error: (err) => {
         Swal.fire({

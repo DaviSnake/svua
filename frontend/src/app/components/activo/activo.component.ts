@@ -100,9 +100,12 @@ export class ActivoComponent implements OnInit {
   cargarActivos() {
     this.activoService.getAll(this.page, this.size).subscribe({
       next: (data) => {
+
         this.activos = data.content;
-        this.totalPages = data.totalPages;
-        this.totalElements = data.totalElements;
+
+        this.page = data.page.number;
+        this.totalPages = data.page.totalPages;
+        this.totalElements = data.page.totalElements;
       },
       error: () => {
         console.log("error");

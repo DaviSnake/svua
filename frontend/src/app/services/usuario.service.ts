@@ -16,7 +16,7 @@ export class UsuarioService {
   http = inject(HttpClient);
 
   getAll(page = 0, size = 3): Observable<Page<Usuario>> {
-    return this.http.get<Page<Usuario>>(`${this.apiUrl}/usuarios?page=${page}&size=${size}?page=0&size=3&sort=nombre,asc`);
+    return this.http.get<Page<Usuario>>(`${this.apiUrl}/usuarios?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
   getPerfilUsurio(): Observable<PerfilUsuario> {

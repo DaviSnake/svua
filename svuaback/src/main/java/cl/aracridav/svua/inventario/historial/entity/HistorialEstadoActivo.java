@@ -26,6 +26,10 @@ public class HistorialEstadoActivo extends BaseEntity {
     @Column(nullable = false)
     private EstadoActivo estado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private EstadoActivo estadoAnterior;
+
     @Column(nullable = false)
     private LocalDateTime fecha;
 

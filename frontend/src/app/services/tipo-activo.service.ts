@@ -14,7 +14,7 @@ export class TipoActivoService {
   private http = inject(HttpClient);
 
   getAll(page = 0, size = 10): Observable<Page<TipoActivo>> {
-    return this.http.get<Page<TipoActivo>>(`${this.apiUrl}/tipos-activo?page=${page}&size=${size}?page=0&size=3&sort=nombre,asc`);
+    return this.http.get<Page<TipoActivo>>(`${this.apiUrl}/tipos-activo?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
   create(tipoActivo: TipoActivo): Observable<TipoActivo> {

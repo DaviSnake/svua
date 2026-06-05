@@ -28,6 +28,7 @@ import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
+import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.tipoactivo.repository.TipoActivoRepository;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
@@ -64,6 +65,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final RepuestoRepository repuestoRepository;
     private final ActivoRepository activoRepository;
     private final DepreciacionService depreciacionService;
+    private final HistorialEstadoActivoService historialEstadoActivoService;
     private final UsuarioRepository usuarioRepository;
     private final PlanMantenimientoRepository planRepository;
     private final TipoActivoRepository tipoActivoRepository;
@@ -107,7 +109,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchActivo.add(activo);
 
                             if (batchActivo.size() == BATCH_SIZE) {
-                                guardarActivo(batchActivo, empresaId);
+                                guardarActivo(batchActivo, empresaId, usuarioId);
                                 batchActivo.clear();
                             }
                         }
@@ -173,7 +175,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             // 🔚 Guardar lo restante
             switch (archivo) {
                 case "activo" -> {
-                    if (!batchActivo.isEmpty()) guardarActivo(batchActivo, empresaId);
+                    if (!batchActivo.isEmpty()) guardarActivo(batchActivo, empresaId, usuarioId);
                 }
                 case "proveedor" -> {
                     if (!batchProveedor.isEmpty()) guardarProveedor(batchProveedor);
@@ -226,9 +228,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return sb.toString();
     }
     
-    private void guardarActivo(List<Activo> batch, Long empresaId) {
+    private void guardarActivo(List<Activo> batch, Long empresaId, Long usuarioId) {
         List<Activo> activos = activoRepository.saveAll(batch);
         calcularYGuardarDepreciacionMensual(activos, empresaId);
+        guardarHistoriaCracionActivo(activos, empresaId, usuarioId);
         em.flush();
         em.clear();
     }
@@ -385,6 +388,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         activo.setVidaUtilMeses(getInteger(row, 10));
         activo.setCuentaContable(getString(row, 13));
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
+        activo.setFechaCreacion(LocalDateTime.now());
         activo.setUbicacion(ubicacion);
         activo.setProveedor(proveedor);
         activo.setEmpresa(empresa);
@@ -684,6 +688,16 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private void calcularYGuardarDepreciacionMensual(List<Activo> activos, Long empresaId) {
         for (Activo activo : activos) {
             depreciacionService.calcularYGuardarDepreciacionMensual(activo, empresaId);
+        }
+    }
+
+    private void guardarHistoriaCracionActivo(List<Activo> activos, Long empresaId, Long usuarioId) {
+        for (Activo activo : activos) {
+            historialEstadoActivoService.registrarCambioEstado(
+                activo.getId(), EstadoActivo.OPERATIVO, null, "Creación de Activo", usuarioId
+            );
+
+            
         }
     }
 

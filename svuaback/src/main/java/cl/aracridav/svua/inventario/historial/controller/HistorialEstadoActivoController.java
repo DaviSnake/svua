@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
+import cl.aracridav.svua.inventario.historial.dto.response.HistorialActivoCompletoResponse;
 import cl.aracridav.svua.inventario.historial.dto.response.HistorialEstadoActivoResponse;
 import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.shared.exception.BusinessException;
@@ -37,6 +38,34 @@ public class HistorialEstadoActivoController {
                 .orElseThrow(() -> new BusinessException("Activo no encontrado"));
 
         return ResponseEntity.ok(service.obtenerHistorial(activo.getId()));
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('HISTORIAL_VIEW')) "
+    )
+    @GetMapping("/historial")
+    public ResponseEntity<List<HistorialActivoCompletoResponse>>
+    obtenerHistorialTodos() {
+
+        return ResponseEntity.ok(
+            service.obtenerHistorialCompletoTodos()
+        );
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('HISTORIAL_VIEW')) "
+    )
+    @GetMapping("/{id}/historial")
+    public ResponseEntity<HistorialActivoCompletoResponse>
+    obtenerHistorialCompleto(
+            @PathVariable Long id) {
+
+        HistorialActivoCompletoResponse response =
+            service.obtenerHistorialCompleto(id);
+
+        return ResponseEntity.ok(response);
     }
 
 }

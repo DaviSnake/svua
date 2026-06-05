@@ -67,6 +67,10 @@ public class ActivoServiceImpl implements ActivoService {
 
         procesarDepreciacion(guardado);
 
+        historialService.registrarCambioEstado(
+                activo.getId(), EstadoActivo.OPERATIVO, null, "Creación de Activo", null
+            );
+
         return mapper.mapActivoResponse(guardado);
     }
 
@@ -166,7 +170,9 @@ public class ActivoServiceImpl implements ActivoService {
             historialService.registrarCambioEstado(
                     activo.getId(),
                     request.getEstadoActual(),
-                    "Actualización manual de estado"
+                    request.getEstadoActual(),
+                    "Actualización manual de estado",
+                    null
             );
         }
 
@@ -225,7 +231,9 @@ public class ActivoServiceImpl implements ActivoService {
         historialService.registrarCambioEstado(
                 activo.getId(),
                 EstadoActivo.BAJA,
-                request.getMotivo()
+                EstadoActivo.OPERATIVO,
+                request.getMotivo(),
+                null
         );
     }
 
@@ -234,6 +242,8 @@ public class ActivoServiceImpl implements ActivoService {
 
         Activo activo = obtenerActivo(id);
 
+        EstadoActivo viejoEstado = activo.getEstadoActual();
+
         activo.setEstadoActual(nuevoEstado);
 
         activoRepository.save(activo);
@@ -241,7 +251,9 @@ public class ActivoServiceImpl implements ActivoService {
         historialService.registrarCambioEstado(
                 activo.getId(),
                 nuevoEstado,
-                "Cambio automático de estado"
+                viejoEstado,
+                "Cambio automático de estado",
+                null
         );
     }
 
@@ -298,6 +310,7 @@ public class ActivoServiceImpl implements ActivoService {
         activo.setUbicacion(obtenerUbicacion(req.getUbicacionId()));
         activo.setProveedor(obtenerProveedor(req.getProveedorId()));
         activo.setCuentaContable(req.getCuentaContable());
+        activo.setFechaCreacion(LocalDateTime.now());
         activo.setEmpresa(empresa);
 
         return activo;

@@ -66,8 +66,8 @@ export class UbicacionComponent implements OnInit {
     this.ubicacionService.getAll(this.page, this.size).subscribe({
       next: (data) => {
         this.ubicaciones = data.content;
-        this.totalPages = data.totalPages;
-        this.totalElements = data.totalElements;
+        this.totalPages = data.page.totalPages;
+        this.totalElements = data.page.totalElements;
       },
       error: () => {
         console.log("error");

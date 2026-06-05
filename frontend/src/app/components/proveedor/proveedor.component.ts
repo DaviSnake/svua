@@ -71,8 +71,8 @@ export class ProveedorComponent implements OnInit {
     this.proveedorService.getAll(this.page, this.size).subscribe({
       next: (data) => {
         this.proveedores = data.content;
-        this.totalPages = data.totalPages;
-        this.totalElements = data.totalElements;
+        this.totalPages = data.page.totalPages;
+        this.totalElements = data.page.totalElements;
 
         //console.log("DATA:", this.proveedores)
       },
