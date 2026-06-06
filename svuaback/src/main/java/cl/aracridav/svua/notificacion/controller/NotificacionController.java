@@ -26,9 +26,10 @@ public class NotificacionController {
         return notificacionService.listar();
     }
 
-    @GetMapping("/no-leidas/count")
-    public Long contarNoLeidas() {
-        return notificacionService.contarNoLeidas();
+    @GetMapping("/no-leidas/count/{empresaId}")
+    public Long contarNoLeidas(
+            @PathVariable Long empresaId) {
+        return notificacionService.contarNoLeidas(empresaId);
     }
 
     @PutMapping("/{id}/leer")

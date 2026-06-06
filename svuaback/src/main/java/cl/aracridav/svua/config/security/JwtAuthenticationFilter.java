@@ -30,6 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   throws ServletException, IOException {
 
     try {
+
+        String path = request.getServletPath();
+
+        if (path.equals("/api/v1/svua/notificacion/no-leidas/count")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = request.getHeader("Authorization");
     
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {

@@ -3,6 +3,7 @@ export interface HistorialActivoEvento {
   tipo: string;
   descripcion: string;
   usuario: string | null;
+  proveedor: string | null;
   costoTotal: number | null;
   valorHora: number | null;
   costoManoObra: number | null;

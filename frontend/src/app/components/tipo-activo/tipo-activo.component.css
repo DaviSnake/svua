@@ -205,70 +205,151 @@ tbody tr:hover {
 /* =========================
    RESPONSIVE TIPO ACTIVO
 ========================= */
-
-/* WRAPPER TABLA (IMPORTANTE EN MÓVIL) */
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-
-/* TABLET */
 @media (max-width: 768px) {
 
   .container {
     padding: 12px;
+    margin: 20px auto;
   }
 
   h2 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
-  /* FORM EN 1 COLUMNA */
-  .card-section {
-    grid-template-columns: 1fr;
-  }
-
+  /* FORM */
   form {
     padding: 15px;
+    grid-template-columns: 1fr !important;
+  }
+
+  .card-section,
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  /* ACCIONES */
+  .acciones {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
 
-  input, select {
-    font-size: 13px;
-    padding: 9px;
+  .acciones button {
+    width: 100%;
   }
 
-  /* TABLA MÁS COMPACTA */
-  th, td {
-    font-size: 12px;
-    padding: 8px;
-  }
-
-  .btn-editar,
-  .btn-eliminar {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-}
-
-/* MÓVIL PEQUEÑO */
-@media (max-width: 480px) {
-
-  h2 {
-    font-size: 18px;
+  /* TABLA -> CARDS */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+    width: 100%;
   }
 
   table {
-    font-size: 11px;
+    background: transparent;
+    box-shadow: none;
   }
 
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: white;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  td {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: start;
+    gap: 100px;
+    text-align: left;
+    padding: 10px 0;
+  }
+
+  td::before {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  td {
+    overflow-wrap: break-word;
+  }
+
+  td:nth-child(1)::before { content: "Código"; }
+  td:nth-child(2)::before { content: "Nombre"; }
+  td:nth-child(3)::before { content: "Descripción"; }
+  td:nth-child(4)::before { content: "Vida Util Meses"; }
+  td:nth-child(5)::before { content: "Empresa"; }
+  td:nth-child(6)::before { 
+    content: "Acciones"; 
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  td button {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  td:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  td.text-right {
+    text-align: left !important;
+    justify-self: start;
+  }
+
+  /* PAGINACION */
   .paginacion {
     flex-wrap: wrap;
     gap: 6px;
   }
 
-  button {
-    font-size: 12px;
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
   }
 }
 
+/* EXTRA móvil pequeño */
+@media (max-width: 480px) {
+
+  h2 {
+    font-size: 20px;
+  }
+
+  form {
+    padding: 12px;
+  }
+
+  tbody tr {
+    padding: 12px;
+  }
+}

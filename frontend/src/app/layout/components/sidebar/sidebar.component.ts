@@ -39,11 +39,13 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   esAdmin = false;
   esAdminEmpresa = false;
 
+  empresaId: number = 0;
   cantidadNoLeidas = 0;
 
   private intervaloNotificaciones?: Subscription;
-
+  
   ngOnInit() {
+    this.empresaId = this.authService.getEmpresaId() ?? 0;
 
     // usuario
     this.authService.user$.subscribe(user => {
@@ -61,15 +63,15 @@ export class SidebarComponent implements OnInit, OnDestroy  {
         this.detectarRuta(event.url);
       });
 
-      this.cargarCantidadNoLeidas();
+      this.cargarCantidadNoLeidas(this.empresaId);
       this.intervaloNotificaciones =
         interval(30000).subscribe(() => {
-          this.cargarCantidadNoLeidas();
+          this.cargarCantidadNoLeidas(this.empresaId);
       });
 
       this.notificacionState.actualizarCantidad$
       .subscribe(() => {
-        this.cargarCantidadNoLeidas();
+        this.cargarCantidadNoLeidas(this.empresaId);
       });
   }
 
@@ -138,9 +140,9 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.isCollapsed = !this.isCollapsed;
   }
 
-  cargarCantidadNoLeidas(): void {
+  cargarCantidadNoLeidas(empresaId: number): void {
     this.notificacionService
-      .obtenerCantidadNoLeidas()
+      .obtenerCantidadNoLeidas(empresaId)
       .subscribe({
         next: cantidad => {
           this.cantidadNoLeidas = cantidad;

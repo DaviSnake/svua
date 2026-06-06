@@ -341,6 +341,11 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                                     ? orden.getUsuario().getNombre()
                                     : null
                             )
+                            .proveedor(
+                                orden.getProveedor() != null
+                                    ? orden.getProveedor().getNombre()
+                                    : null
+                            )
                             .costoTotal(orden.getCostoTotal())
                             .valorHora(orden.getValorHoraProveedor())
                             .costoManoObra(

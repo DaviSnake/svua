@@ -40,6 +40,14 @@ export class AuthService {
     return payload.rol;
   }
 
+  getEmpresaId(): number | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.empresaId;
+  }
+
   init() {
     this.setUserFromToken();
   }

@@ -14,6 +14,7 @@ public class HistorialActivoResponse {
     private String tipo;
     private String descripcion;
     private String usuario;
+    private String proveedor;
     private BigDecimal costoTotal;
     private BigDecimal valorHora;
     private BigDecimal costoManoObra;

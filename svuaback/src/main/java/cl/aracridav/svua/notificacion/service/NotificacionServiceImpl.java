@@ -138,9 +138,9 @@ public class NotificacionServiceImpl implements NotificacionService {
      * =========================================
      */
     @Override
-    public long contarNoLeidas() {
+    public long contarNoLeidas(Long empresaId) {
 
-        Empresa empresa = obtenerEmpresaActual();
+        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         return notificacionRepository.countByEmpresaAndLeidaFalse(empresa);
     }
@@ -176,6 +176,11 @@ public class NotificacionServiceImpl implements NotificacionService {
 
     private Empresa obtenerEmpresaActual() {
         return empresaRepository.findById(SecurityUtils.getEmpresaId())
+            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
+
+    private Empresa obtenerEmpresaActual(Long empresaId) {
+        return empresaRepository.findById(empresaId)
             .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 

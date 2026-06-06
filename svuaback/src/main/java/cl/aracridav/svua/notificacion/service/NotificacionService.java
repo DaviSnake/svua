@@ -12,7 +12,7 @@ public interface NotificacionService {
 
     public void ordenPreCompletada(OrdenMantenimiento ordenMantenimiento);
 
-    public long contarNoLeidas();
+    public long contarNoLeidas(Long empresaId);
 
     public List<NotificacionResponse> listar();
 

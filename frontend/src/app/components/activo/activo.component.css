@@ -357,19 +357,21 @@ td button {
   }
 
   td {
-    border: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: start;
+    gap: 180px;
+    text-align: left;
     padding: 10px 0;
-    word-break: break-word;
   }
 
   td::before {
     font-weight: bold;
     color: #2c3e50;
-    min-width: 120px;
+  }
+
+  td {
+    overflow-wrap: break-word;
   }
 
   td:nth-child(1)::before {
@@ -410,11 +412,21 @@ td button {
 
   td:nth-child(10)::before {
     content: "Acciones";
+    display: block;
+    width: 100%;
+    text-align: center;
   }
 
   td button {
     width: 100%;
-    margin-top: 6px;
+    margin-top: 5px;
+  }
+
+  td:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
   /* MODAL */

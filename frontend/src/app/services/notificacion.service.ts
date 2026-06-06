@@ -23,9 +23,9 @@ export class NotificacionService {
     );
   }
 
-  obtenerCantidadNoLeidas() {
+  obtenerCantidadNoLeidas(empresaId: number) {
     return this.http.get<number>(
-      `${environment.apiUrl}/notificacion/no-leidas/count`
+      `${environment.apiUrl}/notificacion/no-leidas/count/${empresaId}`
     );
   }
 

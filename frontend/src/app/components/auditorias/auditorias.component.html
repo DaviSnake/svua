@@ -100,6 +100,10 @@
             Usuario: {{ evento.usuario }}
           </div>
 
+          <div *ngIf="evento.proveedor">
+            Proveedor: {{ evento.proveedor }}
+          </div>
+
           <div *ngIf="evento.horasTrabajo">
             Horas trabajo:
             {{ evento.horasTrabajo }}

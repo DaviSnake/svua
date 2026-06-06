@@ -308,17 +308,21 @@ td button:last-child:hover {
   }
 
   td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: none;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: start;
+    gap: 300px;
+    text-align: left;
     padding: 10px 0;
-    gap: 10px;
   }
 
   td::before {
     font-weight: bold;
     color: #2c3e50;
+  }
+
+  td {
+    overflow-wrap: break-word;
   }
 
   td:nth-child(1)::before {
@@ -343,11 +347,21 @@ td button:last-child:hover {
 
   td:nth-child(6)::before {
     content: "Acciones";
+    display: block;
+    width: 100%;
+    text-align: center;
   }
 
   td button {
     width: 100%;
     margin-top: 5px;
+  }
+
+  td:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
   /* MODAL */
