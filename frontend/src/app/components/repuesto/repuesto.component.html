@@ -68,6 +68,7 @@
           <th>Descripión</th>
           <th>Costo Unitario</th>
           <th>Stock Actual</th>
+          <th>Tipo</th>
           <th>Stock Mínimo</th>
           <th>Empresa</th>
           <th>Acciones</th>
@@ -81,6 +82,7 @@
           <td class="text-right">{{ repuesto.costoUnitario | number:'1.0-0':'es-CL' }}</td>
           <td class="text-right">{{ repuesto.stockActual | number:'1.0-0':'es-CL' }}</td>
           <td class="text-right">{{ repuesto.stockMinimo | number:'1.0-0':'es-CL' }}</td>
+          <td>{{ repuesto.tipoRepuesto }}</td>
           <td>{{ repuesto.empresa.nombre }}</td>
           <td>
             <button class="btn-editar" (click)="editar(repuesto)">Editar</button>
