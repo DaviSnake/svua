@@ -30,9 +30,21 @@
     class="activo-card"
     *ngFor="let activo of historialesFiltrados">
 
-    <div class="activo-header">
+    <div
+      class="activo-header clickable"
+      (click)="toggleActivo(activo.activoId)">
 
-      <h2>{{ activo.nombreActivo }}</h2>
+      <div class="titulo-activo">
+
+        <h2>{{ activo.nombreActivo }}</h2>
+
+        <span class="icono-expandir">
+          {{ estaExpandido(activo.activoId)
+              ? 'Ocultar historial'
+              : 'Ver historial (' + activo.eventos.length + ')' }}
+        </span>
+
+      </div>
 
       <div class="resumen">
 
@@ -52,9 +64,7 @@
 
         <div>
           <strong>Mantenciones</strong>
-          <span>
-            {{ activo.cantidadMantenciones }}
-          </span>
+          <span>{{ activo.cantidadMantenciones }}</span>
         </div>
 
         <div>
@@ -68,7 +78,9 @@
 
     </div>
 
-    <div class="timeline">
+    <div
+      class="timeline"
+      *ngIf="estaExpandido(activo.activoId)">
 
       <div
         class="evento"

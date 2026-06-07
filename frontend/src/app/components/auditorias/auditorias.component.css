@@ -116,6 +116,22 @@
   font-size: 14px;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.titulo-activo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.icono-expandir {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
 /* ======================================
    TABLET
    ====================================== */

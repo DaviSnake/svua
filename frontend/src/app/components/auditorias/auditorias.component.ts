@@ -18,6 +18,8 @@ export class AuditoriasComponent implements OnInit {
   historiales: HistorialActivoCompleto[] = [];
   historialesFiltrados: HistorialActivoCompleto[] = [];
 
+  activosExpandidos: Set<number> = new Set();
+
   textoBusqueda = '';
 
   page = 0;
@@ -72,6 +74,20 @@ export class AuditoriasComponent implements OnInit {
         activo.nombreActivo.toLowerCase().includes(texto)
         || activo.activoId.toString().includes(texto)
       );
+  }
+
+  toggleActivo(activoId: number): void {
+
+    if (this.activosExpandidos.has(activoId)) {
+      this.activosExpandidos.delete(activoId);
+    } else {
+      this.activosExpandidos.add(activoId);
+    }
+
+  }
+
+  estaExpandido(activoId: number): boolean {
+    return this.activosExpandidos.has(activoId);
   }
 
 }
