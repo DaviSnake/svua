@@ -27,8 +27,8 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOSTNAME: postgres
-      DB_PORT: 5432
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
     expose:
       - "8080"
     networks:
