@@ -49,4 +49,29 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
     Optional<Activo> findFirstByNombre(String nombre);
 
     Optional<Activo> findByNombreContainingIgnoreCase(String nombre);
+
+    @Query("""
+        SELECT DISTINCT a
+        FROM Activo a
+        LEFT JOIN FETCH a.historialEstados he
+        LEFT JOIN FETCH he.usuario
+        LEFT JOIN FETCH a.ordenesMantenimiento om
+        LEFT JOIN FETCH om.usuario
+        LEFT JOIN FETCH om.proveedor
+        """)
+    List<Activo> findAllConHistorial();
+
+    @Query("""
+        SELECT DISTINCT a
+        FROM Activo a
+        LEFT JOIN FETCH a.historialEstados he
+        LEFT JOIN FETCH he.usuario
+        LEFT JOIN FETCH a.ordenesMantenimiento om
+        LEFT JOIN FETCH om.usuario
+        LEFT JOIN FETCH om.proveedor
+        WHERE a.empresa.id = :empresaId
+    """)
+    List<Activo> findAllConHistorialByEmpresa(
+        @Param("empresaId") Long empresaId
+    );
 }

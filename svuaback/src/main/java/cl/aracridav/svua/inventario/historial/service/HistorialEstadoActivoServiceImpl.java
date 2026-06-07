@@ -273,12 +273,12 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
     @Transactional(readOnly = true)
     public List<HistorialActivoCompletoResponse> obtenerHistorialCompletoTodos() {
 
-    List<Activo> activos = activoRepository.findAll();
+        List<Activo> activos = activoRepository.findAllConHistorial();
 
-    return activos.stream()
-            .map(this::construirHistorialActivo)
-            .toList();
-}
+        return activos.stream()
+                .map(this::construirHistorialActivo)
+                .toList();
+    }
 
     private HistorialActivoCompletoResponse construirHistorialActivo(
         Activo activo) {

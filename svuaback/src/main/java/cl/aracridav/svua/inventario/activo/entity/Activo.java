@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import cl.aracridav.svua.depreciacion.entity.Depreciacion;
 import cl.aracridav.svua.inventario.historial.entity.HistorialEstadoActivo;
@@ -94,9 +95,9 @@ public class Activo extends BaseEntity {
     private List<Depreciacion> depreciaciones;
 
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
-    private List<HistorialEstadoActivo> historialEstados;
+    private Set<HistorialEstadoActivo> historialEstados;
 
     @OneToMany(mappedBy = "activo")
-    private List<OrdenMantenimiento> ordenesMantenimiento;
+    private Set<OrdenMantenimiento> ordenesMantenimiento;
 
 }
