@@ -311,7 +311,7 @@ td button:last-child:hover {
     display: grid;
     grid-template-columns: 120px 1fr;
     align-items: start;
-    gap: 300px;
+    gap: 100px;
     text-align: left;
     padding: 10px 0;
   }
