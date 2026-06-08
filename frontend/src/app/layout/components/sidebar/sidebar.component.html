@@ -128,6 +128,14 @@
       </li>
 
       <li class="menu-item" routerLinkActive="active">
+        <a routerLink="/inicio/soporte" (click)="closeAllMenus()">
+          <i class="bx bx-support"></i>
+          <span *ngIf="!isCollapsed">Soporte</span>
+        </a>
+        <span class="tooltip">Soporte</span>
+      </li>
+
+      <li class="menu-item" routerLinkActive="active">
         <a routerLink="/inicio/configuracion" (click)="closeAllMenus()">
           <i class="bx bx-cog"></i>
           <span *ngIf="!isCollapsed">Configuración</span>

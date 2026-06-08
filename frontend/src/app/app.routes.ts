@@ -20,6 +20,7 @@ import { ResetPasswordComponent } from './components/reset-password/reset-passwo
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { AuditoriasComponent } from './components/auditorias/auditorias.component';
 import { NotificacionComponent } from './components/notificacion/notificacion.component';
+import { SoporteComponent } from './components/soporte/soporte.component';
 
 export const routes: Routes = [
     {
@@ -207,6 +208,17 @@ export const routes: Routes = [
             {
                 path: 'notificaciones',
                 component: NotificacionComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'soporte',
+                component: SoporteComponent
             }
         ]
     },
