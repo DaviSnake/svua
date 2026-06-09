@@ -3,6 +3,8 @@ import { HistorialActivoCompleto } from './models/historial-completo.model';
 import { HistorialService } from '../../services/historial.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-auditorias',
@@ -89,5 +91,69 @@ export class AuditoriasComponent implements OnInit {
   estaExpandido(activoId: number): boolean {
     return this.activosExpandidos.has(activoId);
   }
+
+  exportarExcel(): void {
+
+  const data: any[] = [];
+
+  this.historialesFiltrados.forEach(activo => {
+
+    activo.eventos.forEach(evento => {
+
+      data.push({
+        'ID Activo': activo.activoId,
+        'Activo': activo.nombreActivo,
+        'Valor Adquisición': activo.valorAdquisicion,
+        'Valor Residual': activo.valorResidual,
+        'Cantidad Mantenciones': activo.cantidadMantenciones,
+        'Costo Mantenciones': activo.costoMantenciones,
+
+        'Fecha Evento': evento.fecha,
+        'Tipo Evento': evento.tipo,
+        'Descripción': evento.descripcion,
+        'Usuario': evento.usuario ?? '',
+        'Proveedor': evento.proveedor ?? '',
+        'Horas Trabajo': evento.horasTrabajo ?? '',
+        'Valor Hora': evento.valorHora ?? '',
+        'Costo Mano Obra': evento.costoManoObra ?? '',
+        'Costo Total Evento': evento.costoTotal ?? ''
+      });
+
+    });
+
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'Historial Activos'
+  );
+
+  const excelBuffer =
+    XLSX.write(
+      workbook,
+      {
+        bookType: 'xlsx',
+        type: 'array'
+      }
+    );
+
+  const blob = new Blob(
+    [excelBuffer],
+    {
+      type:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+    }
+  );
+
+  saveAs(
+    blob,
+    `historial_activos_${new Date().getTime()}.xlsx`
+  );
+}
 
 }

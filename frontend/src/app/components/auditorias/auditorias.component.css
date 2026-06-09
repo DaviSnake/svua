@@ -132,6 +132,23 @@
   color: #2563eb;
 }
 
+.acciones-exportar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.btn-exportar {
+  background: #1d6f42;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.btn-exportar:hover {
+  background: #155a35;
+}
+
 /* ======================================
    TABLET
    ====================================== */
