@@ -2,7 +2,9 @@ package cl.aracridav.svua.mantenimiento.orden.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
@@ -131,8 +133,9 @@ public class OrdenMantenimiento extends BaseEntity {
     // RELACIONES OPERATIVAS
     // =========================
 
+    @Builder.Default
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrdenRepuesto> repuestosUtilizados;
+    private Set<OrdenRepuesto> repuestosUtilizados = new HashSet<>();
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Archivo> archivos;

@@ -8,4 +8,5 @@ export interface HistorialActivoEvento {
   valorHora: number | null;
   costoManoObra: number | null;
   horasTrabajo: number | null;
+  repuestos: string[] | null;
 }

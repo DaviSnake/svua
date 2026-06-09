@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @Table(name = "orden_repuesto")
 @SuperBuilder
+@EqualsAndHashCode(of = "id", callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrdenRepuesto extends BaseEntity {

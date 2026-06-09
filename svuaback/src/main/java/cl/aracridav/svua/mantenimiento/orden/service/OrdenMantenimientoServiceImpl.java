@@ -13,10 +13,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -850,7 +852,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             return;
         }
 
-        List<OrdenRepuesto> lista = new ArrayList<>();
+        Set<OrdenRepuesto> lista = new HashSet<>();
 
         for (OrdenRepuestoRequest req : repuestos) {
 

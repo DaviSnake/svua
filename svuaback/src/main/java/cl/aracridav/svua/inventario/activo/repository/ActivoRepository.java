@@ -58,6 +58,8 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
         LEFT JOIN FETCH a.ordenesMantenimiento om
         LEFT JOIN FETCH om.usuario
         LEFT JOIN FETCH om.proveedor
+        LEFT JOIN FETCH om.repuestosUtilizados ru
+        LEFT JOIN FETCH ru.repuesto
         """)
     List<Activo> findAllConHistorial();
 

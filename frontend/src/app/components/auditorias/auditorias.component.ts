@@ -94,66 +94,67 @@ export class AuditoriasComponent implements OnInit {
 
   exportarExcel(): void {
 
-  const data: any[] = [];
+    const data: any[] = [];
 
-  this.historialesFiltrados.forEach(activo => {
+    this.historialesFiltrados.forEach(activo => {
 
-    activo.eventos.forEach(evento => {
+      activo.eventos.forEach(evento => {
 
-      data.push({
-        'ID Activo': activo.activoId,
-        'Activo': activo.nombreActivo,
-        'Valor Adquisición': activo.valorAdquisicion,
-        'Valor Residual': activo.valorResidual,
-        'Cantidad Mantenciones': activo.cantidadMantenciones,
-        'Costo Mantenciones': activo.costoMantenciones,
+        data.push({
+          'ID Activo': activo.activoId,
+          'Activo': activo.nombreActivo,
+          'Valor Adquisición': activo.valorAdquisicion,
+          'Valor Residual': activo.valorResidual,
+          'Cantidad Mantenciones': activo.cantidadMantenciones,
+          'Costo Mantenciones': activo.costoMantenciones,
 
-        'Fecha Evento': evento.fecha,
-        'Tipo Evento': evento.tipo,
-        'Descripción': evento.descripcion,
-        'Usuario': evento.usuario ?? '',
-        'Proveedor': evento.proveedor ?? '',
-        'Horas Trabajo': evento.horasTrabajo ?? '',
-        'Valor Hora': evento.valorHora ?? '',
-        'Costo Mano Obra': evento.costoManoObra ?? '',
-        'Costo Total Evento': evento.costoTotal ?? ''
+          'Fecha Evento': evento.fecha,
+          'Tipo Evento': evento.tipo,
+          'Descripción': evento.descripcion,
+          'Usuario': evento.usuario ?? '',
+          'Proveedor': evento.proveedor ?? '',
+          'Horas Trabajo': evento.horasTrabajo ?? '',
+          'Valor Hora': evento.valorHora ?? '',
+          'Costo Mano Obra': evento.costoManoObra ?? '',
+          'Costo Total Evento': evento.costoTotal ?? '',
+          'Repuestos': evento.repuestos?.join(', ') ?? ''
+        });
+
       });
 
     });
 
-  });
+    const worksheet = XLSX.utils.json_to_sheet(data);
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
 
-  const workbook = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    'Historial Activos'
-  );
-
-  const excelBuffer =
-    XLSX.write(
+    XLSX.utils.book_append_sheet(
       workbook,
+      worksheet,
+      'Historial Activos'
+    );
+
+    const excelBuffer =
+      XLSX.write(
+        workbook,
+        {
+          bookType: 'xlsx',
+          type: 'array'
+        }
+      );
+
+    const blob = new Blob(
+      [excelBuffer],
       {
-        bookType: 'xlsx',
-        type: 'array'
+        type:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
       }
     );
 
-  const blob = new Blob(
-    [excelBuffer],
-    {
-      type:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
-    }
-  );
-
-  saveAs(
-    blob,
-    `historial_activos_${new Date().getTime()}.xlsx`
-  );
-}
+    saveAs(
+      blob,
+      `historial_activos_${new Date().getTime()}.xlsx`
+    );
+  }
 
 }

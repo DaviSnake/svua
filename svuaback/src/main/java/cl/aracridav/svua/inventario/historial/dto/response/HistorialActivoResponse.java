@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.historial.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,6 @@ public class HistorialActivoResponse {
     private BigDecimal valorHora;
     private BigDecimal costoManoObra;
     private BigDecimal horasTrabajo;
+
+    private List<String> repuestos;
 }

@@ -1,10 +1,12 @@
 package cl.aracridav.svua.inventario.historial.service;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
@@ -283,6 +285,11 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
     private HistorialActivoCompletoResponse construirHistorialActivo(
         Activo activo) {
 
+        NumberFormat clp =
+            NumberFormat.getCurrencyInstance(
+                Locale.of("es", "CL")
+            );
+
         List<HistorialActivoResponse> eventos =
                 new ArrayList<>();
 
@@ -326,6 +333,24 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
             activo.getOrdenesMantenimiento()
                 .forEach(orden -> {
 
+                    List<String> repuestos = new ArrayList<>();
+
+                    if (orden.getRepuestosUtilizados() != null) {
+
+                        repuestos = orden.getRepuestosUtilizados()
+                            .stream()
+                            .map(r ->
+                                r.getRepuesto().getNombre()
+                                + " x"
+                                + r.getCantidad()
+                                + " ("
+                                + clp.format(r.getCostoTotal())
+                                + ")"
+                            )
+                            .distinct()
+                            .toList();
+                    }
+
                     eventos.add(
                         HistorialActivoResponse.builder()
                             .fecha(orden.getFechaProgramada())
@@ -354,6 +379,7 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                             .horasTrabajo(
                                 orden.getHorasRealesProveedor()
                             )
+                            .repuestos(repuestos)
                             .build()
                     );
                 });

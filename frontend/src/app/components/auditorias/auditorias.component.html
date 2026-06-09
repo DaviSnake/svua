@@ -149,6 +149,24 @@
             {{ evento.costoTotal | currency:'CLP':'symbol':'1.0-0' }}
           </div>
 
+          <div
+            *ngIf="evento.repuestos?.length"
+            class="repuestos-container">
+
+            <strong>Repuestos utilizados:</strong>
+
+            <div class="chips">
+              <span
+                class="chip"
+                *ngFor="let repuesto of evento.repuestos">
+
+                {{ repuesto }}
+
+              </span>
+            </div>
+
+          </div>
+
         </div>
 
       </div>
