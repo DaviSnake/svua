@@ -108,7 +108,12 @@ export class AuditoriasComponent implements OnInit {
           'Cantidad Mantenciones': activo.cantidadMantenciones,
           'Costo Mantenciones': activo.costoMantenciones,
 
-          'Fecha Evento': evento.fecha,
+          'Fecha Evento': new Date(evento.fecha)
+            .toLocaleDateString('es-CL', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }),
           'Tipo Evento': evento.tipo,
           'Descripción': evento.descripcion,
           'Usuario': evento.usuario ?? '',
