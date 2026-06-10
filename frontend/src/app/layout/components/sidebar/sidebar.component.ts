@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { NotificacionService } from '../../../services/notificacion.service';
 import { interval, Subscription } from 'rxjs';
 import { NotificacionStateService } from '../../../services/notificacion-state.service';
+import { SesionUsuarioService } from '../../../services/sesion-usuario.service';
 
 type MenuKey = 'gestion' | 'organizacion' | 'analisis';
 
@@ -21,6 +22,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   authService = inject(AuthService);
   notificacionService = inject(NotificacionService);
   notificacionState = inject(NotificacionStateService);
+  sesionUsuarioService = inject(SesionUsuarioService);
   router = inject(Router);
 
   usuario: any;
@@ -38,6 +40,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   // roles
   esAdmin = false;
   esAdminEmpresa = false;
+
+  rutaActual = '';
 
   empresaId: number = 0;
   cantidadNoLeidas = 0;
@@ -151,15 +155,20 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   }
 
   logout() {
-   this.authService.logout().subscribe({
+    this.sesionUsuarioService.logout().subscribe({
       next: () => {
-        this.authService.clearSession();
-        this.router.navigate(['/login']);
-      },
-      error: (err) => {
-        console.error('Error al cerrar sesión', err);
-        this.authService.clearSession();
-        this.router.navigate(['/login']);
+
+        this.authService.logout().subscribe({
+           next: () => {
+             this.authService.clearSession();     
+             this.router.navigate(['/login']);
+           },
+           error: (err) => {
+             console.error('Error al cerrar sesión', err);
+             this.authService.clearSession();
+             this.router.navigate(['/login']);
+           }
+         });
       }
     });
 

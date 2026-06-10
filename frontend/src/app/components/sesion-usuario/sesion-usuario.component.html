@@ -1,0 +1,97 @@
+<div class="sesiones-container">
+
+  <div class="header">
+    <h1>Usuarios Conectados</h1>
+
+    <span class="contador">
+      {{ sesiones.length }} usuarios online
+    </span>
+  </div>
+
+  <div class="grid-sesiones">
+
+    <div
+      class="sesion-card"
+      *ngFor="let sesion of sesiones">
+
+      <div class="card-header">
+
+        <div class="usuario-info">
+
+          <div class="avatar">
+            {{ sesion.usuario.charAt(0) }}
+          </div>
+
+          <div>
+
+            <h3>{{ sesion.usuario }}</h3>
+
+            <span class="empresa">
+              {{ sesion.empresa }}
+            </span>
+
+          </div>
+
+        </div>
+
+        <span
+          class="estado"
+          [class.online]="sesion.activa">
+
+          ● Online
+
+        </span>
+
+      </div>
+
+      <div class="info-grid">
+
+        <div class="info-item">
+          <span class="label">Página actual</span>
+          <strong>{{ sesion.paginaActual || '-' }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Última acción</span>
+          <strong>{{ sesion.ultimaAccion || '-' }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">IP</span>
+          <strong>{{ sesion.ip }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Dispositivo</span>
+          <strong>{{ sesion.dispositivo }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Navegador</span>
+          <strong>{{ sesion.navegador }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Sistema</span>
+          <strong>{{ sesion.sistemaOperativo }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Requests</span>
+          <strong>{{ sesion.cantidadRequests }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Última actividad</span>
+          <strong>
+            {{ sesion.ultimaActividad | date:'dd/MM/yyyy HH:mm:ss' }}
+          </strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

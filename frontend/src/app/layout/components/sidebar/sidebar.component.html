@@ -104,6 +104,15 @@
       <span class="tooltip">Notificaciones</span>
     </li>
 
+    <!-- SESIONES ACTIVAS -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
+      <a routerLink="/inicio/SesionesActivas" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-wifi'></i>
+        <span *ngIf="!isCollapsed">Sesiones Activas</span>
+      </a>
+      <span class="tooltip">SesionesActivas</span>
+    </li>
+
   </ul>
 
   <!-- FOOTER -->

@@ -426,7 +426,7 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                 .findTopByActivoIdOrderByFechaDesc(activoId)
                 .filter(h -> h.getEstado() == nuevoEstado)
                 .ifPresent(h -> {
-                    throw new BusinessException("El activo ya se encuentra en ese estado");
+                    throw new BusinessException("El activo ya se encuentra en ese estado" + " (" + nuevoEstado + ")");
                 });
     }
 

@@ -32,23 +32,24 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateToken(UsuarioPrincipal user) {
+    public String generateToken(UsuarioPrincipal user, String tokenJti) {
 
         return Jwts.builder()
-                .setSubject(String.valueOf(user.getId()))
-                .claim("rol",
-                        user.getAuthorities()
-                                .iterator()
-                                .next()
-                                .getAuthority()
-                                .replace("ROLE_", "")
-                )
-                .claim("empresaId", user.getEmpresaId())
-                .claim("userName", user.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
-                .signWith(Keys.hmacShaKeyFor(TU_SECRET_BASE64.getBytes()), SignatureAlgorithm.HS256)
-                .compact();
+            .setSubject(String.valueOf(user.getId()))
+            .claim("rol",
+                user.getAuthorities()
+                    .iterator()
+                    .next()
+                    .getAuthority()
+                    .replace("ROLE_", "")
+            )
+            .claim("empresaId", user.getEmpresaId())
+            .claim("userName", user.getUsername())
+            .claim("jti", tokenJti)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
+            .signWith(Keys.hmacShaKeyFor(TU_SECRET_BASE64.getBytes()), SignatureAlgorithm.HS256)
+            .compact();
     }
 
     public String extractUsername(String token) {
@@ -73,6 +74,10 @@ public class JwtService {
 
     public String extractUserName(String token) {
         return getClaims(token).get("userName", String.class);
+    }
+
+    public String extractTokenJti(String token) {
+        return getClaims(token).get("jti", String.class);
     }
 
 }

@@ -3,6 +3,7 @@ package cl.aracridav.svua.auth.controller;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,7 @@ import cl.aracridav.svua.shared.exception.InvalidRefreshTokenException;
 import cl.aracridav.svua.shared.service.EmailService;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
+import cl.aracridav.svua.usuario.service.SesionUsuarioService;
 import cl.aracridav.svua.usuario.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +52,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final SesionUsuarioService sesionUsuarioService;
     private final EmailService emailService;
     private final UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
@@ -64,6 +67,10 @@ public class AuthController {
     public AuthLoginResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
 
         Authentication auth;
+        
+        String tokenJti = UUID.randomUUID().toString();
+
+        String ip = obtenerIp(httpRequest);
 
         Usuario usuario = usuarioRepository
             .findByEmailWithEmpresa(request.getEmail())
@@ -126,14 +133,24 @@ public class AuthController {
                 throw new BusinessException("Credenciales inválidas");
         }
 
-        String accessToken = jwtService.generateToken(userPrincipal);
+
+        String accessToken = jwtService.generateToken(userPrincipal, tokenJti);
 
         // Datos del dispositivo
         String device = httpRequest.getHeader("User-Agent");
-        String ip = httpRequest.getRemoteAddr();
 
         RefreshToken refreshToken =
-                refreshTokenService.createRefreshToken(usuario, empresa, device, ip);
+            refreshTokenService.createRefreshToken(usuario, empresa, device, ip);
+        
+        sesionUsuarioService.crearSesion(
+            usuario,
+            tokenJti,
+            ip,
+            request.getNavegador(),
+            request.getSistemaOperativo(),
+            request.getDispositivo(),
+            request.getVersionApp()
+        );
 
         return AuthLoginResponse.builder()
             .accessToken(accessToken)
@@ -144,14 +161,14 @@ public class AuthController {
     @Transactional
     @PostMapping("/refresh")
     public AuthLoginResponse refreshToken(@RequestBody RefreshTokenRequest request,
-                                        HttpServletRequest httpRequest
+         HttpServletRequest httpRequest
     ) {
 
         RefreshToken oldToken = refreshTokenRepository
             .findByToken(request.getRefreshToken())
             .map(refreshTokenService::verifyExpiration)
             .orElseThrow(() ->
-                    new InvalidRefreshTokenException("Refresh token inválido o expirado"));
+                new InvalidRefreshTokenException("Refresh token inválido o expirado"));
 
         Usuario usuario = oldToken.getUsuario();
 
@@ -255,5 +272,16 @@ public class AuthController {
                 }
         }
     }
+
+    private String obtenerIp(HttpServletRequest request) {
+
+        String ip = request.getHeader("X-Forwarded-For");
+
+        if (ip != null && !ip.isBlank()) {
+                return ip.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
+        }
 
 }

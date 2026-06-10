@@ -6,4 +6,9 @@ import lombok.Data;
 public class LoginRequest {
     private String email;
     private String password;
+
+    private String navegador;
+    private String sistemaOperativo;
+    private String dispositivo;
+    private String versionApp;
 }

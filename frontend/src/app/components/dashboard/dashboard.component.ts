@@ -2,6 +2,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { CommonModule } from '@angular/common';
 import { NgChartsModule } from 'ng2-charts';
+import { SesionUsuarioService } from '../../services/sesion-usuario.service';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,8 +21,11 @@ export class DashboardComponent implements OnInit {
   doughnutData: any;
   lineData: any;
   barData: any;
+  rutaActual = '';
 
   dashboardService = inject(DashboardService);
+  sesionUsuarioService = inject(SesionUsuarioService);
+  router = inject(Router);
 
   // gráfico
   chartData: any;
@@ -28,6 +34,8 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getDashboard().subscribe(res => {
       this.data = res;
+
+      this.guardarActividad();
 
       this.initCharts();
     });
@@ -87,6 +95,25 @@ export class DashboardComponent implements OnInit {
         ]
       };
     });
+  }
+
+  guardarActividad() {
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd)
+      )
+      .subscribe((event: any) => {
+
+        this.rutaActual = event.urlAfterRedirects;
+
+        if (this.rutaActual != "/login"){
+          this.sesionUsuarioService.actualizarActividad(
+            event.urlAfterRedirects,
+            'Navegación'
+          ).subscribe();
+        }
+
+      });
   }
 
 }

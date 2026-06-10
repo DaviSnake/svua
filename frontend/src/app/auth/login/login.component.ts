@@ -15,6 +15,8 @@ export class LoginComponent {
 
   showPassword = false;
 
+  userAgent = navigator.userAgent;
+
   errorMessage = '';
   successMessage = '';
 
@@ -29,7 +31,12 @@ export class LoginComponent {
 
   loginData = {
     email: this.email,
-    password: this.password
+    password: this.password,
+
+    navegador: this.obtenerNavegador(),
+    sistemaOperativo: this.obtenerSO(),
+    dispositivo: this.obtenerDispositivo(),
+    versionApp: '1.0.0'
   };
 
   authService = inject(AuthService)
@@ -68,6 +75,41 @@ export class LoginComponent {
       }
     });
 
+  }
+
+  obtenerNavegador(): string {
+
+    const ua = navigator.userAgent;
+
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari')) return 'Safari';
+
+    return 'Desconocido';
+  }
+
+  obtenerSO(): string {
+
+    const ua = navigator.userAgent;
+
+    if (ua.includes('Windows')) return 'Windows';
+    if (ua.includes('Mac')) return 'MacOS';
+    if (ua.includes('Linux')) return 'Linux';
+    if (ua.includes('Android')) return 'Android';
+    if (ua.includes('iPhone')) return 'iOS';
+
+    return 'Desconocido';
+  }
+
+  obtenerDispositivo(): string {
+
+    const ua = navigator.userAgent;
+
+    const esMovil =
+      /Android|iPhone|iPad|iPod/i.test(ua);
+
+    return esMovil ? 'Móvil' : 'Escritorio';
   }
 
   goToForgotPassword() {

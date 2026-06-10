@@ -21,6 +21,7 @@ import { ReportesComponent } from './components/reportes/reportes.component';
 import { AuditoriasComponent } from './components/auditorias/auditorias.component';
 import { NotificacionComponent } from './components/notificacion/notificacion.component';
 import { SoporteComponent } from './components/soporte/soporte.component';
+import { SesionUsuarioComponent } from './components/sesion-usuario/sesion-usuario.component';
 
 export const routes: Routes = [
     {
@@ -219,6 +220,17 @@ export const routes: Routes = [
             {
                 path: 'soporte',
                 component: SoporteComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'SesionesActivas',
+                component: SesionUsuarioComponent
             }
         ]
     },
