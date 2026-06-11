@@ -9,14 +9,12 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 
-@Repository
 public interface OrdenMantenimientoRepository extends JpaRepository<OrdenMantenimiento, Long> {
 
     @Query("""

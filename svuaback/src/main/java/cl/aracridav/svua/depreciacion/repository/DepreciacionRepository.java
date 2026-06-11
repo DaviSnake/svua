@@ -8,12 +8,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import cl.aracridav.svua.depreciacion.entity.Depreciacion;
 import cl.aracridav.svua.depreciacion.entity.MetodoDepreciacion;
 
-@Repository
 public interface DepreciacionRepository extends JpaRepository<Depreciacion, Long> {
 
     // 🔎 Buscar depreciación por activo

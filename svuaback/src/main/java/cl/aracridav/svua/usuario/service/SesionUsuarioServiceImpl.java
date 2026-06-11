@@ -56,11 +56,9 @@ public class SesionUsuarioServiceImpl implements SesionUsuarioService {
 
                 sesion.setUltimaActividad(
                     LocalDateTime.now());
-
                 sesion.setPaginaActual(pagina);
-
                 sesion.setUltimaAccion(accion);
-
+                sesion.setActiva(true);
                 sesion.setCantidadRequests(
                     sesion.getCantidadRequests() + 1);
 

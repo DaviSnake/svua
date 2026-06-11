@@ -6,11 +6,9 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import cl.aracridav.svua.usuario.entity.SesionUsuario;
 
-@Repository
 public interface SesionUsuarioRepository
         extends JpaRepository<SesionUsuario, Long> {
 
@@ -38,5 +36,7 @@ public interface SesionUsuarioRepository
         WHERE s.activa = true
     """)
     List<SesionUsuario> findActivasConUsuarioEmpresa();
+
+    List<SesionUsuario> findByActivaTrueAndUltimaActividadBefore(LocalDateTime fecha);
 
 }

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -77,6 +77,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       .subscribe(() => {
         this.cargarCantidadNoLeidas(this.empresaId);
       });
+
   }
 
   ngOnDestroy(): void {
@@ -155,7 +156,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   }
 
   logout() {
-    this.sesionUsuarioService.logout().subscribe({
+    this.sesionUsuarioService.logout(this.authService.getTokenJti()!).subscribe({
       next: () => {
 
         this.authService.logout().subscribe({

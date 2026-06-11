@@ -7,13 +7,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.historial.entity.HistorialEstadoActivo;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 
-@Repository
 public interface HistorialEstadoActivoRepository extends JpaRepository<HistorialEstadoActivo, Long> {
 
     @Query("""

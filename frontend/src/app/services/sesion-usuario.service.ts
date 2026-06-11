@@ -26,10 +26,10 @@ export class SesionUsuarioService {
     );
   }
 
-  logout(): Observable<void> {
+  logout(tokenJti: string): Observable<void> {
 
     return this.http.post<void>(
-      `${environment.apiUrl}/sesiones/logout`,
+      `${environment.apiUrl}/sesiones/logout/${tokenJti}`,
       {}
     );
   }
