@@ -9,10 +9,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import cl.aracridav.svua.inventario.historial.repository.HistorialEstadoActivoRepository;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
+import cl.aracridav.svua.mantenimiento.orden.repository.OrdenReprogramacionRepository;
+import cl.aracridav.svua.mantenimiento.ordenrepuesto.repository.OrdenRepuestoRepository;
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
+import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
+import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.shared.service.EmailService;
 import cl.aracridav.svua.usuario.entity.SesionUsuario;
 import cl.aracridav.svua.usuario.repository.SesionUsuarioRepository;
@@ -28,8 +33,17 @@ public class MantencionScheduler {
     private final EmailService emailService;
     private final SesionUsuarioRepository sesionRepository;
 
+    private final OrdenRepuestoRepository ordenRepuestoRepository;
+    private final OrdenReprogramacionRepository ordenReprogramacionRepository;
+    private final HistorialEstadoActivoRepository historialEstadoActivoRepository;
+    private final OrdenMantenimientoRepository ordenMantenimientoRepository;
+    private final RepuestoRepository repuestoRepository;
+
     @Value("${svua.scheduler.mantenciones.enabled}")
     private boolean enabled;
+
+    @Value("${app.demo.empresa-id}")
+    private Long empresaId;
 
     @Transactional
     @Scheduled(cron = "*/30 * * * * *")
@@ -93,6 +107,30 @@ public class MantencionScheduler {
             );
 
         });
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void eliminarOrdenesEmpresaDemo() {
+
+        log.info("Iniciando limpieza de órdenes de la empresa {}", empresaId);
+
+        // Eliminar órdenes
+        ordenRepuestoRepository.deleteByEmpresaId(empresaId);
+        ordenReprogramacionRepository.deleteByEmpresaId(empresaId);
+        historialEstadoActivoRepository.deleteByEmpresaIdAndComentarioNot(empresaId);
+        ordenMantenimientoRepository.deleteByEmpresaId(empresaId);
+
+        // Restaurar stock
+        List<Repuesto> repuestos =
+                repuestoRepository.findByEmpresaId(empresaId);
+
+        repuestos.forEach(r -> r.setStockActual(15));
+
+        repuestoRepository.saveAll(repuestos);
+
+        log.info("Limpieza finalizada correctamente");
+
     }
 
 }

@@ -62,7 +62,7 @@ public class EmailServiceImpl implements EmailService {
                     ">
 
                         <h2 style="color:#2d3436;">
-                            Recuperar contraseña
+                            Restablecer contraseña
                         </h2>
 
                         <p style="color:#636e72;">

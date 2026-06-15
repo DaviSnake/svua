@@ -201,8 +201,6 @@ export class EmpresaComponent implements OnInit {
 
   onAdminClick() {
 
-    console.log("entro");
-
     const adminNombre = this.empresaForm.get('adminNombre');
     const adminEmail = this.empresaForm.get('adminEmail');
     const adminPassword = this.empresaForm.get('adminPassword');

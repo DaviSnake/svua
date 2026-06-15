@@ -3,6 +3,7 @@ import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -26,8 +27,8 @@ export class LoginComponent {
   //email = 'admin@admin.com';
   //password = 'Admin123*';
 
-  //email = 'admin@empresademo.cl';
-  //password = 'Admin12345';
+  //email = 'demo@empresademo.cl';
+  //password = '123456789';
 
   loginData = {
     email: this.email,
@@ -114,6 +115,97 @@ export class LoginComponent {
 
   goToForgotPassword() {
     this.router.navigateByUrl('/forgot-password');
+  }
+
+  invitado(){
+
+    this.loginData = {
+      email: 'demo@empresademo.cl',
+      password: '123456789',
+
+      navegador: this.obtenerNavegador(),
+      sistemaOperativo: this.obtenerSO(),
+      dispositivo: this.obtenerDispositivo(),
+      versionApp: '1.0.0'
+    };
+
+    Swal.fire({
+      icon: 'info',
+      title: '¡Bienvenido!',
+      html: `
+        <p>
+          Has ingresado como <b>Invitado</b>.
+        </p>
+
+        <div style="text-align:left; margin:15px 0;">
+          ✔ Explora todas las funcionalidades.<br>
+          ✔ Puedes crear y modificar información.<br>
+          ⚠ Los datos de esta cuenta se reinician automáticamente cada día.
+        </div>
+
+        <input
+          id="correoDemo"
+          class="swal2-input"
+          type="email"
+          placeholder="Correo electrónico (opcional)">
+
+        <div style="margin-top:10px;text-align:left;">
+          <label style="display:flex;align-items:flex-start;gap:8px;">
+            <input id="aceptaInfo" type="checkbox" style="margin-top:4px;">
+            <span style="font-size:13px;">
+              Al marcar esta opción, autorizo a recibir información sobre
+              novedades, actualizaciones y promociones relacionadas con la plataforma.
+            </span>
+          </label>
+        </div>
+      `,
+      confirmButtonText: 'Comenzar',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      focusConfirm: false,
+      preConfirm: () => {
+
+        const email = (document.getElementById('correoDemo') as HTMLInputElement).value.trim();
+        const acepta = (document.getElementById('aceptaInfo') as HTMLInputElement).checked;
+
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          Swal.showValidationMessage('Ingrese un correo electrónico válido.');
+          return false;
+        }
+
+        return {
+          email,
+          acepta
+        };
+      }
+
+    }).then((result) => {
+
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      const { email, acepta } = result.value;
+
+      // Si ingresó correo y aceptó recibir información
+      if (email && acepta) {
+        // Llamar a tu API para guardar el lead
+        // this.demoService.registrarInteres(email).subscribe();
+        this.login();
+      } else {
+        this.loginData = {
+          email: '',
+          password: '',
+
+          navegador: '',
+          sistemaOperativo: '',
+          dispositivo: '',
+          versionApp: ''
+        };
+      }
+
+
+    });
   }
 
   clearError() {

@@ -1,6 +1,8 @@
 package cl.aracridav.svua.mantenimiento.repuesto.repository;
 
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,5 +19,7 @@ public interface RepuestoRepository extends JpaRepository<Repuesto, Long> {
     Page<Repuesto> findByEmpresaId(Long empresaId, Pageable pageable);
 
     boolean existsByCodigoAndEmpresa(String codigo, Empresa empresa);
+
+    List<Repuesto> findByEmpresaId(Long empresaId);
 
 }

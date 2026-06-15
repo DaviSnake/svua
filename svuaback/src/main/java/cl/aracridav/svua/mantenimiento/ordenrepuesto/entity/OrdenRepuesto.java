@@ -15,7 +15,6 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @Table(name = "orden_repuesto")
 @SuperBuilder
-@EqualsAndHashCode(of = "id", callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrdenRepuesto extends BaseEntity {
@@ -41,4 +40,29 @@ public class OrdenRepuesto extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
     private Usuario usuario;
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof OrdenRepuesto other)) {
+            return false;
+        }
+
+        if (id == null || other.id == null) {
+            return false;
+        }
+
+        return id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null
+            ? id.hashCode()
+            : System.identityHashCode(this);
+    }
 }

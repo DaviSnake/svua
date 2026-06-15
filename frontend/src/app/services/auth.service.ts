@@ -56,6 +56,14 @@ export class AuthService {
     return payload.jti;
   }
 
+  getDemo(): boolean | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.demo;
+  }
+
   init() {
     this.setUserFromToken();
   }
@@ -154,22 +162,6 @@ export class AuthService {
 
   resetPassword(token: string, password: string) {
     return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, password });
-  }
-
-  cerrarSesionBeacon(): void {
-
-    const tokenJti =
-      this.getTokenJti();
-
-    if (!tokenJti) {
-      return;
-    }
-
-    alert("Cerrando");
-
-    navigator.sendBeacon(
-      `${environment.apiUrl}/api/v1/svua/sesiones/logout/${tokenJti}`
-    );
   }
 
   logout() {

@@ -8,6 +8,7 @@ import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 import Swal from 'sweetalert2';
 import { FormUtils } from '../../shared/form-utils';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-usuario',
@@ -21,6 +22,7 @@ export class UsuarioComponent implements OnInit {
   usuarioService = inject(UsuarioService);
   empresaService = inject(EmpresaService);
   authService = inject(AuthService);
+  router = inject(Router);
   fb = inject(FormBuilder);
 
   usuarioForm!: FormGroup;
@@ -45,6 +47,9 @@ export class UsuarioComponent implements OnInit {
 
   page = 0;
   size = 10;
+
+  message = '';
+  errorMessage = '';
 
   totalPages = 0;
   totalElements = 0;
@@ -293,6 +298,42 @@ export class UsuarioComponent implements OnInit {
   cerrarModal() {
     this.mostrarModalPassword = false;
     this.passwordForm.reset();
+  }
+
+  enviarCorreo(){
+    const data = {
+      email: this.usuarioForm.value.email
+    };
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Correo enviado',
+      text: `Se ha enviado un correo a ${this.usuarioForm.value.email} para restablecer la contraseña. La aplicación se reiniciará.`,
+      timer: 5000,
+      showConfirmButton: false
+    });
+
+    this.authService.forgotPassword(data).subscribe({
+      next: (res: any) => {
+        this.message = res.message || 'Revisa tu correo 📩';
+        this.errorMessage = '';
+
+        this.message = 'Correo enviado 📩';
+
+        this.goBack();
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Error al enviar correo';
+        this.message = '';
+
+        setTimeout(() => this.errorMessage = '', 4000);
+      }
+    });
+
+  }
+
+  goBack() {
+    this.router.navigateByUrl('/login');
   }
 
   guardarPassword() {

@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -217,5 +218,12 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         LocalDateTime desde,
         LocalDateTime hasta
     );
+
+    @Modifying
+    @Query("""
+        DELETE FROM OrdenMantenimiento o
+        WHERE o.empresa.id = :empresaId
+    """)
+    void deleteByEmpresaId(@Param("empresaId") Long empresaId);
 
 }

@@ -43,5 +43,10 @@
     "name": "svua.scheduler.mantenciones.enabled",
     "type": "java.lang.String",
     "description": "A description for 'svua.scheduler.mantenciones.enabled'"
+  },
+  {
+    "name": "app.demo.empresa-id",
+    "type": "java.lang.String",
+    "description": "A description for 'app.demo.empresa-id'"
   }
 ]}

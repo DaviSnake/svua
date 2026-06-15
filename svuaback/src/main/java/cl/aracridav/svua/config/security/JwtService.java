@@ -46,6 +46,7 @@ public class JwtService {
             .claim("empresaId", user.getEmpresaId())
             .claim("userName", user.getUsername())
             .claim("jti", tokenJti)
+            .claim("demo", user.getDemo())
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
             .signWith(Keys.hmacShaKeyFor(TU_SECRET_BASE64.getBytes()), SignatureAlgorithm.HS256)

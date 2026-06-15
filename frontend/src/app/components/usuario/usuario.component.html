@@ -33,7 +33,7 @@
                 {{ editando ? 'Actualizar' : 'Guardar' }}
               </button>
               @if (editando) {
-                <button type="button" (click)="abrirModalPassword(usuarioSeleccionado)">
+                <button type="button" (click)="enviarCorreo()">
                   Cambiar Password
                 </button>
               }

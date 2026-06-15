@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.historial.entity.HistorialEstadoActivo;
@@ -68,5 +70,15 @@ public interface HistorialEstadoActivoRepository extends JpaRepository<Historial
                          @Param("estado") EstadoActivo estado);
 
     List<HistorialEstadoActivo> findByActivoOrderByFechaDesc(Activo activo);
+
+    @Modifying
+    @Transactional
+    @Query("""
+        DELETE FROM HistorialEstadoActivo h
+        WHERE h.empresa.id = :empresaId
+        AND h.comentario <> 'Creación de Activo'
+    """)
+    int deleteByEmpresaIdAndComentarioNot(
+            @Param("empresaId") Long empresaId);
 
 }

@@ -15,6 +15,7 @@ public class UsuarioPrincipal implements UserDetails {
 
     private Long id;
     private Long empresaId;
+    private Boolean demo;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
@@ -22,6 +23,7 @@ public class UsuarioPrincipal implements UserDetails {
     public UsuarioPrincipal(Usuario usuario) {
         this.id = usuario.getId();
         this.empresaId = usuario.getEmpresa().getId();
+        this.demo = usuario.getEmpresa().getDemo();
         this.email = usuario.getEmail();
         this.password = usuario.getPassword();
         
@@ -47,6 +49,10 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Long getEmpresaId() {
         return empresaId;
+    }
+
+    public Boolean getDemo() {
+        return demo;
     }
 
     @Override

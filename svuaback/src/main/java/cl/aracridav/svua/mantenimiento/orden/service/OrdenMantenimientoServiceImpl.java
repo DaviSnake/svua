@@ -324,20 +324,43 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 notificacionService.verificarStockMinimo(repuestoGuardado);
 
                 OrdenRepuesto ordenRepuesto =
-                    OrdenRepuesto.builder()
-                        .orden(orden)
-                        .repuesto(repuesto)
-                        .cantidad(r.getCantidad())
-                        .costoUnitario(repuesto.getCostoUnitario())
-                        .costoTotal(
-                            repuesto.getCostoUnitario().multiply(
-                                BigDecimal.valueOf(r.getCantidad())
-                            )
+                    ordenRepuestoRepository
+                        .findByOrdenIdAndRepuestoId(
+                            orden.getId(),
+                            repuesto.getId()
                         )
-                        .empresa(orden.getEmpresa())
-                        .usuario(orden.getUsuario())
-                        .build();
+                        .orElse(null);
 
+                if (ordenRepuesto == null) {
+                    ordenRepuesto =
+                        OrdenRepuesto.builder()
+                            .orden(orden)
+                            .repuesto(repuesto)
+                            .cantidad(r.getCantidad())
+                            .costoUnitario(repuesto.getCostoUnitario())
+                            .costoTotal(
+                                repuesto.getCostoUnitario().multiply(
+                                    BigDecimal.valueOf(r.getCantidad())
+                                )
+                            )
+                            .empresa(orden.getEmpresa())
+                            .usuario(orden.getUsuario())
+                            .build();
+
+                }
+                else {
+                    int nuevaCantidad =
+                        ordenRepuesto.getCantidad() + r.getCantidad();
+
+                    ordenRepuesto.setCantidad(nuevaCantidad);
+
+                    ordenRepuesto.setCostoTotal(
+                        repuesto.getCostoUnitario()
+                            .multiply(BigDecimal.valueOf(nuevaCantidad))
+                    );
+                }         
+                
+                ordenRepuestoRepository.save(ordenRepuesto);
                 nuevosRepuestos.add(ordenRepuesto);
             }
 
@@ -853,6 +876,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         }
 
         Set<OrdenRepuesto> lista = new HashSet<>();
+        
 
         for (OrdenRepuestoRequest req : repuestos) {
 
