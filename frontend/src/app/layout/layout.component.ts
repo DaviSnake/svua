@@ -1,8 +1,11 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { HeaderComponent } from "./components/header/header.component";
 import { SidebarComponent } from "./components/sidebar/sidebar.component";
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { NotificacionStateService } from '../services/notificacion-state.service';
+import { AuthService } from '../services/auth.service';
+import { NotificacionService } from '../services/notificacion.service';
 
 @Component({
   selector: 'app-layout',
@@ -11,11 +14,38 @@ import { CommonModule } from '@angular/common';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit{
+
+  notificacionState = inject(NotificacionStateService);
+  authService = inject(AuthService);
+  notificacionService = inject(NotificacionService);
+  router = inject(Router);
 
   @ViewChild('sidebarPadre') sidebarPadre!: ElementRef;
 
   sidebarOpen = false;
+
+  empresaId: number = 0;
+  cantidadNoLeidas = 0;
+
+  ngOnInit(){
+
+    this.empresaId = this.authService.getEmpresaId() ?? 0;
+
+    this.notificacionState.actualizarCantidad$
+      .subscribe(() => {
+        this.cargarCantidadNoLeidas(this.empresaId);
+      });
+
+    this.notificacionState.notificarActualizacion();
+
+  }
+
+  abrirNotificaciones() {
+
+      this.router.navigateByUrl('/inicio/notificaciones');
+
+  }
 
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
@@ -32,6 +62,16 @@ export class LayoutComponent {
       this.sidebarPadre.nativeElement.classList.add('minimize');
 
     }
+  }
+
+  cargarCantidadNoLeidas(empresaId: number): void {
+    this.notificacionService
+      .obtenerCantidadNoLeidas(empresaId)
+      .subscribe({
+        next: cantidad => {
+          this.cantidadNoLeidas = cantidad;
+        }
+      });
   }
 
 }

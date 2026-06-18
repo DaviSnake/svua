@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class NotificacionServiceImpl implements NotificacionService {
 
     private final NotificacionRepository notificacionRepository;
+    private final NotificacionWebSocketService socketService;
     private final EmpresaRepository empresaRepository;
     private final GeneralMapper mapper;
 
@@ -83,7 +84,9 @@ public class NotificacionServiceImpl implements NotificacionService {
                 notificacion.setFechaCreacion(LocalDateTime.now());
                 notificacion.setEmpresa(empresa);
 
-                notificacionRepository.save(notificacion);
+                crearNotificacion(notificacion);
+
+                //notificacionRepository.save(notificacion);
             }
 
         } else {
@@ -96,7 +99,7 @@ public class NotificacionServiceImpl implements NotificacionService {
 
     /*
      * =========================================
-     * VERIFICAR STOCK MINIMO
+     * ORDEN PRE COMPLETADA
      * =========================================
      */
     @Override
@@ -128,7 +131,8 @@ public class NotificacionServiceImpl implements NotificacionService {
                 notificacion.setFechaCreacion(LocalDateTime.now());
                 notificacion.setEmpresa(empresa);
 
-                notificacionRepository.save(notificacion);
+                crearNotificacion(notificacion);
+                //notificacionRepository.save(notificacion);
         }
     }
     
@@ -161,6 +165,8 @@ public class NotificacionServiceImpl implements NotificacionService {
         notificacion.setLeida(true);
 
         notificacionRepository.save(notificacion);
+
+        socketService.enviar(notificacion);
     }
 
     /*
@@ -172,6 +178,23 @@ public class NotificacionServiceImpl implements NotificacionService {
     @Transactional
     public void eliminar(Long id) {
         notificacionRepository.deleteById(id);
+    }
+
+    /*
+     * =========================================
+     * LISTAR NOTIFICACIONES
+     * =========================================
+     */
+    
+    private Notificacion crearNotificacion(Notificacion notificacion) {
+
+        Notificacion nueva =
+                notificacionRepository.save(notificacion);
+
+        socketService.enviar(nueva);
+
+        return nueva;
+
     }
 
     private Empresa obtenerEmpresaActual() {

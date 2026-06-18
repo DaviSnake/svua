@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        if (path.equals("/api/v1/svua/notificacion/no-leidas/count")) {
+        if (path.equals("/ws")) {
             filterChain.doFilter(request, response);
             return;
         }

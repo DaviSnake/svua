@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -97,9 +98,16 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             List<OrdenMantenimiento> batchOrden = new ArrayList<>();
             List<Repuesto> batchRepuesto = new ArrayList<>();
 
+            System.out.println("Total Filas: " + total);
+
             for (Row row : sheet) {
 
                 if (row.getRowNum() == 0) continue;
+
+                if (filaVacia(row)) {
+                    total--;
+                    continue;
+                }
 
                 try {
                     switch (archivo) {
@@ -191,6 +199,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             ImportProgressDTO p = progressService.get(jobId);
 
             int procesados = p.getProcesados();
+            p.setTotal(total);
+
+            System.out.println("Total Filas: " + total);
+            System.out.println("Total procesados: " + procesados);
 
             if (!huboErrores && procesados == total) {
                 progressService.finalizar(jobId);
@@ -217,6 +229,36 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             }
         }
     }
+
+    private boolean filaVacia(Row row) {
+
+    if (row == null) {
+        return true;
+    }
+
+    DataFormatter formatter = new DataFormatter();
+
+    for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
+
+        if (i < 0) {
+            return true;
+        }
+
+        Cell cell = row.getCell(i);
+
+        if (cell == null) {
+            continue;
+        }
+
+        String valor = formatter.formatCellValue(cell);
+
+        if (!valor.trim().isEmpty()) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
     private String getRowData(Row row) {
         StringBuilder sb = new StringBuilder();
@@ -259,8 +301,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String codigo = getString(row, 0);
         validarCodigoUnico(codigo);
 
-        TipoActivo tipoActivo = obtenerTipoActivo(getString(row, 3));
-        Ubicacion ubicacion = obtenerUbicacion(getString(row, 11));
+        TipoActivo tipoActivo = obtenerTipoActivo(getString(row, 3), empresaId);
+        Ubicacion ubicacion = obtenerUbicacion(getString(row, 11), empresaId);
         Proveedor proveedor = obtenerProveedor(getString(row, 12));
         Empresa empresa = obtenerEmpresa(empresaId);
 
@@ -307,7 +349,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
         String observaciones = getString(row, 6);
 
-        Activo activo = obtenerActivoPorNombre(getRequiredString(row, 7, "Activo requerido"));
+        Activo activo = obtenerActivoPorNombreYEmpresa(getRequiredString(row, 7, "Activo requerido"), empresaId);
         Proveedor proveedor = obtenerProveedor(getString(row, 8));
         BigDecimal valorHora = getBigDecimal(row, 9, "Valor Hora inválido");
         BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido");
@@ -490,13 +532,13 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return repuesto;
     }
 
-    private TipoActivo obtenerTipoActivo(String nombre) {
-        return tipoActivoRepository.findFirstByNombre(nombre)
+    private TipoActivo obtenerTipoActivo(String nombre, Long empresaId) {
+        return tipoActivoRepository.findFirstByNombreAndEmpresaId(nombre, empresaId)
             .orElseThrow(() -> new BusinessException("Tipo de activo no existe: " + nombre));
     }
 
-    private Ubicacion obtenerUbicacion(String nombre) {
-        return ubicacionRepository.findFirstByNombre(nombre)
+    private Ubicacion obtenerUbicacion(String nombre, Long empresaId) {
+        return ubicacionRepository.findFirstByNombreAndEmpresaId(nombre, empresaId)
             .orElseThrow(() -> new BusinessException("Ubicación no existe: " + nombre));
     }
 
@@ -510,8 +552,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
-    private Activo obtenerActivoPorNombre(String nombre) {
-        return activoRepository.findFirstByNombre(nombre)
+    private Activo obtenerActivoPorNombreYEmpresa(String nombre, Long empresaId) {
+        return activoRepository.findFirstByNombreAndEmpresaId(nombre, empresaId)
             .orElseThrow(() -> new BusinessException("Activo no existe: " + nombre));
     }
 

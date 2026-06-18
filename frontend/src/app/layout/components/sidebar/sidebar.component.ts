@@ -7,6 +7,9 @@ import { NotificacionService } from '../../../services/notificacion.service';
 import { interval, Subscription } from 'rxjs';
 import { NotificacionStateService } from '../../../services/notificacion-state.service';
 import { SesionUsuarioService } from '../../../services/sesion-usuario.service';
+import { WebSocketService } from '../../../services/web-socket.service';
+import { Notificacion } from '../../../model/notificacion';
+import Swal from 'sweetalert2';
 
 type MenuKey = 'gestion' | 'organizacion' | 'analisis';
 
@@ -23,6 +26,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   notificacionService = inject(NotificacionService);
   notificacionState = inject(NotificacionStateService);
   sesionUsuarioService = inject(SesionUsuarioService);
+  webSocketService = inject(WebSocketService);
   router = inject(Router);
 
   usuario: any;
@@ -43,6 +47,10 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   esDemo = false;
 
   rutaActual = '';
+
+  notificaciones: Notificacion[] = [];
+
+  totalNotificaciones = 0;
 
   empresaId: number = 0;
   cantidadNoLeidas = 0;
@@ -69,16 +77,31 @@ export class SidebarComponent implements OnInit, OnDestroy  {
         this.detectarRuta(event.url);
       });
 
-      this.cargarCantidadNoLeidas(this.empresaId);
+      /*this.cargarCantidadNoLeidas(this.empresaId);
       this.intervaloNotificaciones =
         interval(30000).subscribe(() => {
           this.cargarCantidadNoLeidas(this.empresaId);
-      });
+      });*/
 
       this.notificacionState.actualizarCantidad$
       .subscribe(() => {
         this.cargarCantidadNoLeidas(this.empresaId);
       });
+
+      this.webSocketService.conectar(
+
+        this.authService.getEmpresaId()!,
+
+        notificacion => {
+
+            this.notificaciones.unshift(
+                notificacion);
+
+            this.totalNotificaciones++;
+
+            this.notificacionState.notificarActualizacion();
+
+        });
 
   }
 

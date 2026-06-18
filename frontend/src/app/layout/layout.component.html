@@ -9,29 +9,58 @@
 <body>
     <div class="layout">
 
-      <!-- ☰ botón móvil -->
-      <button class="menu-btn" (click)="toggleSidebar()">
-        ☰
+    <!-- Header móvil -->
+    <div class="mobile-header">
+
+      <button class="menu-btn"
+              (click)="toggleSidebar()">
+
+        <i class='bx bx-menu'></i>
+
       </button>
 
-      <!-- overlay oscuro -->
-      <div 
-        class="overlay" 
-        *ngIf="sidebarOpen" 
-        (click)="closeSidebar()">
-      </div>
+      <div class="mobile-right">
 
-      <!-- sidebar -->
-      <app-sidebar 
-        class="sidebar"
-        [class.open]="sidebarOpen">
-      </app-sidebar>
+        <button
+            class="notification-btn"
+            (click)="abrirNotificaciones()">
 
-      <!-- contenido -->
-      <div class="content">
-        <router-outlet></router-outlet>
+            <i class='bx bx-bell'></i>
+
+            <span
+                *ngIf="cantidadNoLeidas > 0"
+                class="badge">
+
+                {{ cantidadNoLeidas }}
+
+            </span>
+
+        </button>
+
       </div>
 
     </div>
+
+    <!-- overlay -->
+    <div
+        class="overlay"
+        *ngIf="sidebarOpen"
+        (click)="closeSidebar()">
+    </div>
+
+    <!-- sidebar -->
+    <app-sidebar
+        class="sidebar"
+        [class.open]="sidebarOpen">
+    </app-sidebar>
+
+    <!-- contenido -->
+    <div class="content">
+
+        <router-outlet></router-outlet>
+
+    </div>
+
+  </div>
 </body>
 </html>

@@ -18,6 +18,7 @@ import cl.aracridav.svua.mantenimiento.ordenrepuesto.repository.OrdenRepuestoRep
 import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.notificacion.repository.NotificacionRepository;
 import cl.aracridav.svua.shared.service.EmailService;
 import cl.aracridav.svua.usuario.entity.SesionUsuario;
 import cl.aracridav.svua.usuario.repository.SesionUsuarioRepository;
@@ -33,6 +34,7 @@ public class MantencionScheduler {
     private final EmailService emailService;
     private final SesionUsuarioRepository sesionRepository;
 
+    private final NotificacionRepository notificacionRepository;
     private final OrdenRepuestoRepository ordenRepuestoRepository;
     private final OrdenReprogramacionRepository ordenReprogramacionRepository;
     private final HistorialEstadoActivoRepository historialEstadoActivoRepository;
@@ -116,6 +118,7 @@ public class MantencionScheduler {
         log.info("Iniciando limpieza de órdenes de la empresa {}", empresaId);
 
         // Eliminar órdenes
+        notificacionRepository.deleteByEmpresaId(empresaId);
         ordenRepuestoRepository.deleteByEmpresaId(empresaId);
         ordenReprogramacionRepository.deleteByEmpresaId(empresaId);
         historialEstadoActivoRepository.deleteByEmpresaIdAndComentarioNot(empresaId);

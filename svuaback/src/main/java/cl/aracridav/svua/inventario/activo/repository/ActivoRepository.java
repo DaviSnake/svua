@@ -74,4 +74,9 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
     List<Activo> findAllConHistorialByEmpresa(
         @Param("empresaId") Long empresaId
     );
+
+    Optional<Activo> findFirstByNombreAndEmpresaId(
+        String nombre,
+        Long empresaId
+    );
 }

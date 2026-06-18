@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.notificacion.entity.Notificacion;
@@ -28,5 +30,9 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
 
     List<Notificacion> findByEmpresaOrderByFechaCreacionDesc(
         Empresa empresa);
+
+    @Transactional
+    @Modifying
+    void deleteByEmpresaId(Long empresaId);
 
 }
