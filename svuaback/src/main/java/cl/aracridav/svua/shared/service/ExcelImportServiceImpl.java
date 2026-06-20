@@ -97,6 +97,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             List<Proveedor> batchProveedor = new ArrayList<>();
             List<OrdenMantenimiento> batchOrden = new ArrayList<>();
             List<Repuesto> batchRepuesto = new ArrayList<>();
+            List<Ubicacion> batchUbicacion = new ArrayList<>();
+            List<TipoActivo> batchTipoActivo = new ArrayList<>();
 
             System.out.println("Total Filas: " + total);
 
@@ -152,6 +154,26 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             }
                         }
 
+                        case "ubicacion" -> {
+                            Ubicacion ubicacion = mapUbicacion(row, empresaId);
+                            batchUbicacion.add(ubicacion);
+
+                            if (batchUbicacion.size() == BATCH_SIZE) { // ✅ CORREGIDO
+                                guardarUbicacion(batchUbicacion);
+                                batchUbicacion.clear(); // ✅ CORREGIDO
+                            }
+                        }
+
+                        case "tipoActivo" -> {
+                            TipoActivo tipoActivo = mapTipoActivo(row, empresaId);
+                            batchTipoActivo.add(tipoActivo);
+
+                            if (batchTipoActivo.size() == BATCH_SIZE) { // ✅ CORREGIDO
+                                guardarTipoActivo(batchTipoActivo);
+                                batchTipoActivo.clear(); // ✅ CORREGIDO
+                            }
+                        }
+
                         default -> throw new IllegalArgumentException("Tipo archivo inválido: " + archivo);
                     }
 
@@ -193,6 +215,12 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                 }
                 case "repuesto" -> {
                     if (!batchRepuesto.isEmpty()) guardarRepuesto(batchRepuesto); // ✅ CORREGIDO
+                }
+                case "ubicacion" -> {
+                    if (!batchUbicacion.isEmpty()) guardarUbicacion(batchUbicacion); // ✅ CORREGIDO
+                }
+                case "tipoActivo" -> {
+                    if (!batchTipoActivo.isEmpty()) guardarTipoActivo(batchTipoActivo); // ✅ CORREGIDO
                 }
             }
 
@@ -292,6 +320,18 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
     private void guardarRepuesto(List<Repuesto> batch) {
         repuestoRepository.saveAll(batch);
+        em.flush();
+        em.clear();
+    }
+
+    private void guardarUbicacion(List<Ubicacion> batch) {
+        ubicacionRepository.saveAll(batch);
+        em.flush();
+        em.clear();
+    }
+
+    private void guardarTipoActivo(List<TipoActivo> batch) {
+        tipoActivoRepository.saveAll(batch);
         em.flush();
         em.clear();
     }
@@ -400,10 +440,26 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return construirRepuesto(codigo, nombre, descripcion, costo, StockActual, stockMinimo, cuentaContable, tipoRepuesto, empresa);
     }
 
-    private void validarCodigoUnico(String codigo) {
-        if (activoRepository.existsByCodigoInterno(codigo)) {
-            throw new BusinessException("El código interno ya existe: " + codigo);
-        }
+    private Ubicacion mapUbicacion(Row row, Long empresaId) {
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+
+        String nombre = getRequiredString(row, 0, "El nombre es obligatorio");
+        String descripcion = getString(row, 1);
+        String direccion = getString(row, 2);        
+
+        return construirUbicacion(nombre, descripcion, direccion, empresa);
+    }
+
+    private TipoActivo mapTipoActivo(Row row, Long empresaId) {
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+
+        String nombre = getRequiredString(row, 0, "El nombre es obligatorio");
+        String descripcion = getString(row, 1);
+        Integer vidaUtil = getInteger(row, 2);       
+
+        return construirTipoActivo(nombre, descripcion, vidaUtil, empresa);
     }
 
     private Activo construirActivo(
@@ -530,6 +586,47 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         repuesto.setEmpresa(empresa);
 
         return repuesto;
+    }
+
+    private Ubicacion construirUbicacion(
+        String nombre,
+        String descripcion,
+        String direccion,        
+        Empresa empresa
+    ) {
+
+        Ubicacion ubicacion = new Ubicacion();
+
+        ubicacion.setNombre(nombre);
+        ubicacion.setDescripcion(descripcion);
+        ubicacion.setDireccion(direccion);    
+        ubicacion.setActivo(true);    
+        ubicacion.setEmpresa(empresa);
+
+        return ubicacion;
+    }
+    private TipoActivo construirTipoActivo(
+        String nombre,
+        String descripcion,
+        Integer vidaUtil,        
+        Empresa empresa
+    ) {
+
+        TipoActivo tipoActivo = new TipoActivo();
+
+        tipoActivo.setNombre(nombre);
+        tipoActivo.setDescripcion(descripcion);
+        tipoActivo.setVidaUtilReferencialMeses(vidaUtil);
+        tipoActivo.setActivo(true);     
+        tipoActivo.setEmpresa(empresa);
+
+        return tipoActivo;
+    }
+
+    private void validarCodigoUnico(String codigo) {
+        if (activoRepository.existsByCodigoInterno(codigo)) {
+            throw new BusinessException("El código interno ya existe: " + codigo);
+        }
     }
 
     private TipoActivo obtenerTipoActivo(String nombre, Long empresaId) {

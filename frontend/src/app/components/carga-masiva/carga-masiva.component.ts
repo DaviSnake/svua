@@ -17,20 +17,28 @@ export class CargaMasivaComponent {
   fileNameProveedor: string | null = null;
   fileNameOrden: string | null = null;
   fileNameRepuesto: string | null = null;
+  fileNameUbicacion: string | null = null;
+  fileNameTipoActivo: string | null = null;
   progressActivo = 0;
   progressProveedor = 0;
   progressOrden = 0;
   progressRepuesto = 0;
+  progressUbicacion = 0;
+  progressTipoActivo = 0;
   estadoActivo = '';
   estadoProveedor = '';
   estadoOrden = '';
   estadoRepuesto = '';
+  estadoUbicacion = '';
+  estadoTipoActivo = '';
   interval: any;
   mensaje = '';
   mensajeActivo = '';
   mensajeProveedor = '';
   mensajeOrden = '';
   mensajeRepuesto = '';
+  mensajeUbicacion = '';
+  mensajeTipoActivo = '';
 
   onFileSelected(event: Event, archivo: String) {
     const input = event.target as HTMLInputElement;
@@ -52,6 +60,12 @@ export class CargaMasivaComponent {
       this.subir(file, archivo);
     } else if (archivo === "repuesto"){
       this.fileNameRepuesto = file.name;
+      this.subir(file, archivo);
+    } else if (archivo === "ubicacion"){
+      this.fileNameUbicacion = file.name;
+      this.subir(file, archivo);
+    } else if (archivo === "tipoActivo"){
+      this.fileNameTipoActivo = file.name;
       this.subir(file, archivo);
     }
 
@@ -101,6 +115,14 @@ export class CargaMasivaComponent {
         this.mensajeRepuesto = this.mensaje;
         this.estadoRepuesto = p.estado;
         this.progressRepuesto = Math.round((p.procesados / p.total) * 100);
+      } else if (archivo === "ubicacion"){
+        this.mensajeUbicacion = this.mensaje;
+        this.estadoUbicacion = p.estado;
+        this.progressUbicacion = Math.round((p.procesados / p.total) * 100);
+      } else if (archivo === "tipoActivo"){
+        this.mensajeTipoActivo = this.mensaje;
+        this.estadoTipoActivo = p.estado;
+        this.progressTipoActivo = Math.round((p.procesados / p.total) * 100);
       }
 
       
@@ -130,6 +152,14 @@ export class CargaMasivaComponent {
       this.fileNameRepuesto = null;
       this.progressRepuesto = 0;
       this.mensajeRepuesto = '';
+    } else if (archivo === "ubicacion"){
+      this.fileNameUbicacion = null;
+      this.progressUbicacion = 0;
+      this.mensajeUbicacion = '';
+    } else if (archivo === "tipoActivo"){
+      this.fileNameTipoActivo = null;
+      this.progressTipoActivo = 0;
+      this.mensajeTipoActivo = '';
     }
     this.mensaje = '';
 

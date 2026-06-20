@@ -79,4 +79,6 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
         String nombre,
         Long empresaId
     );
+
+    List<Activo> findByEmpresaId(Long empresaId);
 }

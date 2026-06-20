@@ -214,5 +214,107 @@
       </div>
     
     </div>
+
+    <!-- Ubicacion -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Ubicación</h2>
+    
+      <div class="file-box">
+        <label for="fileInputUbicacion" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputUbicacion
+            id="fileInputUbicacion"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('ubicacion')"
+            (change)="onFileSelected($event, 'ubicacion')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameUbicacion">
+          📄 {{ fileNameUbicacion }}
+        </p>
+      </div>
+    
+      @if (mensajeUbicacion) {
+        <div class="alert">
+            {{ mensajeUbicacion }}
+        </div>
+        }
+    
+      <div *ngIf="progressUbicacion > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressUbicacion}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressUbicacion">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoUbicacion}}
+        </p>
+    
+      </div>
+    
+    </div>
+
+    <!-- Tipo Activo -->
+    <div class="upload-container">
+    
+      <h2 class="title">Carga Tipo de Activos</h2>
+    
+      <div class="file-box">
+        <label for="fileInputTipoActivo" class="file-label">
+          Seleccionar archivo
+        </label>
+        <input 
+            #fileInputTipoActivo
+            id="fileInputTipoActivo"
+            type="file"
+            accept=".xlsx,.xls"
+            (click)="reset('tipoActivo')"
+            (change)="onFileSelected($event, 'tipoActivo')"
+            hidden
+        />
+    
+        <p class="file-name" *ngIf="fileNameTipoActivo">
+          📄 {{ fileNameTipoActivo }}
+        </p>
+      </div>
+    
+      @if (mensajeTipoActivo) {
+        <div class="alert">
+            {{ mensajeTipoActivo }}
+        </div>
+        }
+    
+      <div *ngIf="progressTipoActivo > 0" class="progress-container">
+    
+        <p class="progress-text">
+          Progreso: {{progressTipoActivo}}%
+        </p>
+    
+        <div class="progress-bar">
+          <div 
+            class="progress-fill"
+            [style.width.%]="progressTipoActivo">
+          </div>
+        </div>
+    
+        <p class="status">
+          Estado: {{estadoTipoActivo}}
+        </p>
+    
+      </div>
+    
+    </div>
   </div>
 </div>

@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import cl.aracridav.svua.inventario.activo.entity.Activo;
+import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.inventario.historial.repository.HistorialEstadoActivoRepository;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
@@ -19,6 +21,7 @@ import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.notificacion.repository.NotificacionRepository;
+import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.service.EmailService;
 import cl.aracridav.svua.usuario.entity.SesionUsuario;
 import cl.aracridav.svua.usuario.repository.SesionUsuarioRepository;
@@ -40,6 +43,7 @@ public class MantencionScheduler {
     private final HistorialEstadoActivoRepository historialEstadoActivoRepository;
     private final OrdenMantenimientoRepository ordenMantenimientoRepository;
     private final RepuestoRepository repuestoRepository;
+    private final ActivoRepository activoRepository;
 
     @Value("${svua.scheduler.mantenciones.enabled}")
     private boolean enabled;
@@ -111,7 +115,8 @@ public class MantencionScheduler {
         });
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    //@Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "*/30 * * * * *")
     @Transactional
     public void eliminarOrdenesEmpresaDemo() {
 
@@ -131,6 +136,16 @@ public class MantencionScheduler {
         repuestos.forEach(r -> r.setStockActual(15));
 
         repuestoRepository.saveAll(repuestos);
+
+        // Restaurar estado activo
+        List<Activo> activos =
+                activoRepository.findByEmpresaId(empresaId);
+
+        activos.forEach(r -> r.setEstadoActual(EstadoActivo.OPERATIVO));
+
+        activoRepository.saveAll(activos);
+
+
 
         log.info("Limpieza finalizada correctamente");
 
