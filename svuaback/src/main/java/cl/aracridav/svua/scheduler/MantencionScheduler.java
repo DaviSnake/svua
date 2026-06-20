@@ -115,8 +115,7 @@ public class MantencionScheduler {
         });
     }
 
-    //@Scheduled(cron = "0 0 0 * * *")
-    @Scheduled(cron = "*/30 * * * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void eliminarOrdenesEmpresaDemo() {
 
