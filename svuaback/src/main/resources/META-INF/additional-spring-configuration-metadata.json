@@ -48,5 +48,10 @@
     "name": "app.demo.empresa-id",
     "type": "java.lang.String",
     "description": "A description for 'app.demo.empresa-id'"
+  },
+  {
+    "name": "svua.scheduler.mantenciones.diasnotificacion",
+    "type": "java.lang.String",
+    "description": "A description for 'svua.scheduler.mantenciones.diasnotificacion'"
   }
 ]}

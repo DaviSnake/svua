@@ -99,7 +99,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
 
             this.totalNotificaciones++;
 
-            this.notificacionState.notificarActualizacion();
+            this.cantidadNoLeidas++;
 
         });
 
@@ -108,6 +108,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   ngOnDestroy(): void {
 
     this.intervaloNotificaciones?.unsubscribe();
+
+    this.webSocketService.desconectar();
 
   }
 
@@ -181,6 +183,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   }
 
   logout() {
+    this.webSocketService.desconectar();
+
     this.sesionUsuarioService.logout(this.authService.getTokenJti()!).subscribe({
       next: () => {
 

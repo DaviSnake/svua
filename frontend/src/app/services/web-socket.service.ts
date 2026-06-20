@@ -40,4 +40,12 @@ export class WebSocketService {
 
   }
 
+  desconectar(): void {
+
+    if (this.client?.active) {
+      this.client.deactivate();
+    }
+
+  }
+
 }

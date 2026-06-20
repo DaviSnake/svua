@@ -48,20 +48,23 @@ public class MantencionScheduler {
     @Value("${svua.scheduler.mantenciones.enabled}")
     private boolean enabled;
 
+    @Value("${svua.scheduler.mantenciones.diasnotificacion}")
+    private int diasNotificaion;
+
     @Value("${app.demo.empresa-id}")
     private Long empresaId;
 
     @Transactional
-    @Scheduled(cron = "*/30 * * * * *")
+    @Scheduled(cron = "0 0 20 * * *")
     public void generarNotificacionesMantenciones() {
 
         if (!enabled) {
             return;
         }
 
-        LocalDate manana = LocalDate.now().plusDays(1);
-        LocalDateTime desde = manana.atStartOfDay();
-        LocalDateTime hasta = manana.atTime(23, 59, 59);
+        LocalDate fechaNotificacion = LocalDate.now().plusDays(diasNotificaion);
+        LocalDateTime desde = fechaNotificacion.atStartOfDay();
+        LocalDateTime hasta = fechaNotificacion.atTime(23, 59, 59);
 
         List<OrdenMantenimiento> ordenes =
         ordenRepository
