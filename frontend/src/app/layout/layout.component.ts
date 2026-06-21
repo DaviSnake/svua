@@ -32,11 +32,6 @@ export class LayoutComponent implements OnInit{
 
     this.empresaId = this.authService.getEmpresaId() ?? 0;
 
-    this.notificacionState.actualizarCantidad$
-      .subscribe(() => {
-        this.cargarCantidadNoLeidas(this.empresaId);
-      });
-
     this.notificacionState.notificarActualizacion();
 
   }
@@ -62,16 +57,6 @@ export class LayoutComponent implements OnInit{
       this.sidebarPadre.nativeElement.classList.add('minimize');
 
     }
-  }
-
-  cargarCantidadNoLeidas(empresaId: number): void {
-    this.notificacionService
-      .obtenerCantidadNoLeidas(empresaId)
-      .subscribe({
-        next: cantidad => {
-          this.cantidadNoLeidas = cantidad;
-        }
-      });
   }
 
 }

@@ -106,7 +106,7 @@ export class DashboardComponent implements OnInit {
 
         this.rutaActual = event.urlAfterRedirects;
 
-        if (this.rutaActual != "/login"){
+        if (this.rutaActual != "/login" && this.rutaActual != "/forgot-password"){
           this.sesionUsuarioService.actualizarActividad(
             event.urlAfterRedirects,
             'Navegación'
