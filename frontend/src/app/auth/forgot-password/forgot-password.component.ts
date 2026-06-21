@@ -44,7 +44,7 @@ export class ForgotPasswordComponent {
         }, 3000);
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Error al enviar correo';
+        this.errorMessage = err.error?.error || 'Error al enviar correo';
         this.message = '';
 
         setTimeout(() => this.errorMessage = '', 4000);

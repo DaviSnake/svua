@@ -225,7 +225,7 @@ public class AuthController {
 
 
         Usuario user = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
 
         String token = usuarioService.createToken(user);
 
