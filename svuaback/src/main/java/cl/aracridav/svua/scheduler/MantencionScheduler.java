@@ -55,7 +55,7 @@ public class MantencionScheduler {
     private Long empresaId;
 
     @Transactional
-    @Scheduled(cron = "0 0 20 * * *")
+    @Scheduled(cron = "${app.jobs.ordenes.cron}")
     public void generarNotificacionesMantenciones() {
 
         if (!enabled) {
