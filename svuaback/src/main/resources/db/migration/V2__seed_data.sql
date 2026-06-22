@@ -21,7 +21,7 @@ VALUES (
     999,
     999,
     'Nexo Vectoria SPA',
-    '99.999.999-9',
+    '78436887-4',
     '+56912345678',
     'ENTERPRISE',
     false
