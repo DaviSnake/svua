@@ -14,7 +14,8 @@ CREATE TABLE empresa (
     telefono VARCHAR(30),
     tipo_plan VARCHAR(50) NOT NULL,
     CONSTRAINT chk_empresa_tipo_plan
-        CHECK (tipo_plan IN ('FREE', 'BASICO', 'PROFESIONAL', 'ENTERPRISE'))
+        CHECK (tipo_plan IN ('FREE', 'BASICO', 'PROFESIONAL', 'ENTERPRISE')),
+    demo BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE rol_usuario (
