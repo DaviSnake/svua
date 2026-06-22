@@ -26,4 +26,16 @@ export class PerfilUsuarioComponent implements OnInit {
     });
   }
 
+  formatearRut(rut: string): string {
+
+    if (!rut) {
+      return '';
+    }
+
+    const [cuerpo, dv] = rut.split('-');
+
+    return `${Number(cuerpo).toLocaleString('es-CL')}-${dv.toUpperCase()}`;
+
+  }
+
 }
