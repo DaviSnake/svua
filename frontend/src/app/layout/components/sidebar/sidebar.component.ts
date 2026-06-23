@@ -81,12 +81,12 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.intervaloNotificaciones =
         interval(30000).subscribe(() => {
           this.cargarCantidadNoLeidas(this.empresaId);
-      });*/
+      });
 
       this.notificacionState.actualizarCantidad$
       .subscribe(() => {
         this.cargarCantidadNoLeidas(this.empresaId);
-      });
+      });*/
 
       this.webSocketService.conectar(
 
@@ -97,10 +97,14 @@ export class SidebarComponent implements OnInit, OnDestroy  {
             this.notificaciones.unshift(
                 notificacion);
 
-            this.totalNotificaciones++;
+            this.cantidadNoLeidas = this.notificaciones.filter(
+              n => !n.leida
+            ).length;
 
-            this.cantidadNoLeidas++;
+        });
 
+        this.webSocketService.noLeidas$.subscribe(value => {
+          this.cantidadNoLeidas = value;
         });
 
   }
@@ -112,6 +116,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.webSocketService.desconectar();
 
   }
+  
 
   // 🔥 detectar menú activo por URL
   detectarRuta(url: string) {
@@ -170,16 +175,6 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   // 🔥 toggle sidebar
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;
-  }
-
-  cargarCantidadNoLeidas(empresaId: number): void {
-    this.notificacionService
-      .obtenerCantidadNoLeidas(empresaId)
-      .subscribe({
-        next: cantidad => {
-          this.cantidadNoLeidas = cantidad;
-        }
-      });
   }
 
   logout() {

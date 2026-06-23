@@ -148,7 +148,15 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                     eventos.add(
                         HistorialActivoResponse.builder()
                             .fecha(
+                                orden.getFechaEjecucion() != null
+                                    ? orden.getFechaEjecucion()
+                                    : orden.getFechaProgramada()
+                            )
+                            .fechaProgramada(
                                 orden.getFechaProgramada()
+                            )
+                            .fechaEjecucion(
+                                orden.getFechaEjecucion()
                             )
                             .tipo("MANTENCION")
                             .descripcion(
@@ -350,10 +358,16 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                             .distinct()
                             .toList();
                     }
-
+                    
                     eventos.add(
                         HistorialActivoResponse.builder()
-                            .fecha(orden.getFechaProgramada())
+                            .fecha(
+                                orden.getFechaEjecucion() != null
+                                    ? orden.getFechaEjecucion()
+                                    : orden.getFechaProgramada()
+                            )
+                            .fechaProgramada(orden.getFechaProgramada())
+                            .fechaEjecucion(orden.getFechaEjecucion())
                             .tipo("MANTENCION")
                             .descripcion(
                                 "Orden #" + orden.getId()

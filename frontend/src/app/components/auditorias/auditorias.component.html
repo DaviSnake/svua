@@ -121,6 +121,18 @@
             {{ evento.descripcion }}
           </h4>
 
+          <div *ngIf="evento.tipo === 'MANTENCION'">
+
+            <div *ngIf="evento.fechaProgramada">
+              Fecha programada: {{ evento.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+
+            <div *ngIf="evento.fechaEjecucion">
+              Fecha ejecución: {{ evento.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+
+          </div>
+
           <div *ngIf="evento.usuario">
             Usuario: {{ evento.usuario }}
           </div>

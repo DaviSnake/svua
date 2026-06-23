@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { NotificacionStateService } from '../services/notificacion-state.service';
 import { AuthService } from '../services/auth.service';
 import { NotificacionService } from '../services/notificacion.service';
+import { WebSocketService } from '../services/web-socket.service';
 
 @Component({
   selector: 'app-layout',
@@ -19,6 +20,7 @@ export class LayoutComponent implements OnInit{
   notificacionState = inject(NotificacionStateService);
   authService = inject(AuthService);
   notificacionService = inject(NotificacionService);
+  webSocketService = inject(WebSocketService);
   router = inject(Router);
 
   @ViewChild('sidebarPadre') sidebarPadre!: ElementRef;
@@ -32,7 +34,9 @@ export class LayoutComponent implements OnInit{
 
     this.empresaId = this.authService.getEmpresaId() ?? 0;
 
-    this.notificacionState.notificarActualizacion();
+    this.webSocketService.noLeidas$.subscribe(value => {
+      this.cantidadNoLeidas = value;
+    });
 
   }
 

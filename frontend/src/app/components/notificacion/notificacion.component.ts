@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { NotificacionService } from '../../services/notificacion.service';
 import { Router } from '@angular/router';
 import { NotificacionStateService } from '../../services/notificacion-state.service';
+import { WebSocketService } from '../../services/web-socket.service';
 
 @Component({
   selector: 'app-notificacion',
@@ -16,6 +17,7 @@ export class NotificacionComponent implements OnInit {
 
   notificacionService = inject(NotificacionService);
   notificacionStateService = inject(NotificacionStateService);
+  webSocketService = inject(WebSocketService);
   router = inject(Router);
 
   notificaciones: Notificacion[] = [];
@@ -26,18 +28,14 @@ export class NotificacionComponent implements OnInit {
 
   cargarNotificaciones(): void {
 
-    this.notificacionService
-      .listarNotificaciones()
-      .subscribe({
-        next: data => {
+    this.notificacionService.notificaciones$.subscribe(data => {
+    this.notificaciones = data.map(n => ({
+      ...n,
+      expandida: false
+    }));
+  });
 
-          this.notificaciones = data.map(n => ({
-            ...n,
-            expandida: false
-          }));
-
-        }
-      });
+    this.notificacionService.listarNotificaciones();
   }
 
   abrirNotificacion(n: Notificacion): void {
@@ -48,7 +46,7 @@ export class NotificacionComponent implements OnInit {
     .subscribe({
       next: () => {
         this.cargarNotificaciones();
-        this.notificacionStateService.notificarActualizacion();
+        this.webSocketService.marcarComoLeida(n);
       },
       error: (error) => {
         console.error('Error al marcar notificación como leída', error);

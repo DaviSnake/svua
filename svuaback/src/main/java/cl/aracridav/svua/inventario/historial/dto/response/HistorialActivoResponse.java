@@ -12,6 +12,8 @@ import lombok.Data;
 public class HistorialActivoResponse {
 
     private LocalDateTime fecha;
+    private LocalDateTime fechaProgramada;
+    private LocalDateTime fechaEjecucion;
     private String tipo;
     private String descripcion;
     private String usuario;

@@ -1,5 +1,7 @@
 export interface HistorialActivoEvento {
   fecha: string;
+  fechaProgramada: string;
+  fechaEjecucion: string;
   tipo: string;
   descripcion: string;
   usuario: string | null;
