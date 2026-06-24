@@ -12,7 +12,6 @@ import cl.aracridav.svua.inventario.historial.entity.HistorialEstadoActivo;
 import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
@@ -88,9 +87,6 @@ public class Activo extends BaseEntity {
 
     @Column(name = "motivo_baja", length = 255)
     private String motivoBaja;
-
-    @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
-    private List<PlanMantenimiento> planesMantenimiento;
 
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
     private List<Depreciacion> depreciaciones;

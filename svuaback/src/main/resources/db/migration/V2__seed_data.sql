@@ -113,6 +113,23 @@ VALUES (
     2
 );
 
+INSERT INTO usuario (
+    activo,
+    email,
+    nombre,
+    password,
+    rol,
+    empresa_id
+)
+VALUES (
+    true,
+    'demotecnico@empresademo.cl',
+    'Demo Tecnico',
+    '$2a$10$fAL6q4DH3PltC0VPydRDluQm131sVQaPDzCGIgX22bQ6b5EO9Rw5W',
+    'TECNICO',
+    2
+);
+
 INSERT INTO ubicacion (
     activo, 
     descripcion, 

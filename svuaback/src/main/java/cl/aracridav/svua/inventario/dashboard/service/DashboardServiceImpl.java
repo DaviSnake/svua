@@ -25,8 +25,8 @@ import cl.aracridav.svua.inventario.dashboard.dto.response.IndicadorCumplimiento
 import cl.aracridav.svua.inventario.dashboard.dto.response.IndicadorMTTRResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;

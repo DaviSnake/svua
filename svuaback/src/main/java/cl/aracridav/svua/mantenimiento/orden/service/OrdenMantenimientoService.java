@@ -18,8 +18,6 @@ public interface OrdenMantenimientoService {
 
     public OrdenMantenimientoResponse crearOrden(OrdenMantenimientoRequest request);
 
-    public OrdenMantenimiento generarDesdePlan(Long planId, Long usuarioId);
-
     public OrdenEjecucionResponse cerrarOrden(
             Long ordenId,
             BigDecimal costo,

@@ -2,8 +2,8 @@ package cl.aracridav.svua.mantenimiento.orden.dto.request;
 
 import java.util.List;
 
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import lombok.Data;
 
 @Data

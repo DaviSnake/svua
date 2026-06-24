@@ -27,8 +27,6 @@ import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResp
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.response.OrdenRepuestoResponse;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
-import cl.aracridav.svua.mantenimiento.plan.dto.response.PlanMantenimientoReponse;
-import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
 import cl.aracridav.svua.mantenimiento.repuesto.dto.response.RepuestoResponse;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.notificacion.dto.response.NotificacionResponse;
@@ -334,25 +332,6 @@ public class GeneralMapper {
     ordenRepuestoResponse.setCostoTotal(oRepuesto.getCostoTotal());             
 
     return ordenRepuestoResponse;
-  }
-
-  public PlanMantenimientoReponse mapPlanMantenimientotoResponse(PlanMantenimiento entity) {
-
-    PlanMantenimientoReponse dto = new PlanMantenimientoReponse();
-
-    dto.setId(entity.getId());
-    dto.setTipoMantenimiento(entity.getTipoMantenimiento());
-    dto.setFrecuenciaDias(entity.getFrecuenciaDias());
-    dto.setDescripcion(entity.getDescripcion());
-    dto.setEstaActivo(entity.getEstaActivo());
-    dto.setUltimaEjecucion(entity.getUltimaEjecucion());
-    dto.setProximaEjecucion(entity.getProximaEjecucion());
-
-    if (entity.getActivo() != null) {
-        dto.setActivoId(entity.getActivo().getId());
-    }
-
-    return dto;
   }
 
   public PerfilUsuarioDTO mapUsuariotoPerfilDTO(Usuario u) {

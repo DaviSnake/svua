@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.response.OrdenRepuestoResponse;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import lombok.Data;
 
 @Data

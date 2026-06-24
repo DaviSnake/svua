@@ -45,8 +45,6 @@ import cl.aracridav.svua.mantenimiento.orden.repository.OrdenReprogramacionRepos
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.repository.OrdenRepuestoRepository;
-import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.notificacion.service.NotificacionService;
@@ -72,7 +70,6 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     private final ActivoRepository activoRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProveedorRepository proveedorRepository;
-    private final PlanMantenimientoRepository planRepository;
     private final EmpresaRepository empresaRepository;
     private final NotificacionService notificacionService;
     private final HistorialEstadoActivoService historialEstadoActivoService;
@@ -192,8 +189,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 obtenerEmpresaActual(),
                 activo,
                 obtenerUsuario(req.getUsuarioId()),
-                proveedor,
-                obtenerPlan(req.getPlanMantenimientoId())
+                proveedor
         );
 
         // 🔥 guardar primero
@@ -210,24 +206,6 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return mapper.mapOrdenMantenimientoResponse(orden);
     }
 
-    @Override
-    public OrdenMantenimiento generarDesdePlan(Long planId, Long usuarioId) {
-
-        PlanMantenimiento plan = obtenerPlan(planId);
-        validarPlanActivo(plan);
-
-        validarNoExisteOrdenPendiente(plan.getActivo().getId());
-
-        OrdenMantenimiento orden = new OrdenMantenimiento();
-        orden.setActivo(plan.getActivo());
-        orden.setUsuario(obtenerUsuario(usuarioId));
-        orden.setTipoMantenimiento(plan.getTipoMantenimiento());
-        orden.setFechaProgramada(plan.getProximaEjecucion());
-        orden.setEstado(EstadoOrden.PENDIENTE);
-        orden.setPlanMantenimiento(plan);
-
-        return ordenRepository.save(orden);
-    }
 
     /*
      * =========================================
@@ -756,11 +734,6 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 .orElseThrow(() -> new BusinessException("Proveedor no existe"));
     }
 
-    private PlanMantenimiento obtenerPlan(Long id) {
-        return planRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Plan no existe"));
-    }
-
     private Empresa obtenerEmpresaActual() {
         return empresaRepository.findById(SecurityUtils.getEmpresaId())
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
@@ -797,12 +770,6 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         }
     }
 
-    private void validarPlanActivo(PlanMantenimiento plan) {
-        if (!plan.getEstaActivo()) {
-            throw new BusinessException("El plan no está activo");
-        }
-    }
-
     private void validarNoExisteOrdenPendiente(Long activoId) {
         if (ordenRepository.existsByActivoIdAndEstado(activoId, EstadoOrden.PENDIENTE)) {
             throw new BusinessException("Ya existe una orden pendiente para este activo");
@@ -832,8 +799,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             Empresa empresa,
             Activo activo,
             Usuario usuario,
-            Proveedor proveedor,
-            PlanMantenimiento plan) {
+            Proveedor proveedor) {
 
         OrdenMantenimiento orden = new OrdenMantenimiento();
 
@@ -859,7 +825,6 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setActivo(activo);
         orden.setUsuario(usuario);
         orden.setProveedor(proveedor);
-        orden.setPlanMantenimiento(plan);
         orden.setEmpresa(empresa);
 
         return orden;

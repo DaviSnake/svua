@@ -8,8 +8,6 @@ import java.util.Set;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.entity.OrdenRepuesto;
-import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
@@ -150,8 +148,4 @@ public class OrdenMantenimiento extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_activo", nullable = false, updatable = false)
     private Activo activo;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_plan", nullable = false, updatable = false)
-    private PlanMantenimiento planMantenimiento;
 }

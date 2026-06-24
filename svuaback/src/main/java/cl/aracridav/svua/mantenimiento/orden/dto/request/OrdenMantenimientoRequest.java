@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.dto.request.OrdenRepuestoRequest;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
 import lombok.Data;
 
 @Data
@@ -26,7 +26,6 @@ public class OrdenMantenimientoRequest {
     private Long activoId;
     private Long usuarioId;
     private Long proveedorId;
-    private Long planMantenimientoId;
     private List<OrdenRepuestoRequest> repuestos;
 
 }

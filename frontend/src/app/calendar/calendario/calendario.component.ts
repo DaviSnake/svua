@@ -48,6 +48,7 @@ export class CalendarioComponent implements OnInit {
   activos: Activo[] = [];
 
   repuestos: any[] = [];
+  repuestosAsociados: any[] = [];
 
   proveedores: any[] = [];
 
@@ -561,6 +562,8 @@ export class CalendarioComponent implements OnInit {
       fechaHora: fechaLocal
      });
 
+    this.repuestosAsociados = [];
+
     this.mostrarModal = true;
   }
 
@@ -713,6 +716,8 @@ export class CalendarioComponent implements OnInit {
       fechaHora: fechaLocal,
       repuestos: info.event.extendedProps?.repuestos || ''
     });
+
+     this.repuestosAsociados = info.event.extendedProps?.repuestos ?? [];
 
     // 🔥 AQUÍ LA MAGIA
     this.setActivoSeleccionado(activoId);

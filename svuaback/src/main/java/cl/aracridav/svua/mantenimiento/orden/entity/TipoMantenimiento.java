@@ -1,4 +1,4 @@
-package cl.aracridav.svua.mantenimiento.plan.entity;
+package cl.aracridav.svua.mantenimiento.orden.entity;
 
 public enum TipoMantenimiento {
     PREVENTIVO,

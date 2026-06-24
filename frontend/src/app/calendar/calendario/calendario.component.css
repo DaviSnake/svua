@@ -564,7 +564,89 @@ textarea {
   justify-content: center;
 }
 
+.tabla-repuestos {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
 
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla thead {
+  position: sticky;
+  top: 0;
+  background: black;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.tabla th,
+.tabla td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.tabla-repuestos.con-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tabla-repuestos:not(.con-scroll) {
+  overflow: visible;
+}
+
+.titulo-repuestos {
+  margin-bottom: 2px;
+}
+
+.tabla-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  display: block;
+}
+
+.tabla-scroll.con-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tabla-wrapper.con-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tabla-scroll-body {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* 🔥 HEADER FIJO */
+.tabla-scroll-body thead,
+.tabla-scroll-body tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* 🔥 AQUÍ ESTÁ EL SCROLL REAL */
+.tabla-scroll-body tbody {
+  display: block;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* opcional: estética */
+.tabla-scroll-body th,
+.tabla-scroll-body td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
 
 /* colores iguales a tu backend */
 .pendiente { background: #eab308; }

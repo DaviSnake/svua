@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 
 public interface OrdenMantenimientoRepository extends JpaRepository<OrdenMantenimiento, Long> {
 
@@ -56,10 +56,6 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
                 LocalDate desde,
                 LocalDate hasta
         );
-
-    // 🔎 Buscar por plan de mantenimiento
-    List<OrdenMantenimiento> 
-        findByPlanMantenimientoId(Long planId);
 
     // 🔎 Buscar órdenes vencidas
     @Query("""

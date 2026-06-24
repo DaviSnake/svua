@@ -192,7 +192,37 @@
           />
         </div>
 
-        <h3 *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)">Repuestos o Fungibles</h3>
+        <h3 class="titulo-repuestos"
+            *ngIf="repuestosAsociados.length > 0">
+          Repuestos o Fungibles
+        </h3>
+        <div
+          class="tabla-repuestos"
+          *ngIf="repuestosAsociados.length > 0">
+          <div class="tabla-scroll" *ngIf="repuestosAsociados.length > 0">
+            <div class="tabla-wrapper">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Costo Total</th>
+                  </tr>
+                </thead>
+    
+                <tbody>
+                  <tr *ngFor="let r of repuestosAsociados">
+                    <td>{{ r.repuestoNombre }}</td>
+                    <td class="text-end">{{ r.cantidad }}</td>
+                    <td class="text-end">{{ r.costoTotal | number:'1.0-0' }}</td>
+                  </tr>
+                </tbody>
+    
+              </table>
+            </div>
+          </div>
+
+        </div>
 
         <button type="button"
                 class="btn primary full"

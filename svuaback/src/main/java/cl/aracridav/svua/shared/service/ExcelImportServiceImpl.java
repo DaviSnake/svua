@@ -37,10 +37,8 @@ import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
 import cl.aracridav.svua.inventario.ubicacion.repository.UbicacionRepository;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
-import cl.aracridav.svua.mantenimiento.plan.entity.PlanMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.entity.TipoMantenimiento;
-import cl.aracridav.svua.mantenimiento.plan.repository.PlanMantenimientoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.TipoRepuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
@@ -69,7 +67,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final DepreciacionService depreciacionService;
     private final HistorialEstadoActivoService historialEstadoActivoService;
     private final UsuarioRepository usuarioRepository;
-    private final PlanMantenimientoRepository planRepository;
     private final TipoActivoRepository tipoActivoRepository;
     private final UbicacionRepository ubicacionRepository;
     private final ProveedorRepository proveedorRepository;
@@ -399,7 +396,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         BigDecimal valorHora = getBigDecimal(row, 9, "Valor Hora inválido");
         BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido", evaluator, formatter);
         BigDecimal costoManoObraEstimada = getBigDecimal(row, 11, "Costo mano de obra estimada inválido", evaluator, formatter);
-        PlanMantenimiento plan = obtenerPlan(Long.valueOf(1));
 
         return construirOrden(
             titulo,
@@ -414,7 +410,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             valorHora,
             horaEstimada,
             costoManoObraEstimada,
-            plan,
             empresa
         );
     }
@@ -540,7 +535,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         BigDecimal valorHora,
         BigDecimal horasEstimada,
         BigDecimal costoManoObraEstimada,
-        PlanMantenimiento plan,
         Empresa empresa
     ) {
 
@@ -559,7 +553,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         o.setValorHoraProveedor(valorHora);
         o.setHorasEstimadasProveedor(horasEstimada);
         o.setCostoManoObraEstimadasProveedor(costoManoObraEstimada);
-        o.setPlanMantenimiento(plan);
         o.setEmpresa(empresa);
 
         return o;
@@ -662,11 +655,6 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private Usuario obtenerUsuario(Long usuarioId) {
         return usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new BusinessException("Usuario no existe: " + usuarioId));
-    }
-
-    private PlanMantenimiento obtenerPlan(Long id) {
-        return planRepository.findById(id)
-            .orElseThrow(() -> new BusinessException("Plan mantenimiento no encontrado: " + id));
     }
 
     private String getString(Row row, int index) {
