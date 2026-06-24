@@ -13,7 +13,7 @@
   <ul class="menu">
 
     <!-- DASHBOARD -->
-    <li routerLinkActive="active" class="menu-item">
+    <li routerLinkActive="active" class="menu-item" *ngIf="!esTecnico">
       <a routerLink="/inicio/dashboard" (click)="closeAllMenus(); $event.stopPropagation()">
         <i class="bx bx-bar-chart"></i>
         <span *ngIf="!isCollapsed">Dashboard</span>
@@ -22,7 +22,7 @@
     </li>
 
     <!-- GESTION -->
-    <li class="menu-item">
+    <li class="menu-item" *ngIf="!esTecnico">
       <div class="menu-parent" (click)="toggleMenu('gestion')">
         <i class="bx bx-package"></i>
         <span *ngIf="!isCollapsed">Gestión Activos</span>
@@ -39,7 +39,7 @@
     </li>
 
     <!-- ORGANIZACION -->
-    <li class="menu-item">
+    <li class="menu-item" *ngIf="!esTecnico">
       <div class="menu-parent" (click)="toggleMenu('organizacion')">
         <i class="bx bx-sitemap"></i>
         <span *ngIf="!isCollapsed">Organización</span>
@@ -57,7 +57,7 @@
     </li>
 
     <!-- ANALISIS -->
-    <li class="menu-item">
+    <li class="menu-item" *ngIf="!esTecnico">
       <div class="menu-parent" (click)="toggleMenu('analisis')">
         <i class="bx bx-analyse"></i>
         <span *ngIf="!isCollapsed">Análisis</span>
@@ -82,7 +82,7 @@
     </li>
 
     <!-- CARGA MASIVA -->
-    <li class="menu-item" routerLinkActive="active">
+    <li class="menu-item" routerLinkActive="active" *ngIf="!esTecnico">
       <a routerLink="/inicio/cargaMasiva" (click)="closeAllMenus(); $event.stopPropagation()">
         <i class="bx bx-cloud-upload"></i>
         <span *ngIf="!isCollapsed">Carga Masiva</span>
@@ -91,7 +91,7 @@
     </li>
 
     <!-- NOTIFICACIONES -->
-    <li class="menu-item" routerLinkActive="active">
+    <li class="menu-item" routerLinkActive="active" *ngIf="!esTecnico">
       <a routerLink="/inicio/notificaciones" (click)="closeAllMenus(); $event.stopPropagation()">
         <i class='bx bx-bell'></i>
         <span *ngIf="!isCollapsed">Notificaciones</span>
@@ -144,7 +144,7 @@
         <span class="tooltip">Soporte</span>
       </li>
 
-      <li class="menu-item" routerLinkActive="active">
+      <li class="menu-item" routerLinkActive="active" *ngIf="!esTecnico">
         <a routerLink="/inicio/configuracion" (click)="closeAllMenus()">
           <i class="bx bx-cog"></i>
           <span *ngIf="!isCollapsed">Configuración</span>

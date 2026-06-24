@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 export class LoginComponent {
 
   showPassword = false;
+  esTecnico = false;
 
   userAgent = navigator.userAgent;
 
@@ -52,6 +53,7 @@ export class LoginComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
+
     if (!this.loginData.email || !this.loginData.password) {
       this.errorMessage = 'Completa los campos';
       return;
@@ -67,8 +69,14 @@ export class LoginComponent {
         this.authService.setUserFromToken();
         this.authService.startRefreshTimer();
 
+        this.esTecnico = this.authService.isTecnico()!;
+
         setTimeout(() => {
-          this.router.navigateByUrl('/inicio/dashboard');
+          if (!this.esTecnico){
+            this.router.navigateByUrl('/inicio/dashboard');
+          } else {
+            this.router.navigateByUrl('/inicio/calendario');
+          }
         }, 800);
       },
       error: (err) => {

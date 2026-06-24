@@ -16,6 +16,7 @@ import java.util.List;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -88,6 +89,9 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         try (InputStream is = Files.newInputStream(path);
             Workbook workbook = new XSSFWorkbook(is)) {
 
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            DataFormatter formatter = new DataFormatter();
+
             Sheet sheet = workbook.getSheetAt(0);
             int total = sheet.getLastRowNum();
 
@@ -135,7 +139,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         }
 
                         case "orden" -> {
-                            OrdenMantenimiento oM = mapOrden(row, empresaId, usuarioId);
+                            OrdenMantenimiento oM = mapOrden(row, empresaId, usuarioId, evaluator, formatter);
                             batchOrden.add(oM);
 
                             if (batchOrden.size() == BATCH_SIZE) {
@@ -361,7 +365,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return construirProveedor(row, nombre, rut, empresa);
     }
 
-    private OrdenMantenimiento mapOrden(Row row, Long empresaId, Long usuarioId) {
+    private OrdenMantenimiento mapOrden(Row row, Long empresaId, Long usuarioId, FormulaEvaluator evaluator,
+        DataFormatter formatter) {
 
         Empresa empresa = obtenerEmpresa(empresaId);
         Usuario usuario = obtenerUsuario(usuarioId);
@@ -392,8 +397,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         Activo activo = obtenerActivoPorNombreYEmpresa(getRequiredString(row, 7, "Activo requerido"), empresaId);
         Proveedor proveedor = obtenerProveedor(getString(row, 8));
         BigDecimal valorHora = getBigDecimal(row, 9, "Valor Hora inválido");
-        BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido");
-        BigDecimal costoManoObraEstimada = getBigDecimal(row, 11, "Costo mano de obra estimada inválido");
+        BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido", evaluator, formatter);
+        BigDecimal costoManoObraEstimada = getBigDecimal(row, 11, "Costo mano de obra estimada inválido", evaluator, formatter);
         PlanMantenimiento plan = obtenerPlan(Long.valueOf(1));
 
         return construirOrden(
@@ -723,6 +728,29 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             };
         } catch (Exception e) {
             throw new BusinessException(mensaje + " (columna " + index + ")");
+        }
+    }
+
+    private BigDecimal getBigDecimal(
+    Row row,
+    int col,
+    String error,
+    FormulaEvaluator evaluator,
+    DataFormatter formatter
+    ) {
+
+        String valor = formatter
+                .formatCellValue(row.getCell(col), evaluator)
+                .trim();
+
+        if (valor.isBlank()) {
+            return null;
+        }
+
+        try {
+            return new BigDecimal(valor.replace(",", "."));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(error);
         }
     }
 

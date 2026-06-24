@@ -508,6 +508,10 @@ export class CalendarioComponent implements OnInit {
   cargarRepustos(){
     this.repuestoService.getAll(this.page, this.size).subscribe({
       next: (data) => {
+
+        if (!data) {
+          return;
+        }
         this.repuestos = data.content;
 
         // 🔥 IMPORTANTE: inicializar filtro cuando ya tienes datos

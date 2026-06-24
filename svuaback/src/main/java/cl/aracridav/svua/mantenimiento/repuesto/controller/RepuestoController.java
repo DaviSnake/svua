@@ -36,7 +36,7 @@ public class RepuestoController {
     }
 
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "(hasAuthority('REPUESTO_VIEW')) "
     )
     @GetMapping

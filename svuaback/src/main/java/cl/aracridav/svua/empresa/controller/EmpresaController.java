@@ -49,7 +49,7 @@ public class EmpresaController {
     }
 
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "(hasAuthority('EMPRESA_VIEW'))"
     )
     @GetMapping

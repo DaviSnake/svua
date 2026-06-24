@@ -44,6 +44,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   // roles
   esAdmin = false;
   esAdminEmpresa = false;
+  esTecnico = false;
   esDemo = false;
 
   rutaActual = '';
@@ -64,6 +65,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.authService.user$.subscribe(user => {
       this.usuario = user;
       this.esAdmin = this.authService.isAdmin();
+      this.esTecnico = this.authService.isTecnico()!;
       this.esAdminEmpresa = this.authService.isAdminEmpresa();
       this.esDemo = this.authService.getDemo()!;
     });

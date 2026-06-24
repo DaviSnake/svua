@@ -194,7 +194,12 @@ export class AuthService {
   isAdminEmpresa(): boolean {
     return this.getUserRole() === 'ADMIN_EMPRESA';
   }
+
   isAdmin(): boolean {
     return this.getUserRole() === 'SUPER_ADMIN';
+  }
+
+  isTecnico(): boolean {
+    return this.getUserRole() === 'TECNICO';
   }
 }

@@ -53,7 +53,7 @@ public class ProveedorController {
      * =========================================
      */
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "hasAuthority('PROVEEDOR_VIEW')"
     )
     @GetMapping
