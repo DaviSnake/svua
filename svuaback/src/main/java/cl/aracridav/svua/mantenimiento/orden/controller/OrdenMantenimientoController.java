@@ -37,7 +37,7 @@ public class OrdenMantenimientoController {
     private final OrdenMantenimientoService ordenMantenimientoService;
 
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "(hasAuthority('ORDEN_MANT_CREATE')) "
     )
     @PostMapping
