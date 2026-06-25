@@ -68,12 +68,12 @@ public class RepuestoServiceImpl implements RepuestoService {
         if (esSuperAdmin()) {
             RepuestoResponse =  repository.findAll(pageable)
                 .map(mapper::mapRepuestoResponse);
+
+           return RepuestoResponse; 
         }
 
-        if (esAdminEmpresa()) {
-            RepuestoResponse = repository.findByEmpresaId(empresaId, pageable)
-                    .map(mapper::mapRepuestoResponse);
-        }
+        RepuestoResponse = repository.findByEmpresaId(empresaId, pageable)
+            .map(mapper::mapRepuestoResponse);
 
         return RepuestoResponse;
 
@@ -171,12 +171,6 @@ public class RepuestoServiceImpl implements RepuestoService {
         return SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
-    }
-
-    private boolean esAdminEmpresa() {
-        return SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_EMPRESA"));
     }
 
     private Repuesto construirRepuesto(RepuestoRequest request, Empresa empresa) {
