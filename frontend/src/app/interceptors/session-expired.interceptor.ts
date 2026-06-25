@@ -10,12 +10,15 @@ export const sessionExpiredInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error) => {
 
-      if (error.status === 401 || error.status === 403) {
-
+      if (error.status === 401) {
         sessionStorage.clear();
         router.navigate(['/login']);
 
         return throwError(() => new Error('Sesión expirada'));
+      }
+
+      if (error.status === 403) {
+        return throwError(() => error);
       }
 
       return throwError(() => error);

@@ -73,7 +73,7 @@ public class OrdenMantenimientoController {
     }
 
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "(hasAuthority('ORDEN_MANT_UPDATE')) "
     )
     @PutMapping("/{ordenId}")
@@ -83,6 +83,10 @@ public class OrdenMantenimientoController {
         return ResponseEntity.ok(ordenMantenimientoService.actualizar(ordenId, request));
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
     @PutMapping("/{id}/ejecutar")
     public ResponseEntity<OrdenEjecucionResponse> ejecutarOrden(@PathVariable Long id) {
 
@@ -91,6 +95,10 @@ public class OrdenMantenimientoController {
         return ResponseEntity.ok(orden);
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
     @PutMapping("/{id}/detener")
     public ResponseEntity<OrdenEjecucionResponse> detenerOrden(@PathVariable Long id) {
 
@@ -99,6 +107,10 @@ public class OrdenMantenimientoController {
         return ResponseEntity.ok(orden);
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
     @PostMapping("/{id}/preDetenerConArchivo")
     public ResponseEntity<Void> detener(
             @PathVariable Long id,
@@ -109,6 +121,10 @@ public class OrdenMantenimientoController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
     @GetMapping("/{id}/archivo")
     public ResponseEntity<Resource> verArchivo(
             @PathVariable Long id) throws IOException {
@@ -125,6 +141,10 @@ public class OrdenMantenimientoController {
                 .body(resource);
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
     @PutMapping("/{id}/reprogramar")
     public ResponseEntity<OrdenMantenimientoResponse> reprogramarOrden(
             @PathVariable Long id,

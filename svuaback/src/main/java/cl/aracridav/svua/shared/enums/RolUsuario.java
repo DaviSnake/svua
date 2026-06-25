@@ -35,8 +35,7 @@ public enum RolUsuario {
 
     TECNICO(EnumSet.of(
             Permiso.ACTIVO_VIEW,
-            Permiso.ORDEN_MANT_VIEW,
-            Permiso.ORDEN_MANT_UPDATE
+            Permiso.ORDEN_MANT_VIEW
     )),
 
     BODEGUERO(EnumSet.of(
