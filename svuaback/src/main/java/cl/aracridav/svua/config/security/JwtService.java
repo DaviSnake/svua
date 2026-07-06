@@ -1,6 +1,10 @@
 package cl.aracridav.svua.config.security;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
+
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 
@@ -23,34 +26,44 @@ public class JwtService {
     private Long JWT_TIME_VALIDITY;
 
     public String generateToken(UserDetails user) {
+
+        SecretKey key = Keys.hmacShaKeyFor(
+                Base64.getDecoder().decode(TU_SECRET_BASE64));
+
         return Jwts.builder()
-                .setSubject(user.getUsername())
+                .subject(user.getUsername())
                 .claim("role", user.getAuthorities().iterator().next().getAuthority())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY)) // 2min
-                .signWith(Keys.hmacShaKeyFor(TU_SECRET_BASE64.getBytes()), SignatureAlgorithm.HS256)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
+                .signWith(key)
                 .compact();
     }
 
     public String generateToken(UsuarioPrincipal user, String tokenJti) {
 
+        String base64 = Base64.getEncoder().encodeToString(TU_SECRET_BASE64.getBytes());
+
+        // Si TU_SECRET_BASE64 está realmente en Base64
+        SecretKey key = Keys.hmacShaKeyFor(
+                Base64.getDecoder().decode(base64));
+
         return Jwts.builder()
-            .setSubject(String.valueOf(user.getId()))
-            .claim("rol",
-                user.getAuthorities()
-                    .iterator()
-                    .next()
-                    .getAuthority()
-                    .replace("ROLE_", "")
-            )
-            .claim("empresaId", user.getEmpresaId())
-            .claim("userName", user.getUsername())
-            .claim("jti", tokenJti)
-            .claim("demo", user.getDemo())
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
-            .signWith(Keys.hmacShaKeyFor(TU_SECRET_BASE64.getBytes()), SignatureAlgorithm.HS256)
-            .compact();
+                .subject(String.valueOf(user.getId()))
+                .claim("rol",
+                        user.getAuthorities()
+                                .iterator()
+                                .next()
+                                .getAuthority()
+                                .replace("ROLE_", "")
+                )
+                .claim("empresaId", user.getEmpresaId())
+                .claim("userName", user.getUsername())
+                .claim("jti", tokenJti)
+                .claim("demo", user.getDemo())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
+                .signWith(key)
+                .compact();
     }
 
     public String extractUsername(String token) {
@@ -58,12 +71,16 @@ public class JwtService {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(TU_SECRET_BASE64.getBytes())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
+
+    SecretKey key = Keys.hmacShaKeyFor(
+            TU_SECRET_BASE64.getBytes(StandardCharsets.UTF_8));
+
+    return Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+}
 
     public String extractRol(String token) {
         return getClaims(token).get("rol", String.class);

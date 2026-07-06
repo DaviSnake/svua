@@ -1,7 +1,6 @@
 package cl.aracridav.svua.empresa.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +13,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import cl.aracridav.svua.auth.dto.response.AuthResponse;
 import cl.aracridav.svua.empresa.dto.request.CreateEmpresaRequest;
@@ -123,23 +119,5 @@ public class EmpresaController {
                 .body(response);
     }
 
-    @PostMapping("/webhook/mercadopago")
-    public ResponseEntity<Void> recibirWebhook(
-      @RequestBody(required = false) Map<String, Object> body) throws JsonMappingException, JsonProcessingException {
-
-      /*Object dataObj = body.get("data");
-
-      if (dataObj instanceof Map<?, ?> dataMap) {
-        Object idObj = dataMap.get("id");
-        if (idObj != null) {
-          String preapprovalId = idObj.toString();
-          empresaService.confirmarSuscripcion(preapprovalId);
-        }
-      }*/
-
-      System.out.println("WEBHOOK MP");  
-      System.out.println("BODY: " + body);
-
-      return ResponseEntity.ok().build();
-    }
+    
 }
