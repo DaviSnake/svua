@@ -72,15 +72,15 @@ public class JwtService {
 
     private Claims getClaims(String token) {
 
-    SecretKey key = Keys.hmacShaKeyFor(
-            TU_SECRET_BASE64.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(
+                TU_SECRET_BASE64.getBytes(StandardCharsets.UTF_8));
 
-    return Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-}
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
 
     public String extractRol(String token) {
         return getClaims(token).get("rol", String.class);
