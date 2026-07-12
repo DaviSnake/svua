@@ -79,6 +79,20 @@
   font-size: 15px;
 }
 
+.info-item.whatsapp i {
+    color: #25D366;
+}
+
+.info-item a {
+    color: inherit;
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.info-item a:hover {
+    color: #25D366;
+}
+
 @media (max-width: 768px) {
 
   .soporte-card {
