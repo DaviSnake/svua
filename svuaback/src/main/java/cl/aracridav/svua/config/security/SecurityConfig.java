@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/svua/auth/**").permitAll()
                 .requestMatchers("/api/v1/svua/public/**").permitAll()
                 .requestMatchers("/api/v1/svua/notificacion/no-leidas/count").permitAll()
+                .requestMatchers("/api/v1/svua/temperaturas/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/ws").permitAll()
                 .anyRequest().authenticated()
