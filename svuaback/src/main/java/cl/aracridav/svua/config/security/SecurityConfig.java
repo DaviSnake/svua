@@ -1,7 +1,9 @@
 package cl.aracridav.svua.config.security;
 
 import java.util.Arrays;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +30,9 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtFilter;
     private final EmpresaRequestFilter empresaRequestFilter;
+
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost}")
+    private List<String> corsAllowedOrigins;
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -69,16 +74,10 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    // Configuración CORS
+    // Configuración CORS: los orígenes vienen de app.cors.allowed-origins (application.properties / env var)
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:4200", //local
-                                                    "http://localhost", // frontend Angular local
-                                                    "https://www.svua.cl", // frontend Angular internet
-                                                    "https://svua.cl", // frontend Angular internet
-                                                    "https://157.173.112.68" // frontend Angular IP
-                                                ) 
-                                ); 
+        config.setAllowedOrigins(corsAllowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true); // si usas cookies/token en headers
