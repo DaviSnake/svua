@@ -1,0 +1,92 @@
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'"
+  },
+  {
+    "name": "jwt.refresh-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.refresh-expiration'"
+  },
+  {
+    "name": "security.jwt.refresh-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'security.jwt.refresh-expiration'"
+  },
+  {
+    "name": "security.jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'security.jwt.expiration'"
+  },
+  {
+    "name": "security.jwt.secret-key",
+    "type": "java.lang.String",
+    "description": "A description for 'security.jwt.secret-key'"
+  },
+  {
+    "name": "jwt.expiration-token",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration-token'"
+  },
+  {
+    "name": "app.frontend.url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.frontend.url'"
+  },
+  {
+    "name": "svua.scheduler.mantenciones.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'svua.scheduler.mantenciones.enabled'"
+  },
+  {
+    "name": "app.demo.empresa-id",
+    "type": "java.lang.String",
+    "description": "A description for 'app.demo.empresa-id'"
+  },
+  {
+    "name": "svua.scheduler.mantenciones.diasnotificacion",
+    "type": "java.lang.String",
+    "description": "A description for 'svua.scheduler.mantenciones.diasnotificacion'"
+  },
+  {
+    "name": "app.jobs.ordenes.cron",
+    "type": "java.lang.String",
+    "description": "A description for 'app.jobs.ordenes.cron'"
+  },
+  {
+    "name": "ocr.tesseract.data-path",
+    "type": "java.lang.String",
+    "description": "A description for 'ocr.tesseract.data-path'"
+  },
+  {
+    "name": "ocr.tesseract.language",
+    "type": "java.lang.String",
+    "description": "A description for 'ocr.tesseract.language'"
+  },
+  {
+    "name": "app.cors.allowed-origins",
+    "type": "java.lang.String",
+    "description": "A description for 'app.cors.allowed-origins'"
+  },
+  {
+    "name": "app.init-data.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'app.init-data.enabled'"
+  },
+  {
+    "name": "app.init-data.admin-email",
+    "type": "java.lang.String",
+    "description": "A description for 'app.init-data.admin-email'"
+  },
+  {
+    "name": "app.init-data.admin-password",
+    "type": "java.lang.String",
+    "description": "A description for 'app.init-data.admin-password'"
+  }
+]}
