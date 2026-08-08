@@ -17,6 +17,10 @@ export class TipoActivoService {
     return this.http.get<Page<TipoActivo>>(`${this.apiUrl}/tipos-activo?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
+  getTipoActivoCombo(page = 0, size = 50): Observable<Page<TipoActivo>> {
+    return this.http.get<Page<TipoActivo>>(`${this.apiUrl}/tipos-activo?page=${page}&size=${size}&sort=nombre,asc`);
+  }
+
   create(tipoActivo: TipoActivo): Observable<TipoActivo> {
     return this.http.post<TipoActivo>(`${this.apiUrl}/tipos-activo`, tipoActivo);
   }

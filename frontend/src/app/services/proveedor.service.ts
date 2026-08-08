@@ -17,6 +17,10 @@ export class ProveedorService {
     return this.http.get<Page<Proveedor>>(`${this.apiUrl}/proveedores?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
+  getProveedorCombo(page = 0, size = 50): Observable<Page<Proveedor>> {
+    return this.http.get<Page<Proveedor>>(`${this.apiUrl}/proveedores?page=${page}&size=${size}&sort=nombre,asc`);
+  }
+
   create(proveedor: Proveedor): Observable<Proveedor> {
     return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, proveedor);
   }

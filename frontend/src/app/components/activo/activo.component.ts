@@ -114,7 +114,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarTipoActivos() {
-    this.tipoActivoService.getAll(this.page, this.size).subscribe({
+    this.tipoActivoService.getTipoActivoCombo(this.page, this.size).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
       },
@@ -125,7 +125,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarUbicaciones() {
-    this.ubicacionService.getAll(this.page, this.size).subscribe({
+    this.ubicacionService.getUbicacionCombo(this.page, this.size).subscribe({
       next: (data) => {
         this.ubicaciones = data.content;
       },
@@ -136,7 +136,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarProveedores() {
-    this.proveedorService.getAll(this.page, this.size).subscribe({
+    this.proveedorService.getProveedorCombo(this.page, this.size).subscribe({
       next: (data) => {
         this.proveedores = data.content;
       },

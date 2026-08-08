@@ -17,6 +17,10 @@ export class UbicacionService {
     return this.http.get<Page<Ubicacion>>(`${this.apiUrl}/ubicaciones?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
+  getUbicacionCombo(page = 0, size = 50): Observable<Page<Ubicacion>> {
+    return this.http.get<Page<Ubicacion>>(`${this.apiUrl}/ubicaciones?page=${page}&size=${size}&sort=nombre,asc`);
+  }
+
   create(ubicacion: Ubicacion): Observable<Ubicacion> {
     return this.http.post<Ubicacion>(`${this.apiUrl}/ubicaciones`, ubicacion);
   }
