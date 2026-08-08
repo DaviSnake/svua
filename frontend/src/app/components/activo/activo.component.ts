@@ -55,6 +55,7 @@ export class ActivoComponent implements OnInit {
 
   page = 0;
   size = 10;
+  sizeCombo = 50;
 
   totalPages = 0;
   totalElements = 0;
@@ -114,7 +115,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarTipoActivos() {
-    this.tipoActivoService.getTipoActivoCombo(this.page, this.size).subscribe({
+    this.tipoActivoService.getTipoActivoCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
       },
@@ -125,7 +126,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarUbicaciones() {
-    this.ubicacionService.getUbicacionCombo(this.page, this.size).subscribe({
+    this.ubicacionService.getUbicacionCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.ubicaciones = data.content;
       },
@@ -136,7 +137,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarProveedores() {
-    this.proveedorService.getProveedorCombo(this.page, this.size).subscribe({
+    this.proveedorService.getProveedorCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.proveedores = data.content;
       },
