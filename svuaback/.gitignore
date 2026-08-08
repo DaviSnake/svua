@@ -1,6 +1,7 @@
 HELP.md
 target/
 camaras/
+_to_delete/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
