@@ -186,6 +186,10 @@ export class CalendarioComponent implements OnInit {
     height: 'auto',   // 🔥 IMPORTANTE
     expandRows: true, // 🔥 IMPORTANTE
     contentHeight: 'auto',
+    // 🔴 Línea horizontal que marca la hora exacta en tiempo real (solo se
+    // dibuja en las vistas timeGridDay / timeGridWeek; FullCalendar la
+    // actualiza sola mientras la vista esté montada).
+    nowIndicator: true,
     events: [],
 
     eventDidMount: (info) => {

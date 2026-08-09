@@ -68,6 +68,24 @@
   z-index: 1;
 }
 
+/* 🔴 LÍNEA DE HORA ACTUAL (nowIndicator)
+   Marca la hora exacta en tiempo real con una línea horizontal delgada en
+   las vistas de calendario con franja horaria (timeGridDay / timeGridWeek).
+   FullCalendar la dibuja solo (activada con `nowIndicator: true` en el
+   componente); acá solo se ajusta el grosor para que sea una línea fina en
+   vez de la barra gruesa por defecto. No aplica a la vista "listWeek"
+   (mobile, <768px), que no tiene franja horaria. */
+::ng-deep .fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  border-width: 1px 0 0 0;
+  z-index: 5;
+}
+
+::ng-deep .fc .fc-timegrid-now-indicator-arrow {
+  border-color: #ef4444;
+  border-width: 5px;
+}
+
 /* Header */
 .modal-header {
   display: flex;
