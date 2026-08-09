@@ -11,7 +11,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -28,24 +30,34 @@ import org.springframework.stereotype.Service;
 import cl.aracridav.svua.depreciacion.service.DepreciacionService;
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
+import cl.aracridav.svua.inventario.activo.dto.request.ActivoImportRowDTO;
+import cl.aracridav.svua.inventario.activo.dto.response.ActivoImportResultDTO;
+import cl.aracridav.svua.inventario.activo.dto.response.ActivoImportRowResultDTO;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
+import cl.aracridav.svua.inventario.tipoactivo.dto.request.TipoActivoImportRowDTO;
 import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.tipoactivo.repository.TipoActivoRepository;
+import cl.aracridav.svua.inventario.ubicacion.dto.request.UbicacionImportRowDTO;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
 import cl.aracridav.svua.inventario.ubicacion.repository.UbicacionRepository;
+import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenImportRowDTO;
 import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
+import cl.aracridav.svua.mantenimiento.repuesto.dto.request.RepuestoImportRowDTO;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.TipoRepuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.proveedor.dto.request.ProveedorImportRowDTO;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.proveedor.entity.TipoProveedor;
 import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
+import cl.aracridav.svua.shared.dto.response.ImportBatchResultDTO;
 import cl.aracridav.svua.shared.dto.response.ImportProgressDTO;
+import cl.aracridav.svua.shared.dto.response.ImportRowResultDTO;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.usuario.entity.Usuario;
@@ -260,6 +272,448 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         }
     }
 
+    /**
+     * Procesa de forma síncrona un lote de Activos ingresados manualmente
+     * (grilla tipo planilla) desde el frontend. A diferencia de procesarAsync,
+     * no usa jobId/polling: valida y guarda todo en la misma request y
+     * devuelve el detalle fila por fila de una vez.
+     */
+    @Override
+    @Transactional
+    public ActivoImportResultDTO procesarActivosManual(List<ActivoImportRowDTO> filas, Long empresaId, Long usuarioId) {
+
+        List<ActivoImportRowResultDTO> resultados = new ArrayList<>();
+        List<Activo> validos = new ArrayList<>();
+        Set<String> codigosEnLote = new HashSet<>();
+
+        int fila = 0;
+
+        for (ActivoImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                String codigo = datos.getCodigoInterno();
+
+                if (codigo != null && !codigo.isBlank() && !codigosEnLote.add(codigo)) {
+                    throw new BusinessException("Código interno repetido en esta misma carga: " + codigo);
+                }
+
+                Activo activo = construirActivoDesdeCampos(
+                    codigo,
+                    datos.getNombre(),
+                    datos.getDescripcion(),
+                    datos.getTipoActivoNombre(),
+                    datos.getMarca(),
+                    datos.getModelo(),
+                    datos.getNumeroSerie(),
+                    datos.getFechaAdquisicion(),
+                    datos.getValorAdquisicion(),
+                    datos.getValorResidual(),
+                    datos.getVidaUtilMeses(),
+                    datos.getUbicacionNombre(),
+                    datos.getProveedorRut(),
+                    datos.getCuentaContable(),
+                    empresaId
+                );
+
+                validos.add(activo);
+
+                resultados.add(ActivoImportRowResultDTO.builder()
+                    .fila(fila)
+                    .exito(true)
+                    .mensaje("OK")
+                    .codigoInterno(codigo)
+                    .build());
+
+            } catch (Exception e) {
+
+                resultados.add(ActivoImportRowResultDTO.builder()
+                    .fila(fila)
+                    .exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .codigoInterno(datos.getCodigoInterno())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarActivo(validos, empresaId, usuarioId);
+
+                // Asociar el id ya generado a cada resultado exitoso (mismo orden en que se agregaron a "validos")
+                int idx = 0;
+                for (ActivoImportRowResultDTO r : resultados) {
+                    if (r.isExito()) {
+                        r.setActivoId(validos.get(idx).getId());
+                        idx++;
+                    }
+                }
+            } catch (Exception e) {
+                // Si falla el guardado del lote (ej. una restricción de BD no detectada antes),
+                // no perdemos el detalle ya calculado: marcamos como error las filas que iban a guardarse.
+                for (ActivoImportRowResultDTO r : resultados) {
+                    if (r.isExito()) {
+                        r.setExito(false);
+                        r.setMensaje("No se pudo guardar: " + (e.getMessage() != null ? e.getMessage() : "error desconocido"));
+                    }
+                }
+            }
+        }
+
+        int exitosos = (int) resultados.stream().filter(ActivoImportRowResultDTO::isExito).count();
+
+        return ActivoImportResultDTO.builder()
+            .total(filas.size())
+            .exitosos(exitosos)
+            .fallidos(filas.size() - exitosos)
+            .resultados(resultados)
+            .build();
+    }
+
+    /**
+     * Procesa de forma síncrona un lote de Proveedores ingresados manualmente
+     * (grilla tipo planilla) desde el frontend.
+     */
+    @Override
+    @Transactional
+    public ImportBatchResultDTO procesarProveedoresManual(List<ProveedorImportRowDTO> filas, Long empresaId) {
+
+        List<ImportRowResultDTO> resultados = new ArrayList<>();
+        List<Proveedor> validos = new ArrayList<>();
+        Set<String> rutsEnLote = new HashSet<>();
+        Set<String> emailsEnLote = new HashSet<>();
+
+        int fila = 0;
+
+        for (ProveedorImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                String rut = datos.getRut();
+                String email = datos.getEmail();
+
+                if (rut != null && !rut.isBlank() && !rutsEnLote.add(rut)) {
+                    throw new BusinessException("RUT repetido en esta misma carga: " + rut);
+                }
+
+                if (email != null && !email.isBlank() && !emailsEnLote.add(email.toLowerCase())) {
+                    throw new BusinessException("Email repetido en esta misma carga: " + email);
+                }
+
+                Proveedor proveedor = construirProveedorDesdeCampos(
+                    datos.getNombre(),
+                    rut,
+                    datos.getContacto(),
+                    datos.getTelefono(),
+                    datos.getEmail(),
+                    datos.getTipoProveedor(),
+                    empresaId
+                );
+
+                validos.add(proveedor);
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(true).mensaje("OK").referencia(rut).build());
+
+            } catch (Exception e) {
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .referencia(datos.getRut())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarProveedor(validos);
+                asignarIds(resultados, validos, Proveedor::getId);
+            } catch (Exception e) {
+                marcarLoteComoFallido(resultados, e);
+            }
+        }
+
+        return construirResultadoLote(filas.size(), resultados);
+    }
+
+    /**
+     * Procesa de forma síncrona un lote de Órdenes de Mantención ingresadas
+     * manualmente (grilla tipo planilla) desde el frontend.
+     */
+    @Override
+    @Transactional
+    public ImportBatchResultDTO procesarOrdenesManual(List<OrdenImportRowDTO> filas, Long empresaId, Long usuarioId) {
+
+        List<ImportRowResultDTO> resultados = new ArrayList<>();
+        List<OrdenMantenimiento> validos = new ArrayList<>();
+
+        int fila = 0;
+
+        for (OrdenImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                LocalDateTime fechaHora = null;
+
+                if (datos.getFechaProgramada() != null && datos.getHoraProgramada() != null) {
+                    fechaHora = LocalDateTime.of(datos.getFechaProgramada(), datos.getHoraProgramada());
+                }
+
+                OrdenMantenimiento orden = construirOrdenDesdeCampos(
+                    datos.getTitulo(),
+                    fechaHora,
+                    datos.getDuracionMinutos(),
+                    datos.getTipoMantenimiento(),
+                    datos.getEstado(),
+                    datos.getObservaciones(),
+                    datos.getActivoNombre(),
+                    datos.getProveedorRut(),
+                    datos.getValorHoraProveedor(),
+                    datos.getHorasEstimadasProveedor(),
+                    datos.getCostoManoObraEstimadasProveedor(),
+                    empresaId,
+                    usuarioId
+                );
+
+                validos.add(orden);
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(true).mensaje("OK").referencia(datos.getTitulo()).build());
+
+            } catch (Exception e) {
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .referencia(datos.getTitulo())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarOrden(validos);
+                asignarIds(resultados, validos, OrdenMantenimiento::getId);
+            } catch (Exception e) {
+                marcarLoteComoFallido(resultados, e);
+            }
+        }
+
+        return construirResultadoLote(filas.size(), resultados);
+    }
+
+    /**
+     * Procesa de forma síncrona un lote de Repuestos ingresados manualmente
+     * (grilla tipo planilla) desde el frontend.
+     */
+    @Override
+    @Transactional
+    public ImportBatchResultDTO procesarRepuestosManual(List<RepuestoImportRowDTO> filas, Long empresaId) {
+
+        List<ImportRowResultDTO> resultados = new ArrayList<>();
+        List<Repuesto> validos = new ArrayList<>();
+        Set<String> codigosEnLote = new HashSet<>();
+
+        int fila = 0;
+
+        for (RepuestoImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                String codigo = datos.getCodigo();
+
+                if (codigo != null && !codigo.isBlank() && !codigosEnLote.add(codigo)) {
+                    throw new BusinessException("Código repetido en esta misma carga: " + codigo);
+                }
+
+                Repuesto repuesto = construirRepuestoDesdeCampos(
+                    codigo,
+                    datos.getNombre(),
+                    datos.getDescripcion(),
+                    datos.getCosto(),
+                    datos.getStockActual(),
+                    datos.getStockMinimo(),
+                    datos.getCuentaContable(),
+                    datos.getTipoRepuesto(),
+                    empresaId
+                );
+
+                validos.add(repuesto);
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(true).mensaje("OK").referencia(codigo).build());
+
+            } catch (Exception e) {
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .referencia(datos.getCodigo())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarRepuesto(validos);
+                asignarIds(resultados, validos, Repuesto::getId);
+            } catch (Exception e) {
+                marcarLoteComoFallido(resultados, e);
+            }
+        }
+
+        return construirResultadoLote(filas.size(), resultados);
+    }
+
+    /**
+     * Procesa de forma síncrona un lote de Ubicaciones ingresadas manualmente
+     * (grilla tipo planilla) desde el frontend.
+     */
+    @Override
+    @Transactional
+    public ImportBatchResultDTO procesarUbicacionesManual(List<UbicacionImportRowDTO> filas, Long empresaId) {
+
+        List<ImportRowResultDTO> resultados = new ArrayList<>();
+        List<Ubicacion> validos = new ArrayList<>();
+
+        int fila = 0;
+
+        for (UbicacionImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                Ubicacion ubicacion = construirUbicacionDesdeCampos(
+                    datos.getNombre(),
+                    datos.getDescripcion(),
+                    datos.getDireccion(),
+                    empresaId
+                );
+
+                validos.add(ubicacion);
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(true).mensaje("OK").referencia(datos.getNombre()).build());
+
+            } catch (Exception e) {
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .referencia(datos.getNombre())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarUbicacion(validos);
+                asignarIds(resultados, validos, Ubicacion::getId);
+            } catch (Exception e) {
+                marcarLoteComoFallido(resultados, e);
+            }
+        }
+
+        return construirResultadoLote(filas.size(), resultados);
+    }
+
+    /**
+     * Procesa de forma síncrona un lote de Tipos de Activo ingresados
+     * manualmente (grilla tipo planilla) desde el frontend.
+     */
+    @Override
+    @Transactional
+    public ImportBatchResultDTO procesarTiposActivoManual(List<TipoActivoImportRowDTO> filas, Long empresaId) {
+
+        List<ImportRowResultDTO> resultados = new ArrayList<>();
+        List<TipoActivo> validos = new ArrayList<>();
+
+        int fila = 0;
+
+        for (TipoActivoImportRowDTO datos : filas) {
+
+            fila++;
+
+            try {
+
+                TipoActivo tipoActivo = construirTipoActivoDesdeCampos(
+                    datos.getNombre(),
+                    datos.getDescripcion(),
+                    datos.getVidaUtilReferencialMeses(),
+                    empresaId
+                );
+
+                validos.add(tipoActivo);
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(true).mensaje("OK").referencia(datos.getNombre()).build());
+
+            } catch (Exception e) {
+
+                resultados.add(ImportRowResultDTO.builder()
+                    .fila(fila).exito(false)
+                    .mensaje(e.getMessage() != null ? e.getMessage() : "Error desconocido al procesar la fila")
+                    .referencia(datos.getNombre())
+                    .build());
+            }
+        }
+
+        if (!validos.isEmpty()) {
+            try {
+                guardarTipoActivo(validos);
+                asignarIds(resultados, validos, TipoActivo::getId);
+            } catch (Exception e) {
+                marcarLoteComoFallido(resultados, e);
+            }
+        }
+
+        return construirResultadoLote(filas.size(), resultados);
+    }
+
+    // ==========================================================
+    // Helpers genéricos para las cargas manuales (todas menos Activo,
+    // que ya tenía su propio DTO de resultado antes de generalizar esto)
+    // ==========================================================
+
+    private <T> void asignarIds(List<ImportRowResultDTO> resultados, List<T> validos, java.util.function.Function<T, Long> idExtractor) {
+        int idx = 0;
+        for (ImportRowResultDTO r : resultados) {
+            if (r.isExito()) {
+                r.setId(idExtractor.apply(validos.get(idx)));
+                idx++;
+            }
+        }
+    }
+
+    private void marcarLoteComoFallido(List<ImportRowResultDTO> resultados, Exception e) {
+        for (ImportRowResultDTO r : resultados) {
+            if (r.isExito()) {
+                r.setExito(false);
+                r.setMensaje("No se pudo guardar: " + (e.getMessage() != null ? e.getMessage() : "error desconocido"));
+            }
+        }
+    }
+
+    private ImportBatchResultDTO construirResultadoLote(int total, List<ImportRowResultDTO> resultados) {
+        int exitosos = (int) resultados.stream().filter(ImportRowResultDTO::isExito).count();
+        return ImportBatchResultDTO.builder()
+            .total(total)
+            .exitosos(exitosos)
+            .fallidos(total - exitosos)
+            .resultados(resultados)
+            .build();
+    }
+
     private boolean filaVacia(Row row) {
 
     if (row == null) {
@@ -299,7 +753,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
         return sb.toString();
     }
-    
+
     private void guardarActivo(List<Activo> batch, Long empresaId, Long usuarioId) {
         List<Activo> activos = activoRepository.saveAll(batch);
         calcularYGuardarDepreciacionMensual(activos, empresaId);
@@ -341,38 +795,57 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private Activo mapActivo(Row row, Long empresaId) {
 
         String codigo = getString(row, 0);
-        validarCodigoUnico(codigo);
+        String nombre = getString(row, 1);
+        String descripcion = getString(row, 2);
+        String tipoActivoNombre = getString(row, 3);
+        String marca = getString(row, 4);
+        String modelo = getString(row, 5);
+        String numeroSerie = getString(row, 6);
+        LocalDate fechaAdquisicion = getLocalDate(row, 7);
+        BigDecimal valorAdquisicion = getBigDecimal(row, 8);
+        BigDecimal valorResidual = getBigDecimal(row, 9);
+        Integer vidaUtilMeses = getInteger(row, 10);
+        String ubicacionNombre = getString(row, 11);
+        String proveedorRut = getString(row, 12);
+        String cuentaContable = getString(row, 13);
 
-        TipoActivo tipoActivo = obtenerTipoActivo(getString(row, 3), empresaId);
-        Ubicacion ubicacion = obtenerUbicacion(getString(row, 11), empresaId);
-        Proveedor proveedor = obtenerProveedor(getString(row, 12));
-        Empresa empresa = obtenerEmpresa(empresaId);
-
-        return construirActivo(row, codigo, tipoActivo, ubicacion, proveedor, empresa);
+        return construirActivoDesdeCampos(
+            codigo,
+            nombre,
+            descripcion,
+            tipoActivoNombre,
+            marca,
+            modelo,
+            numeroSerie,
+            fechaAdquisicion,
+            valorAdquisicion,
+            valorResidual,
+            vidaUtilMeses,
+            ubicacionNombre,
+            proveedorRut,
+            cuentaContable,
+            empresaId
+        );
     }
 
     private Proveedor mapProveedor(Row row, Long empresaId) {
 
         String nombre = getRequiredString(row, 0, "El nombre del proveedor es obligatorio");
         String rut = getRequiredString(row, 1, "El RUT del proveedor es obligatorio");
+        String contacto = getString(row, 2);
+        String telefono = getString(row, 3);
+        String email = getString(row, 4);
+        String tipoProveedor = getString(row, 5);
 
-        validarRutUnico(rut);
-
-        Empresa empresa = obtenerEmpresa(empresaId);
-
-        return construirProveedor(row, nombre, rut, empresa);
+        return construirProveedorDesdeCampos(nombre, rut, contacto, telefono, email, tipoProveedor, empresaId);
     }
 
     private OrdenMantenimiento mapOrden(Row row, Long empresaId, Long usuarioId, FormulaEvaluator evaluator,
         DataFormatter formatter) {
 
-        Empresa empresa = obtenerEmpresa(empresaId);
-        Usuario usuario = obtenerUsuario(usuarioId);
-        
-
         String titulo = getRequiredString(row, 0, "El título es obligatorio");
 
-        // 🔥 NUEVO: fecha + hora separadas
+        // 🔥 fecha + hora separadas en el Excel
         LocalDateTime fechaProgramada = getDateTimeSafe(
             row,
             1, // columna fecha
@@ -381,47 +854,35 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         );
 
         Integer duracionMinutos = getInteger(row, 3, "Duración minutos inválido");
-
-        TipoMantenimiento tipo = getEnum(
-            row, 4, TipoMantenimiento.class, "Tipo de mantenimiento inválido"
-        );
-
-        EstadoOrden estado = getEnum(
-            row, 5, EstadoOrden.class, "Estado inválido"
-        );
-
+        String tipoMantenimiento = getRequiredString(row, 4, "Tipo de mantenimiento inválido");
+        String estado = getRequiredString(row, 5, "Estado inválido");
         String observaciones = getString(row, 6);
-
-        Activo activo = obtenerActivoPorNombreYEmpresa(getRequiredString(row, 7, "Activo requerido"), empresaId);
-        Proveedor proveedor = obtenerProveedor(getString(row, 8));
+        String activoNombre = getRequiredString(row, 7, "Activo requerido");
+        String proveedorRut = getString(row, 8);
         BigDecimal valorHora = getBigDecimal(row, 9, "Valor Hora inválido");
         BigDecimal horaEstimada = getBigDecimal(row, 10, "Hora Estimada inválido", evaluator, formatter);
         BigDecimal costoManoObraEstimada = getBigDecimal(row, 11, "Costo mano de obra estimada inválido", evaluator, formatter);
 
-        return construirOrden(
+        return construirOrdenDesdeCampos(
             titulo,
             fechaProgramada,
             duracionMinutos,
-            tipo,
+            tipoMantenimiento,
             estado,
             observaciones,
-            activo,
-            usuario,
-            proveedor,
+            activoNombre,
+            proveedorRut,
             valorHora,
             horaEstimada,
             costoManoObraEstimada,
-            empresa
+            empresaId,
+            usuarioId
         );
     }
 
     private Repuesto mapRepuesto(Row row, Long empresaId) {
 
-        Empresa empresa = obtenerEmpresa(empresaId);
-
         String codigo = getRequiredString(row, 0, "El código es obligatorio");
-        validarCodigoUnico(codigo, empresa);
-
         String nombre = getRequiredString(row, 1, "El nombre es obligatorio");
         String descripcion = getString(row, 2);
 
@@ -430,61 +891,79 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         Integer stockMinimo = getInteger(row, 5, "Stock mínimo inválido");
 
         String cuentaContable = getString(row, 6);
-        TipoRepuesto tipoRepuesto = TipoRepuesto.valueOf(
-            row.getCell(7)
-            .getStringCellValue()
-            .trim()
-            .toUpperCase()
-        );
+        String tipoRepuesto = getString(row, 7);
 
-        return construirRepuesto(codigo, nombre, descripcion, costo, stockActual, stockMinimo, cuentaContable, tipoRepuesto, empresa);
+        return construirRepuestoDesdeCampos(codigo, nombre, descripcion, costo, stockActual, stockMinimo, cuentaContable, tipoRepuesto, empresaId);
     }
 
     private Ubicacion mapUbicacion(Row row, Long empresaId) {
 
-        Empresa empresa = obtenerEmpresa(empresaId);
-
         String nombre = getRequiredString(row, 0, "El nombre es obligatorio");
         String descripcion = getString(row, 1);
-        String direccion = getString(row, 2);        
+        String direccion = getString(row, 2);
 
-        return construirUbicacion(nombre, descripcion, direccion, empresa);
+        return construirUbicacionDesdeCampos(nombre, descripcion, direccion, empresaId);
     }
 
     private TipoActivo mapTipoActivo(Row row, Long empresaId) {
 
-        Empresa empresa = obtenerEmpresa(empresaId);
-
         String nombre = getRequiredString(row, 0, "El nombre es obligatorio");
         String descripcion = getString(row, 1);
-        Integer vidaUtil = getInteger(row, 2);       
+        Integer vidaUtil = getInteger(row, 2);
 
-        return construirTipoActivo(nombre, descripcion, vidaUtil, empresa);
+        return construirTipoActivoDesdeCampos(nombre, descripcion, vidaUtil, empresaId);
     }
 
-    private Activo construirActivo(
-        Row row,
+    /**
+     * Construye y valida un Activo a partir de campos ya tipados (sin depender
+     * de Apache POI). La usan tanto el importador de Excel (mapActivo, que
+     * primero extrae estos valores desde la Row) como la carga manual
+     * (procesarActivosManual, que los recibe directo como JSON), para no
+     * duplicar reglas de negocio entre ambos caminos.
+     */
+    private Activo construirActivoDesdeCampos(
         String codigo,
-        TipoActivo tipoActivo,
-        Ubicacion ubicacion,
-        Proveedor proveedor,
-        Empresa empresa
+        String nombre,
+        String descripcion,
+        String tipoActivoNombre,
+        String marca,
+        String modelo,
+        String numeroSerie,
+        LocalDate fechaAdquisicion,
+        BigDecimal valorAdquisicion,
+        BigDecimal valorResidual,
+        Integer vidaUtilMeses,
+        String ubicacionNombre,
+        String proveedorRut,
+        String cuentaContable,
+        Long empresaId
     ) {
+
+        if (codigo == null || codigo.isBlank()) {
+            throw new BusinessException("El código interno es obligatorio");
+        }
+
+        validarCodigoUnico(codigo);
+
+        TipoActivo tipoActivo = obtenerTipoActivo(tipoActivoNombre, empresaId);
+        Ubicacion ubicacion = obtenerUbicacion(ubicacionNombre, empresaId);
+        Proveedor proveedor = obtenerProveedor(proveedorRut);
+        Empresa empresa = obtenerEmpresa(empresaId);
 
         Activo activo = new Activo();
 
         activo.setCodigoInterno(codigo);
-        activo.setNombre(getString(row, 1));
-        activo.setDescripcion(getString(row, 2));
+        activo.setNombre(nombre);
+        activo.setDescripcion(descripcion);
         activo.setTipoActivo(tipoActivo);
-        activo.setMarca(getString(row, 4));
-        activo.setModelo(getString(row, 5));
-        activo.setNumeroSerie(getString(row, 6));
-        activo.setFechaAdquisicion(getLocalDate(row, 7));
-        activo.setValorAdquisicion(getBigDecimal(row, 8));
-        activo.setValorResidual(getBigDecimal(row, 9));
-        activo.setVidaUtilMeses(getInteger(row, 10));
-        activo.setCuentaContable(getString(row, 13));
+        activo.setMarca(marca);
+        activo.setModelo(modelo);
+        activo.setNumeroSerie(numeroSerie);
+        activo.setFechaAdquisicion(fechaAdquisicion);
+        activo.setValorAdquisicion(valorAdquisicion != null ? valorAdquisicion : BigDecimal.ZERO);
+        activo.setValorResidual(valorResidual != null ? valorResidual : BigDecimal.ZERO);
+        activo.setVidaUtilMeses(vidaUtilMeses != null ? vidaUtilMeses : 0);
+        activo.setCuentaContable(cuentaContable);
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
         activo.setFechaCreacion(LocalDateTime.now());
         activo.setUbicacion(ubicacion);
@@ -494,49 +973,97 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return activo;
     }
 
-    private Proveedor construirProveedor(
-        Row row,
+    /**
+     * Construye y valida un Proveedor a partir de campos ya tipados. La usan
+     * tanto el importador de Excel (mapProveedor) como la carga manual
+     * (procesarProveedoresManual).
+     */
+    private Proveedor construirProveedorDesdeCampos(
         String nombre,
         String rut,
-        Empresa empresa
+        String contacto,
+        String telefono,
+        String email,
+        String tipoProveedorStr,
+        Long empresaId
     ) {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("El nombre del proveedor es obligatorio");
+        }
+
+        if (rut == null || rut.isBlank()) {
+            throw new BusinessException("El RUT del proveedor es obligatorio");
+        }
+
+        validarRutUnico(rut);
+        validarEmailUnicoProveedor(email);
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+        TipoProveedor tipoProveedor = parseEnumOrThrow(TipoProveedor.class, tipoProveedorStr, "Tipo de proveedor inválido");
 
         Proveedor proveedor = new Proveedor();
 
         proveedor.setNombre(nombre);
         proveedor.setRut(rut);
-        proveedor.setContacto(getString(row, 2));
-        proveedor.setTelefono(getString(row, 3));
-        proveedor.setEmail(getString(row, 4));
-        proveedor.setTipoProveedor(
-            TipoProveedor.valueOf(
-                row.getCell(5)
-                .getStringCellValue()
-                .trim()
-                .toUpperCase()
-            )
-        );
+        proveedor.setContacto(contacto);
+        proveedor.setTelefono(telefono);
+        proveedor.setEmail(email);
+        proveedor.setTipoProveedor(tipoProveedor);
         proveedor.setEmpresa(empresa);
         proveedor.setActivo(true);
 
         return proveedor;
     }
 
-    private OrdenMantenimiento construirOrden(
+    /**
+     * Construye y valida una Orden de Mantención a partir de campos ya
+     * tipados. La usan tanto el importador de Excel (mapOrden) como la carga
+     * manual (procesarOrdenesManual).
+     */
+    private OrdenMantenimiento construirOrdenDesdeCampos(
         String titulo,
         LocalDateTime fechaProgramada,
         Integer duracionMinutos,
-        TipoMantenimiento tipo,
-        EstadoOrden estado,
+        String tipoMantenimientoStr,
+        String estadoStr,
         String observaciones,
-        Activo activo,
-        Usuario usuario,
-        Proveedor proveedor,
+        String activoNombre,
+        String proveedorRut,
         BigDecimal valorHora,
         BigDecimal horasEstimada,
         BigDecimal costoManoObraEstimada,
-        Empresa empresa
+        Long empresaId,
+        Long usuarioId
     ) {
+
+        if (titulo == null || titulo.isBlank()) {
+            throw new BusinessException("El título es obligatorio");
+        }
+
+        if (fechaProgramada == null) {
+            throw new BusinessException("Fecha u hora inválida");
+        }
+
+        if (duracionMinutos == null) {
+            throw new BusinessException("Duración minutos inválido");
+        }
+
+        if (valorHora == null) {
+            throw new BusinessException("Valor Hora inválido");
+        }
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+        Usuario usuario = obtenerUsuario(usuarioId);
+        TipoMantenimiento tipo = parseEnumOrThrow(TipoMantenimiento.class, tipoMantenimientoStr, "Tipo de mantenimiento inválido");
+        EstadoOrden estado = parseEnumOrThrow(EstadoOrden.class, estadoStr, "Estado inválido");
+
+        if (activoNombre == null || activoNombre.isBlank()) {
+            throw new BusinessException("Activo requerido");
+        }
+
+        Activo activo = obtenerActivoPorNombreYEmpresa(activoNombre, empresaId);
+        Proveedor proveedor = obtenerProveedor(proveedorRut);
 
         OrdenMantenimiento o = new OrdenMantenimiento();
 
@@ -558,7 +1085,12 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return o;
     }
 
-    private Repuesto construirRepuesto(
+    /**
+     * Construye y valida un Repuesto a partir de campos ya tipados. La usan
+     * tanto el importador de Excel (mapRepuesto) como la carga manual
+     * (procesarRepuestosManual).
+     */
+    private Repuesto construirRepuestoDesdeCampos(
         String codigo,
         String nombre,
         String descripcion,
@@ -566,9 +1098,34 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         Integer stockActual,
         Integer stockMinimo,
         String cuentaContable,
-        TipoRepuesto tipoRepuesto,
-        Empresa empresa
+        String tipoRepuestoStr,
+        Long empresaId
     ) {
+
+        if (codigo == null || codigo.isBlank()) {
+            throw new BusinessException("El código es obligatorio");
+        }
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("El nombre es obligatorio");
+        }
+
+        if (costo == null) {
+            throw new BusinessException("Costo inválido");
+        }
+
+        if (stockActual == null) {
+            throw new BusinessException("Stock Actual inválido");
+        }
+
+        if (stockMinimo == null) {
+            throw new BusinessException("Stock mínimo inválido");
+        }
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+        validarCodigoUnico(codigo, empresa);
+
+        TipoRepuesto tipoRepuesto = parseEnumOrThrow(TipoRepuesto.class, tipoRepuestoStr, "Tipo de repuesto inválido");
 
         Repuesto repuesto = new Repuesto();
 
@@ -586,36 +1143,59 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         return repuesto;
     }
 
-    private Ubicacion construirUbicacion(
+    /**
+     * Construye y valida una Ubicación a partir de campos ya tipados. La usan
+     * tanto el importador de Excel (mapUbicacion) como la carga manual
+     * (procesarUbicacionesManual).
+     */
+    private Ubicacion construirUbicacionDesdeCampos(
         String nombre,
         String descripcion,
-        String direccion,        
-        Empresa empresa
+        String direccion,
+        Long empresaId
     ) {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("El nombre es obligatorio");
+        }
+
+        Empresa empresa = obtenerEmpresa(empresaId);
 
         Ubicacion ubicacion = new Ubicacion();
 
         ubicacion.setNombre(nombre);
         ubicacion.setDescripcion(descripcion);
-        ubicacion.setDireccion(direccion);    
-        ubicacion.setActivo(true);    
+        ubicacion.setDireccion(direccion);
+        ubicacion.setActivo(true);
         ubicacion.setEmpresa(empresa);
 
         return ubicacion;
     }
-    private TipoActivo construirTipoActivo(
+
+    /**
+     * Construye y valida un Tipo de Activo a partir de campos ya tipados. La
+     * usan tanto el importador de Excel (mapTipoActivo) como la carga manual
+     * (procesarTiposActivoManual).
+     */
+    private TipoActivo construirTipoActivoDesdeCampos(
         String nombre,
         String descripcion,
-        Integer vidaUtil,        
-        Empresa empresa
+        Integer vidaUtil,
+        Long empresaId
     ) {
+
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("El nombre es obligatorio");
+        }
+
+        Empresa empresa = obtenerEmpresa(empresaId);
 
         TipoActivo tipoActivo = new TipoActivo();
 
         tipoActivo.setNombre(nombre);
         tipoActivo.setDescripcion(descripcion);
-        tipoActivo.setVidaUtilReferencialMeses(vidaUtil);
-        tipoActivo.setActivo(true);     
+        tipoActivo.setVidaUtilReferencialMeses(vidaUtil != null ? vidaUtil : 0);
+        tipoActivo.setActivo(true);
         tipoActivo.setEmpresa(empresa);
 
         return tipoActivo;
@@ -762,6 +1342,15 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         }
     }
 
+    private void validarEmailUnicoProveedor(String email) {
+
+        if (email == null || email.isBlank()) return;
+
+        if (proveedorRepository.existsByEmailIgnoreCase(email)) {
+            throw new BusinessException("Ya existe un proveedor con ese email: " + email);
+        }
+    }
+
         private void validarCodigoUnico(String codigo, Empresa empresa) {
 
         if (repuestoRepository.existsByCodigoAndEmpresa(codigo, empresa)) {
@@ -769,17 +1358,22 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         }
     }
 
-    private <T extends Enum<T>> T getEnum(
-        Row row,
-        int index,
-        Class<T> enumClass,
-        String mensaje
-    ) {
+    /**
+     * Convierte un String (venga de una celda de Excel o de la grilla manual)
+     * en el enum correspondiente, lanzando un BusinessException con un
+     * mensaje claro si no es válido. La usan los métodos "construirXDesdeCampos"
+     * compartidos por ambos caminos de carga.
+     */
+    private <T extends Enum<T>> T parseEnumOrThrow(Class<T> enumClass, String valor, String mensajeError) {
+
+        if (valor == null || valor.isBlank()) {
+            throw new BusinessException(mensajeError + " (vacío)");
+        }
+
         try {
-            String value = getRequiredString(row, index, mensaje);
-            return Enum.valueOf(enumClass, value.trim().toUpperCase());
+            return Enum.valueOf(enumClass, valor.trim().toUpperCase());
         } catch (Exception e) {
-            throw new BusinessException(mensaje + " (columna " + index + ")");
+            throw new BusinessException(mensajeError + ": " + valor);
         }
     }
 
@@ -837,7 +1431,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                 activo.getId(), EstadoActivo.OPERATIVO, null, "Creación de Activo", usuarioId
             );
 
-            
+
         }
     }
 

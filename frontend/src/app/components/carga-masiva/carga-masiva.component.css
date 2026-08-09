@@ -1,5 +1,7 @@
 .upload-wrapper {
   padding: 20px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .header {
@@ -32,6 +34,14 @@
   background: #ffffff;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   text-align: center;
+  box-sizing: border-box;
+}
+
+/* Cuando una tarjeta está mostrando su grilla de ingreso manual necesita
+   más ancho: ocupa todo el ancho disponible en vez de compartir columna. */
+.upload-container-ancha {
+  max-width: 100%;
+  grid-column: 1 / -1;
 }
 
 .title {
@@ -51,6 +61,9 @@
   border-radius: 8px;
   cursor: pointer;
   transition: 0.3s;
+  min-height: 44px; /* tamaño de toque recomendado en iOS/Android */
+  box-sizing: border-box;
+  line-height: 24px;
 }
 
 .file-label:hover {
@@ -98,4 +111,102 @@
   border-radius: 8px;
   background: #ffe0e0;
   color: #b00020;
+}
+
+.alert-info {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+/* 🔥 Selector de modo (Excel / ingreso manual), presente en las 6 tarjetas */
+
+.modo-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.modo-toggle button {
+  padding: 8px 16px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+  min-height: 40px;
+  flex: 1 1 140px;
+}
+
+.modo-toggle button.activo {
+  background: #007bff;
+  color: white;
+}
+
+/* ============================================================
+   📱 RESPONSIVE: tablets (iPad, Android tablets) y celulares
+   (iPhone, Android). El sidebar de la app ya colapsa a los
+   768px, así que estos cortes van pensados desde ese ancho
+   de contenido hacia abajo. El detalle de la grilla manual en
+   sí (tabla → tarjetas, etc.) vive en manual-grid.component.css.
+   ============================================================ */
+
+/* Tablets: 2 columnas para las tarjetas de Excel, más aire para
+   tocar con el dedo. */
+@media (max-width: 1024px) {
+
+  .upload-wrapper {
+    padding: 16px;
+  }
+
+  .upload-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .upload-container {
+    margin: 0;
+  }
+}
+
+/* Celulares (iPhone y Android): las tarjetas de Excel a una sola columna. */
+@media (max-width: 640px) {
+
+  .upload-wrapper {
+    padding: 12px;
+  }
+
+  .header h1 {
+    font-size: 21px;
+  }
+
+  .upload-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .upload-container {
+    padding: 16px;
+  }
+
+  .modo-toggle button {
+    flex: 1 1 45%;
+  }
+
+  .file-label {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Evita que iOS Safari haga zoom automático al enfocar un input
+   con font-size menor a 16px. */
+@media (max-width: 768px) {
+  .modo-toggle button,
+  .file-label {
+    font-size: 16px;
+  }
 }

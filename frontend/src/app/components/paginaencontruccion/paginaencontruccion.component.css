@@ -1,9 +1,11 @@
 .construction-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0f172a, #1e293b);
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .card {
@@ -14,8 +16,10 @@
   text-align: center;
   color: white;
   max-width: 400px;
+  width: 100%;
   box-shadow: 0 20px 50px rgba(0,0,0,0.4);
   animation: fadeIn 0.6s ease;
+  box-sizing: border-box;
 }
 
 .icon {
@@ -57,4 +61,24 @@ button:hover {
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
+}
+
+@media (max-width: 480px) {
+
+  .card {
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 19px;
+  }
+
+  .icon {
+    font-size: 40px;
+  }
+
+  button {
+    width: 100%;
+    min-height: 44px;
+  }
 }

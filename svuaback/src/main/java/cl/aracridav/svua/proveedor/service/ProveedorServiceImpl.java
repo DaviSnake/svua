@@ -40,6 +40,7 @@ public class ProveedorServiceImpl implements ProveedorService {
         Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRutUnico(request.getRut(), empresa.getId());
+        validarEmailUnico(request.getEmail(), empresa.getId());
 
         Proveedor proveedor = construirProveedor(request, empresa);
 
@@ -96,6 +97,7 @@ public class ProveedorServiceImpl implements ProveedorService {
         validarEmpresa(proveedor);
 
         validarRutUnicoUpdate(request.getRut(), proveedor);
+        validarEmailUnicoUpdate(request.getEmail(), proveedor);
 
         actualizarCampos(proveedor, request);
 
@@ -166,6 +168,33 @@ public class ProveedorServiceImpl implements ProveedorService {
 
         if (existe && !proveedor.getRut().equalsIgnoreCase(rut)) {
             throw new BusinessException("Ya existe un proveedor con ese RUT");
+        }
+    }
+
+    private void validarEmailUnico(String email, Long empresaId) {
+
+        if (isBlank(email)) return;
+
+        boolean existe = proveedorRepository
+                .existsByEmailIgnoreCaseAndEmpresaId(email, empresaId);
+
+        if (existe) {
+            throw new BusinessException("Ya existe un proveedor con ese email");
+        }
+    }
+
+    private void validarEmailUnicoUpdate(String email, Proveedor proveedor) {
+
+        if (isBlank(email)) return;
+
+        boolean existe = proveedorRepository
+                .existsByEmailIgnoreCaseAndEmpresaId(email, proveedor.getEmpresa().getId());
+
+        boolean esElMismoEmail = proveedor.getEmail() != null
+                && proveedor.getEmail().equalsIgnoreCase(email);
+
+        if (existe && !esElMismoEmail) {
+            throw new BusinessException("Ya existe un proveedor con ese email");
         }
     }
 

@@ -15,7 +15,7 @@
           </div>
           <div class="form-group">
             <input type="text" placeholder="Télefono" formControlName="telefono" />
-            <div *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.invalid">  
+            <div *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.invalid">
               <small *ngIf="proveedorForm.get('telefono')?.errors?.['required']">
                 Teléfono obligatorio
               </small>
@@ -61,49 +61,51 @@
 
   <!-- TABLA -->
   <h2>Proveedores</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Rut</th>
-        <th>Contacto</th>
-        <th>Teléfono</th>
-        <th>Email</th>
-        <th>Empresa</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let proveedor of proveedores">
-        <td>{{ proveedor.id }}</td>
-        <td>{{ proveedor.nombre }}</td>
-        <td>{{ proveedor.rut }}</td>
-        <td>{{ proveedor.contacto }}</td>
-        <td>{{ proveedor.telefono }}</td>
-        <td>{{ proveedor.email }}</td>
-        <td>{{ proveedor.empresa.nombre }}</td>
-        <td>
-          <button class="btn-editar" (click)="editar(proveedor)">Editar</button>
-          <button *ngIf="proveedor.activo" class="btn-eliminar" (click)="eliminar(proveedor.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Rut</th>
+          <th>Contacto</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>Empresa</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let proveedor of proveedores">
+          <td>{{ proveedor.id }}</td>
+          <td>{{ proveedor.nombre }}</td>
+          <td>{{ proveedor.rut }}</td>
+          <td>{{ proveedor.contacto }}</td>
+          <td>{{ proveedor.telefono }}</td>
+          <td>{{ proveedor.email }}</td>
+          <td>{{ proveedor.empresa.nombre }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(proveedor)">Editar</button>
+            <button *ngIf="proveedor.activo" class="btn-eliminar" (click)="eliminar(proveedor.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="paginacion">
     <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
       ⬅ Anterior
     </button>
 
-    <button 
+    <button
       *ngFor="let p of [].constructor(totalPages); let i = index"
       (click)="cambiarPagina(i)"
       [class.activa]="i === page">
       {{ i + 1 }}
     </button>
 
-    <button (click)="cambiarPagina(page + 1)" 
+    <button (click)="cambiarPagina(page + 1)"
             [disabled]="page + 1 >= totalPages">
       Siguiente ➡
     </button>

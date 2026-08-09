@@ -68,7 +68,11 @@ export class CalendarioComponent implements OnInit {
 
   ngAfterViewInit() {
     setTimeout(() => {
-      this.calendarComponent?.getApi().render();
+      // 🔥 getApi() puede devolver null si el calendario todavía no terminó
+      // de montarse en este instante (por eso el segundo "?." — sin él,
+      // "Cannot read properties of null (reading 'render')" podía romper
+      // la carga de la pantalla).
+      this.calendarComponent?.getApi()?.render();
       this.trigger?.openPanel();
     }, 300);
   }
@@ -352,8 +356,8 @@ export class CalendarioComponent implements OnInit {
         if (!['COMPLETADA', 'CANCELADA', 'EN_EJECUCION']
               .includes(this.estadoOrden)) {
 
-          this.transformarAHora(); // 👈 lo que quieras ejecutar    
-          this.calcularCostoManoObra();      
+          this.transformarAHora(); // 👈 lo que quieras ejecutar
+          this.calcularCostoManoObra();
         }
       });
 
@@ -370,7 +374,7 @@ export class CalendarioComponent implements OnInit {
 
   }
 
-  
+
 
   onSelectRange(info: any) {
 
@@ -433,7 +437,7 @@ export class CalendarioComponent implements OnInit {
       this.proveedorService.getAll(this.page, this.size).subscribe({
         next: (data) => {
           this.proveedores = data.content;
-  
+
           //console.log("DATA:", this.proveedores)
         },
         error: (err) => {
@@ -442,7 +446,7 @@ export class CalendarioComponent implements OnInit {
             title: 'Error',
             text: err.error?.message || 'Error desconocido'
           });
-  
+
           console.log("ERROR:", err);
         }
       });
@@ -558,7 +562,7 @@ export class CalendarioComponent implements OnInit {
     // 🔥 LIMPIAR AUTOCOMPLETE
     this.activoControl.reset();
 
-    this.ordenMantencionForm.patchValue({ 
+    this.ordenMantencionForm.patchValue({
       fechaHora: fechaLocal
      });
 
@@ -744,7 +748,7 @@ export class CalendarioComponent implements OnInit {
       return;
     }
 
-    const { titulo, observaciones, activoId, proveedorId, tipoMantenimiento, duracionMinutos, 
+    const { titulo, observaciones, activoId, proveedorId, tipoMantenimiento, duracionMinutos,
             fechaHora, valorHora, horasEstimadas, costoManoObraEstimada } = this.ordenMantencionForm.getRawValue();
 
     const data = {
@@ -758,8 +762,8 @@ export class CalendarioComponent implements OnInit {
       proveedorId,
       usuarioId: this.usuario.sub,
       planMantenimientoId: "1",
-      valorHora: valorHora.replace(".", ""), 
-      horasEstimadas, 
+      valorHora: valorHora.replace(".", ""),
+      horasEstimadas,
       costoManoObraEstimada: costoManoObraEstimada.replace(".", ""),
       // 🔥 NUEVO
       repuestos: this.repuestosFormArray.getRawValue()
@@ -866,11 +870,11 @@ export class CalendarioComponent implements OnInit {
     this.estadoOrden = '';
 
     setTimeout(() => {
-      this.calendarComponent?.getApi().updateSize();
+      this.calendarComponent?.getApi()?.updateSize();
     }, 200);
   }
 
-  
+
 
   getColorPorEstado(estado?: string): string {
     switch (estado) {
@@ -987,7 +991,7 @@ export class CalendarioComponent implements OnInit {
     });
   }
 
-  detenerMantencion(id: number) {    
+  detenerMantencion(id: number) {
     // 🔥 backend
     this.ordenMantencionService.detener(id).subscribe({
       next: (orden) => {
@@ -1173,7 +1177,7 @@ export class CalendarioComponent implements OnInit {
   puedeEditar(): boolean {
     if (!this.modoEdicion) return true; // 🔥 nueva orden
 
-    return this.estadoOrden === 'PENDIENTE' || 
+    return this.estadoOrden === 'PENDIENTE' ||
           this.estadoOrden === 'PROGRAMADA';
   }
 
@@ -1336,7 +1340,7 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.reset();
     this.repuestosFormArray.clear();
     this.activoControl.reset();
-  }  
+  }
 
   formatFechaLocal(date: Date): string {
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -1344,4 +1348,3 @@ export class CalendarioComponent implements OnInit {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 }
-

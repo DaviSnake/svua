@@ -49,7 +49,8 @@
 }
 
 .modal input,
-.modal textarea {
+.modal textarea,
+.modal select {
   width: 100%;
   margin-bottom: 10px;
   padding: 8px;
@@ -655,3 +656,146 @@ textarea {
 .precompletada { background: #14b8a6; }
 .completada { background: #22c55e; }
 .cancelada { background: #ef4444; }
+
+/* ============================================================
+   📱 RESPONSIVE: tablet y celular.
+   El calendario ya cambia de vista (mes/semana/día/lista) solo
+   según el ancho de pantalla desde el componente TS. Acá se ajusta
+   lo visual: modales, formularios en columnas y la barra de
+   herramientas de FullCalendar, que sin esto quedan desbordados o
+   inutilizables en una pantalla angosta.
+   ============================================================ */
+
+@media (max-width: 1024px) {
+
+  .calendar-wrapper {
+    padding: 14px;
+  }
+
+  .modal,
+  .modal-lg {
+    width: 92vw;
+    max-width: 92vw;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .calendar-wrapper {
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .legend {
+    gap: 10px;
+  }
+
+  .item {
+    font-size: 12px;
+  }
+
+  .calendar-container {
+    padding: 10px;
+  }
+
+  /* Barra de herramientas de FullCalendar: por defecto el título +
+     los botones prev/next/today no caben en una pantalla angosta. */
+  ::ng-deep .fc .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  ::ng-deep .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+
+  ::ng-deep .fc .fc-button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* MODALES: ocupan casi todo el ancho y alto disponible */
+  .modal,
+  .modal-lg {
+    width: 95vw;
+    max-width: 95vw;
+    max-height: 92vh;
+    padding: 16px;
+  }
+
+  .mini-modal,
+  .grande {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 1rem;
+  }
+
+  /* FORMULARIO PRINCIPAL: de 2 columnas a 1 */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group.full,
+  .acciones {
+    grid-column: 1;
+  }
+
+  .acciones {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  .acciones .btn {
+    flex: 1 1 45%;
+    min-height: 44px;
+  }
+
+  /* FORMULARIO REPUESTOS: columnas fijas -> apiladas */
+  .form-repuesto {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .fila-repuesto {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .fila-repuesto button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .riesgo-box {
+    min-width: 0;
+    font-size: 0.9rem;
+  }
+
+  .costo-total {
+    font-size: 1.4rem;
+    padding: 0.9rem;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  /* Checklist (iframe) no debe imponer 700px de alto en un celular */
+  .modal iframe {
+    height: 60vh !important;
+  }
+
+  .fab-create {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+    bottom: 16px;
+    right: 16px;
+  }
+}

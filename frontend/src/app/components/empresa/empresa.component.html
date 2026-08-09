@@ -15,7 +15,7 @@
       <input class="span-2" placeholder="RUT" formControlName="rut">
       <input class="span-2" placeholder="Email contacto" formControlName="emailContacto">
       <input class="span-2" placeholder="Teléfono" formControlName="telefono">
-      <div *ngIf="empresaForm.get('telefono')?.touched && empresaForm.get('telefono')?.invalid">  
+      <div *ngIf="empresaForm.get('telefono')?.touched && empresaForm.get('telefono')?.invalid">
         <small *ngIf="empresaForm.get('telefono')?.errors?.['pattern']">
           Solo se permiten números
         </small>
@@ -40,9 +40,9 @@
           <h3>👤 Administrador</h3>
           <span>{{ mostrarAdmin ? '▲' : '▼' }}</span>
         </div>
-  
+
         <div *ngIf="mostrarAdmin" class="admin-body">
-  
+
           <input placeholder="Nombre Administrador" formControlName="adminNombre">
           <input placeholder="Email Administrador" formControlName="adminEmail">
           <div class="input-group password-group">
@@ -52,7 +52,7 @@
               {{ showPassword ? '🙈' : '👁' }}
             </span>
           </div>
-  
+
         </div>
       </div>
 
@@ -85,34 +85,36 @@
   <!-- ========================= -->
   <!-- TABLA -->
   <!-- ========================= -->
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>RUT</th>
-        <th>Email</th>
-        <th>Plan</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>RUT</th>
+          <th>Email</th>
+          <th>Plan</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
 
-    <tbody>
-      <tr *ngFor="let e of empresasFiltradas">
-        <td>{{ e.nombre }}</td>
-        <td>{{ e.rut }}</td>
-        <td>{{ e.emailContacto }}</td>
-        <td>
-          <span class="badge" [ngClass]="e.tipoPlan">
-            {{ e.tipoPlan }}
-          </span>
-        </td>
+      <tbody>
+        <tr *ngFor="let e of empresasFiltradas">
+          <td>{{ e.nombre }}</td>
+          <td>{{ e.rut }}</td>
+          <td>{{ e.emailContacto }}</td>
+          <td>
+            <span class="badge" [ngClass]="e.tipoPlan">
+              {{ e.tipoPlan }}
+            </span>
+          </td>
 
-        <td>
-          <button (click)="editar(e)">Editar</button>
-          <button (click)="eliminar(e.id!)">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          <td>
+            <button (click)="editar(e)">Editar</button>
+            <button (click)="eliminar(e.id!)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
 </div>

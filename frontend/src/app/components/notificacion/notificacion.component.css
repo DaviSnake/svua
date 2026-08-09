@@ -27,6 +27,7 @@
 }
 
 .notificacion-card {
+  position: relative; /* necesario para que el punto de "no leída" se ubique bien */
   display: flex;
   align-items: flex-start;
   gap: 18px;
@@ -63,6 +64,7 @@
   justify-content: center;
 
   background: #eff6ff;
+  flex-shrink: 0;
 }
 
 .icono i {
@@ -72,6 +74,7 @@
 
 .contenido {
   flex: 1;
+  min-width: 0; /* permite que el texto largo se corte/ajuste en vez de desbordar */
 }
 
 .titulo-row {
@@ -84,6 +87,7 @@
 .titulo-row h4 {
   margin: 0;
   font-size: 15px;
+  overflow-wrap: break-word;
 }
 
 .titulo-row small {
@@ -169,6 +173,8 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  flex: 1;
+  min-width: 0;
 }
 
 .mensaje {
@@ -185,5 +191,58 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   📱 RESPONSIVE: tablet y celular.
+   ============================================================ */
+
+@media (max-width: 1024px) {
+
+  .notificaciones-container {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .notificaciones-container {
+    padding: 12px;
+  }
+
+  .header h2 {
+    font-size: 1.4rem;
+  }
+
+  .notificacion-card {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .icono {
+    width: 44px;
+    height: 44px;
+  }
+
+  .icono i {
+    font-size: 22px;
+  }
+
+  .titulo-row {
+    flex-wrap: wrap;
+  }
+
+  .titulo-row h4 {
+    font-size: 14px;
+  }
+
+  .btn-eliminar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .no-leida::before {
+    margin-left: -18px;
   }
 }

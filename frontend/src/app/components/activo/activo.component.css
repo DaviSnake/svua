@@ -224,7 +224,7 @@ td button {
   padding: 25px;
   border-radius: 10px;
   width: 500px; /* 👈 un poco más ancho */
-  
+
   display: grid; /* 🔥 cambio clave */
   grid-template-columns: repeat(2, 1fr); /* 👈 2 columnas */
   gap: 15px;
@@ -281,6 +281,30 @@ td button {
 }
 
 /* ===================================
+   RESPONSIVE TABLET
+=================================== */
+@media (max-width: 1024px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  /* En tablet la tabla mantiene el formato tabla normal, con scroll
+     horizontal suave en vez de saltar directo a tarjetas (que solo
+     aplica desde 768px hacia abajo). */
+  .table-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
+}
+
+/* ===================================
    RESPONSIVE MOBILE
 =================================== */
 @media (max-width: 768px) {
@@ -318,6 +342,10 @@ td button {
     font-size: 16px;
   }
 
+  button {
+    min-height: 44px;
+  }
+
   /* ACCIONES */
   .acciones {
     flex-direction: column;
@@ -344,6 +372,12 @@ td button {
     box-shadow: none;
   }
 
+  /* La columna fija de tablet no aplica una vez convertida en tarjeta */
+  table th:first-child,
+  table td:first-child {
+    position: static;
+  }
+
   thead {
     display: none;
   }
@@ -358,9 +392,9 @@ td button {
 
   td {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: minmax(90px, 120px) 1fr;
     align-items: start;
-    gap: 180px;
+    gap: 10px;
     text-align: left;
     padding: 10px 0;
   }
@@ -420,6 +454,7 @@ td button {
   td button {
     width: 100%;
     margin-top: 5px;
+    min-height: 44px;
   }
 
   td:last-child {

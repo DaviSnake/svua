@@ -80,7 +80,8 @@ export class ProveedorComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: err.error?.message || 'Error desconocido'
+          // 👇 el backend devuelve el mensaje en la propiedad "error", no "message"
+          text: err.error?.error || 'Error desconocido'
         });
 
         console.log("ERROR:", err);
@@ -152,7 +153,9 @@ export class ProveedorComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                // 👇 el backend devuelve el mensaje en la propiedad "error", no "message"
+                // (por ejemplo "Ya existe un proveedor con ese RUT/email")
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
           });
@@ -172,11 +175,13 @@ export class ProveedorComponent implements OnInit {
             confirmButtonColor: '#3498db'
           });
         },
-        error: () => {
+        error: (err) => {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No se pudo guardar el proveedor'
+            // 👇 muestra el motivo real (ej. RUT/email duplicado) en vez de
+            // un mensaje genérico
+            text: err.error?.error || 'No se pudo guardar el proveedor'
           });
         }
       });
@@ -243,14 +248,14 @@ export class ProveedorComponent implements OnInit {
               this.cargarProveedores(); // 🔄 refrescar tabla
               this.nuevo();
             },
-            error: () => {    
+            error: () => {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: 'No se pudo eliminar al proveedor'
               });
             }
-          });       
+          });
       }
     });
   }

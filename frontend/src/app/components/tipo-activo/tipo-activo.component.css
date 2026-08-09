@@ -200,6 +200,24 @@ tbody tr:hover {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===================================
+   RESPONSIVE TABLET
+=================================== */
+@media (max-width: 1024px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
 }
 
 /* =========================
@@ -240,6 +258,10 @@ tbody tr:hover {
     font-size: 16px;
   }
 
+  button {
+    min-height: 44px;
+  }
+
   /* ACCIONES */
   .acciones {
     display: flex;
@@ -267,6 +289,11 @@ tbody tr:hover {
     box-shadow: none;
   }
 
+  table th:first-child,
+  table td:first-child {
+    position: static;
+  }
+
   thead {
     display: none;
   }
@@ -281,9 +308,9 @@ tbody tr:hover {
 
   td {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: minmax(90px, 120px) 1fr;
     align-items: start;
-    gap: 100px;
+    gap: 10px;
     text-align: left;
     padding: 10px 0;
   }
@@ -302,8 +329,8 @@ tbody tr:hover {
   td:nth-child(3)::before { content: "Descripción"; }
   td:nth-child(4)::before { content: "Vida Util Meses"; }
   td:nth-child(5)::before { content: "Empresa"; }
-  td:nth-child(6)::before { 
-    content: "Acciones"; 
+  td:nth-child(6)::before {
+    content: "Acciones";
     display: block;
     width: 100%;
     text-align: center;
@@ -312,6 +339,7 @@ tbody tr:hover {
   td button {
     width: 100%;
     margin-top: 6px;
+    min-height: 44px;
   }
 
   td:last-child {

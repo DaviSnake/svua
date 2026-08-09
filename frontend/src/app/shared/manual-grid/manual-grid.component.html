@@ -1,0 +1,71 @@
+<div class="manual-grid-wrapper">
+
+  <p class="manual-hint">{{ hint }}</p>
+
+  <div class="manual-grid-scroll">
+    <table class="manual-grid" [style.--col-count]="columns.length">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns; trackBy: trackByColKey">{{ col.label }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let fila of filas; let i = index">
+          <td *ngFor="let col of columns; let c = index; trackBy: trackByColKey" [attr.data-label]="col.label">
+            <input
+                [type]="col.type && col.type !== 'text' ? col.type : 'text'"
+                [ngModel]="fila[col.key]"
+                (ngModelChange)="onCampoChange(fila, col, $event)"
+                name="{{ instanceId }}_{{ col.key }}_{{ i }}"
+                (paste)="onPaste($event, i, c)"
+                [attr.list]="col.options ? (instanceId + '_' + col.key) : null"
+                [readonly]="col.readonly"
+                [class.campo-calculado]="col.readonly"
+                [title]="col.readonly ? 'Se calcula automáticamente' : ''"
+            />
+          </td>
+          <td>
+            <button type="button" class="btn-quitar-fila" (click)="eliminarFila(i)" title="Eliminar fila">✕</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-container *ngFor="let col of columns; trackBy: trackByColKey">
+    <datalist *ngIf="col.options" [id]="instanceId + '_' + col.key">
+      <option *ngFor="let opt of col.options" [value]="opt.value">{{ opt.label }}</option>
+    </datalist>
+  </ng-container>
+
+  <div class="manual-grid-actions">
+    <button type="button" class="btn-secundario" (click)="agregarFila()">+ Agregar fila</button>
+    <button type="button" class="btn-primario" (click)="enviar()" [disabled]="enviando">
+      {{ enviando ? 'Guardando...' : textoBoton }}
+    </button>
+  </div>
+
+  @if (resumen) {
+    <div class="alert alert-info">{{ resumen }}</div>
+  }
+
+  @if (resultados.length > 0) {
+    <div class="manual-grid-scroll">
+      <table class="manual-resultados">
+        <thead>
+          <tr><th>Fila</th><th>{{ etiquetaReferencia }}</th><th>Estado</th><th>Detalle</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of resultados" [class.fila-error]="!r.exito" [class.fila-ok]="r.exito">
+            <td data-label="Fila">{{ r.fila }}</td>
+            <td [attr.data-label]="etiquetaReferencia">{{ r.referencia }}</td>
+            <td data-label="Estado">{{ r.exito ? '✔ Guardado' : '✘ Error' }}</td>
+            <td data-label="Detalle">{{ r.mensaje }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>

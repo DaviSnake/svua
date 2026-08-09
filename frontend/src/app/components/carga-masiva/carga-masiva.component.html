@@ -4,7 +4,7 @@
   <div class="header">
     <div>
       <h1>Carga masiva de datos</h1>
-      <p>Importa información desde archivos Excel para distintos módulos del sistema</p>
+      <p>Importa información desde archivos Excel o ingrésala en tiempo real para distintos módulos del sistema</p>
     </div>
   </div>
 
@@ -12,309 +12,441 @@
   <div class="upload-grid">
 
     <!-- Activos -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['activo'] === 'manual'">
+
       <h2 class="title">Carga Activos</h2>
-    
-      <div class="file-box">
-        <label for="fileInputActivo" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputActivo
-            id="fileInputActivo"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('activo')"
-            (change)="onFileSelected($event, 'activo')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameActivo">
-          📄 {{ fileNameActivo }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['activo'] === 'excel'" (click)="cambiarModo('activo', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['activo'] === 'manual'" (click)="cambiarModo('activo', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeActivo) {
-        <div class="alert">
-            {{ mensajeActivo }}
+
+      @if (modos['activo'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputActivo" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputActivo
+              id="fileInputActivo"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('activo')"
+              (change)="onFileSelected($event, 'activo')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameActivo">
+            📄 {{ fileNameActivo }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressActivo > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressActivo}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressActivo">
+
+        @if (mensajeActivo) {
+          <div class="alert">
+              {{ mensajeActivo }}
           </div>
+          }
+
+        <div *ngIf="progressActivo > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressActivo}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressActivo">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoActivo}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoActivo}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['activo'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasActivo"
+            [importFn]="importarActivoFn"
+            campoRequerido="codigoInterno"
+            etiquetaReferencia="Código"
+            textoBoton="Guardar activos"
+            hint="Escribe los datos de cada activo o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
 
     <!-- Proveedores -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['proveedor'] === 'manual'">
+
       <h2 class="title">Carga Proveedores</h2>
-    
-      <div class="file-box">
-        <label for="fileInputProveedor" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputProveedor
-            id="fileInputProveedor"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('proveedor')"
-            (change)="onFileSelected($event, 'proveedor')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameProveedor">
-          📄 {{ fileNameProveedor }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['proveedor'] === 'excel'" (click)="cambiarModo('proveedor', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['proveedor'] === 'manual'" (click)="cambiarModo('proveedor', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeProveedor) {
-        <div class="alert">
-            {{ mensajeProveedor }}
+
+      @if (modos['proveedor'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputProveedor" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputProveedor
+              id="fileInputProveedor"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('proveedor')"
+              (change)="onFileSelected($event, 'proveedor')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameProveedor">
+            📄 {{ fileNameProveedor }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressProveedor > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressProveedor}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressProveedor">
+
+        @if (mensajeProveedor) {
+          <div class="alert">
+              {{ mensajeProveedor }}
           </div>
+          }
+
+        <div *ngIf="progressProveedor > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressProveedor}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressProveedor">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoProveedor}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoProveedor}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['proveedor'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasProveedor"
+            [importFn]="importarProveedorFn"
+            campoRequerido="nombre"
+            etiquetaReferencia="Nombre"
+            textoBoton="Guardar proveedores"
+            hint="Escribe los datos de cada proveedor o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
 
     <!-- Orden -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['orden'] === 'manual'">
+
       <h2 class="title">Carga Orden de Mantención</h2>
-    
-      <div class="file-box">
-        <label for="fileInputOrden" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputOrden
-            id="fileInputOrden"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('orden')"
-            (change)="onFileSelected($event, 'orden')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameOrden">
-          📄 {{ fileNameOrden }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['orden'] === 'excel'" (click)="cambiarModo('orden', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['orden'] === 'manual'" (click)="cambiarModo('orden', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeOrden) {
-        <div class="alert">
-            {{ mensajeOrden }}
+
+      @if (modos['orden'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputOrden" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputOrden
+              id="fileInputOrden"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('orden')"
+              (change)="onFileSelected($event, 'orden')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameOrden">
+            📄 {{ fileNameOrden }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressOrden > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressOrden}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressOrden">
+
+        @if (mensajeOrden) {
+          <div class="alert">
+              {{ mensajeOrden }}
           </div>
+          }
+
+        <div *ngIf="progressOrden > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressOrden}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressOrden">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoOrden}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoOrden}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['orden'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasOrden"
+            [importFn]="importarOrdenFn"
+            campoRequerido="titulo"
+            etiquetaReferencia="Título"
+            textoBoton="Guardar órdenes"
+            hint="Escribe los datos de cada orden de mantención o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
 
     <!-- Repuestos -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['repuesto'] === 'manual'">
+
       <h2 class="title">Carga Repuestos</h2>
-    
-      <div class="file-box">
-        <label for="fileInputRepuesto" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputRepuesto
-            id="fileInputRepuesto"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('repuesto')"
-            (change)="onFileSelected($event, 'repuesto')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameRepuesto">
-          📄 {{ fileNameRepuesto }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['repuesto'] === 'excel'" (click)="cambiarModo('repuesto', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['repuesto'] === 'manual'" (click)="cambiarModo('repuesto', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeRepuesto) {
-        <div class="alert">
-            {{ mensajeRepuesto }}
+
+      @if (modos['repuesto'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputRepuesto" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputRepuesto
+              id="fileInputRepuesto"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('repuesto')"
+              (change)="onFileSelected($event, 'repuesto')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameRepuesto">
+            📄 {{ fileNameRepuesto }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressRepuesto > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressRepuesto}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressRepuesto">
+
+        @if (mensajeRepuesto) {
+          <div class="alert">
+              {{ mensajeRepuesto }}
           </div>
+          }
+
+        <div *ngIf="progressRepuesto > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressRepuesto}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressRepuesto">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoRepuesto}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoRepuesto}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['repuesto'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasRepuesto"
+            [importFn]="importarRepuestoFn"
+            campoRequerido="codigo"
+            etiquetaReferencia="Código"
+            textoBoton="Guardar repuestos"
+            hint="Escribe los datos de cada repuesto o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
 
     <!-- Ubicacion -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['ubicacion'] === 'manual'">
+
       <h2 class="title">Carga Ubicación</h2>
-    
-      <div class="file-box">
-        <label for="fileInputUbicacion" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputUbicacion
-            id="fileInputUbicacion"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('ubicacion')"
-            (change)="onFileSelected($event, 'ubicacion')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameUbicacion">
-          📄 {{ fileNameUbicacion }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['ubicacion'] === 'excel'" (click)="cambiarModo('ubicacion', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['ubicacion'] === 'manual'" (click)="cambiarModo('ubicacion', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeUbicacion) {
-        <div class="alert">
-            {{ mensajeUbicacion }}
+
+      @if (modos['ubicacion'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputUbicacion" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputUbicacion
+              id="fileInputUbicacion"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('ubicacion')"
+              (change)="onFileSelected($event, 'ubicacion')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameUbicacion">
+            📄 {{ fileNameUbicacion }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressUbicacion > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressUbicacion}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressUbicacion">
+
+        @if (mensajeUbicacion) {
+          <div class="alert">
+              {{ mensajeUbicacion }}
           </div>
+          }
+
+        <div *ngIf="progressUbicacion > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressUbicacion}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressUbicacion">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoUbicacion}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoUbicacion}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['ubicacion'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasUbicacion"
+            [importFn]="importarUbicacionFn"
+            campoRequerido="nombre"
+            etiquetaReferencia="Nombre"
+            textoBoton="Guardar ubicaciones"
+            hint="Escribe los datos de cada ubicación o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
 
     <!-- Tipo Activo -->
-    <div class="upload-container">
-    
+    <div class="upload-container" [class.upload-container-ancha]="modos['tipoActivo'] === 'manual'">
+
       <h2 class="title">Carga Tipo de Activos</h2>
-    
-      <div class="file-box">
-        <label for="fileInputTipoActivo" class="file-label">
-          Seleccionar archivo
-        </label>
-        <input 
-            #fileInputTipoActivo
-            id="fileInputTipoActivo"
-            type="file"
-            accept=".xlsx,.xls"
-            (click)="reset('tipoActivo')"
-            (change)="onFileSelected($event, 'tipoActivo')"
-            hidden
-        />
-    
-        <p class="file-name" *ngIf="fileNameTipoActivo">
-          📄 {{ fileNameTipoActivo }}
-        </p>
+
+      <div class="modo-toggle">
+        <button type="button" [class.activo]="modos['tipoActivo'] === 'excel'" (click)="cambiarModo('tipoActivo', 'excel')">
+          Subir Excel
+        </button>
+        <button type="button" [class.activo]="modos['tipoActivo'] === 'manual'" (click)="cambiarModo('tipoActivo', 'manual')">
+          Ingresar manualmente
+        </button>
       </div>
-    
-      @if (mensajeTipoActivo) {
-        <div class="alert">
-            {{ mensajeTipoActivo }}
+
+      @if (modos['tipoActivo'] === 'excel') {
+        <div class="file-box">
+          <label for="fileInputTipoActivo" class="file-label">
+            Seleccionar archivo
+          </label>
+          <input
+              #fileInputTipoActivo
+              id="fileInputTipoActivo"
+              type="file"
+              accept=".xlsx,.xls"
+              (click)="reset('tipoActivo')"
+              (change)="onFileSelected($event, 'tipoActivo')"
+              hidden
+          />
+
+          <p class="file-name" *ngIf="fileNameTipoActivo">
+            📄 {{ fileNameTipoActivo }}
+          </p>
         </div>
-        }
-    
-      <div *ngIf="progressTipoActivo > 0" class="progress-container">
-    
-        <p class="progress-text">
-          Progreso: {{progressTipoActivo}}%
-        </p>
-    
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            [style.width.%]="progressTipoActivo">
+
+        @if (mensajeTipoActivo) {
+          <div class="alert">
+              {{ mensajeTipoActivo }}
           </div>
+          }
+
+        <div *ngIf="progressTipoActivo > 0" class="progress-container">
+
+          <p class="progress-text">
+            Progreso: {{progressTipoActivo}}%
+          </p>
+
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="progressTipoActivo">
+            </div>
+          </div>
+
+          <p class="status">
+            Estado: {{estadoTipoActivo}}
+          </p>
+
         </div>
-    
-        <p class="status">
-          Estado: {{estadoTipoActivo}}
-        </p>
-    
-      </div>
-    
+      }
+
+      @if (modos['tipoActivo'] === 'manual') {
+        <app-manual-grid
+            [columns]="columnasTipoActivo"
+            [importFn]="importarTipoActivoFn"
+            campoRequerido="nombre"
+            etiquetaReferencia="Nombre"
+            textoBoton="Guardar tipos de activo"
+            hint="Escribe los datos de cada tipo de activo o copia celdas desde un Excel y pégalas directamente sobre la tabla. Los campos marcados con * son obligatorios.">
+        </app-manual-grid>
+      }
+
     </div>
   </div>
 </div>

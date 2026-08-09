@@ -57,7 +57,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   cantidadNoLeidas = 0;
 
   private intervaloNotificaciones?: Subscription;
-  
+
   ngOnInit() {
     this.empresaId = this.authService.getEmpresaId() ?? 0;
 
@@ -118,7 +118,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.webSocketService.desconectar();
 
   }
-  
+
 
   // 🔥 detectar menú activo por URL
   detectarRuta(url: string) {
@@ -187,12 +187,12 @@ export class SidebarComponent implements OnInit, OnDestroy  {
 
         this.authService.logout().subscribe({
            next: () => {
-             this.authService.clearSession();     
+             this.authService.finalizarSesionLocal();
              this.router.navigate(['/login']);
            },
            error: (err) => {
              console.error('Error al cerrar sesión', err);
-             this.authService.clearSession();
+             this.authService.finalizarSesionLocal();
              this.router.navigate(['/login']);
            }
          });

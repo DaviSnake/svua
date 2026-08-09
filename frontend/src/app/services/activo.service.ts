@@ -17,6 +17,10 @@ export class ActivoService {
     return this.http.get<Page<Activo>>(`${this.apiUrl}/activos?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
+  getActivoCombo(page = 0, size = 200): Observable<Page<Activo>> {
+    return this.http.get<Page<Activo>>(`${this.apiUrl}/activos?page=${page}&size=${size}&sort=nombre,asc`);
+  }
+
   create(activo: any): Observable<Activo> {
     return this.http.post<Activo>(`${this.apiUrl}/activos`, activo);
   }

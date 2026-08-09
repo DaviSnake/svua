@@ -16,4 +16,9 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
     Page<Proveedor> findByEmpresaId(Long empresaId, Pageable pageable);
 
     boolean existsByRutAndEmpresaId(String rut, Long empresaId);
+
+    // 🔥 Validación de email único (no distingue mayúsculas/minúsculas, como
+    // es habitual en direcciones de correo)
+    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCaseAndEmpresaId(String email, Long empresaId);
 }

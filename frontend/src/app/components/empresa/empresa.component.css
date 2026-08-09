@@ -107,6 +107,12 @@ table {
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* HEADER */
 thead {
   background: #34495e;
@@ -161,6 +167,23 @@ td button:last-child:hover {
 }
 
 /* ===================================
+   RESPONSIVE TABLET
+=================================== */
+@media (max-width: 1024px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
+}
+
+/* ===================================
    RESPONSIVE EMPRESAS
 =================================== */
 @media (max-width: 768px) {
@@ -192,6 +215,10 @@ td button:last-child:hover {
     width: 100%;
     box-sizing: border-box;
     font-size: 16px;
+  }
+
+  button {
+    min-height: 44px;
   }
 
   .span-2 {
@@ -253,6 +280,11 @@ td button:last-child:hover {
     box-shadow: none;
   }
 
+  table th:first-child,
+  table td:first-child {
+    position: static;
+  }
+
   thead {
     display: none;
   }
@@ -267,9 +299,9 @@ td button:last-child:hover {
 
   td {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: minmax(90px, 120px) 1fr;
     align-items: start;
-    gap: 70px;
+    gap: 10px;
     text-align: left;
     padding: 10px 0;
   }
@@ -287,8 +319,8 @@ td button:last-child:hover {
   td:nth-child(2)::before { content: "RUT"; }
   td:nth-child(3)::before { content: "Email"; }
   td:nth-child(4)::before { content: "Plan"; }
-  td:nth-child(5)::before { 
-    content: "Acciones"; 
+  td:nth-child(5)::before {
+    content: "Acciones";
     display: block;
     width: 100%;
     text-align: center;
@@ -297,6 +329,7 @@ td button:last-child:hover {
   td button {
     width: 100%;
     margin-top: 6px;
+    min-height: 44px;
   }
 
   td:last-child {

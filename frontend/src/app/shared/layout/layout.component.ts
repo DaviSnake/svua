@@ -18,15 +18,21 @@ export class LayoutComponent {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        sessionStorage.removeItem('token'); // limpiar token
-        sessionStorage.removeItem('refreshToken'); // limpiar refreshToken
         console.log("Logout exitoso");
-        this.router.navigateByUrl('/login');
+        this.completarLogout();
       },
       error: (err) => {
         console.error("Error en logout", err);
+        // aunque falle el aviso al backend, igual cerramos la sesión local
+        // para no dejar al usuario "atascado" en la pantalla actual
+        this.completarLogout();
       }
     });
+  }
+
+  private completarLogout() {
+    this.authService.finalizarSesionLocal();
+    this.router.navigateByUrl('/login');
   }
 
 }

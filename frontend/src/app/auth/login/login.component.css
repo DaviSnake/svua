@@ -1,5 +1,5 @@
 .auth-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,20 +9,24 @@
               #0f172a;
 
   font-family: 'Inter', sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* CARD */
 .auth-card {
   width: 380px;
+  max-width: 100%;
   padding: 40px;
   border-radius: 20px;
+  box-sizing: border-box;
 
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
 
   border: 1px solid rgba(255,255,255,0.1);
 
-  box-shadow: 
+  box-shadow:
     0 20px 60px rgba(0,0,0,0.6),
     inset 0 0 20px rgba(255,255,255,0.05);
 
@@ -75,6 +79,8 @@
   border-radius: 12px;
   border: 1px solid transparent;
   outline: none;
+  box-sizing: border-box;
+  font-size: 16px; /* evita el zoom automático de iOS Safari */
 
   background: rgba(255,255,255,0.05);
   color: white;
@@ -117,6 +123,7 @@
   top: 12px;
   cursor: pointer;
   opacity: 0.7;
+  padding: 6px; /* área de toque más cómoda en móvil */
 }
 
 .eye:hover {
@@ -129,6 +136,7 @@ button {
   padding: 14px;
   border-radius: 12px;
   border: none;
+  min-height: 48px;
 
   background: linear-gradient(135deg, #00a8ff, #6c5ce7);
   color: white;
@@ -153,6 +161,8 @@ button:hover {
   color: #00a8ff;
   font-size: 13px;
   cursor: pointer;
+  display: inline-block;
+  padding: 6px; /* área de toque más cómoda en móvil */
 }
 
 /* ANIMACIÓN */
@@ -164,5 +174,34 @@ button:hover {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ============================================================
+   📱 RESPONSIVE: tablet y celular. La tarjeta tenía un ancho fijo
+   (380px) sin fallback, así que en pantallas más angostas que eso
+   (la mayoría de los celulares) el formulario se desbordaba.
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+  .auth-card {
+    width: 100%;
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .brand h2 {
+    font-size: 19px;
+  }
+
+  .brand p {
+    font-size: 13px;
+  }
+
+  .logo {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
   }
 }

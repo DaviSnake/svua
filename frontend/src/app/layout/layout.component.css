@@ -44,6 +44,16 @@
     display:none;
 }
 
+/* ============================================================
+   📱 TABLET: entre 769px y 1024px se mantiene el sidebar fijo
+   (sin hamburguesa) pero se reduce el padding del contenido para
+   aprovechar mejor el espacio disponible.
+   ============================================================ */
+@media (max-width: 1024px) {
+  .content {
+    padding: 14px;
+  }
+}
 
 /* 🔥 MOBILE */
 @media (max-width: 768px) {
@@ -60,6 +70,7 @@
     height: 100%;
     background: white;
     z-index: 1000;
+    max-width: 85vw;
 
     transform: translateX(-100%); /* oculto */
   }
@@ -86,6 +97,7 @@
   }
 
   .content{
+    padding: 12px;
     padding-top:60px;
   }
 

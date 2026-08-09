@@ -34,10 +34,19 @@ export class HeaderComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout().subscribe(() => {
-      sessionStorage.clear();
-      this.router.navigate(['/login']);
+    this.authService.logout().subscribe({
+      next: () => this.completarLogout(),
+      error: (err) => {
+        console.error('Error al cerrar sesión', err);
+        // aunque falle el aviso al backend, igual cerramos la sesión local
+        this.completarLogout();
+      }
     });
+  }
+
+  private completarLogout() {
+    this.authService.finalizarSesionLocal();
+    this.router.navigate(['/login']);
   }
 
   irPerfil() {

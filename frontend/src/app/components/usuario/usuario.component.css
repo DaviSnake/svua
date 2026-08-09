@@ -230,10 +230,28 @@ td button:last-child:hover {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-content input {
   width: 100%;
+}
+
+/* ===================================
+   RESPONSIVE TABLET
+=================================== */
+@media (max-width: 1024px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  table th:first-child,
+  table td:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
 }
 
 /* =========================
@@ -268,6 +286,10 @@ td button:last-child:hover {
     box-sizing: border-box;
   }
 
+  button {
+    min-height: 44px;
+  }
+
   /* BOTONES */
   .acciones {
     flex-direction: column;
@@ -295,6 +317,11 @@ td button:last-child:hover {
     background: transparent;
   }
 
+  table th:first-child,
+  table td:first-child {
+    position: static;
+  }
+
   thead {
     display: none;
   }
@@ -309,9 +336,9 @@ td button:last-child:hover {
 
   td {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: minmax(90px, 120px) 1fr;
     align-items: start;
-    gap: 100px;
+    gap: 10px;
     text-align: left;
     padding: 10px 0;
   }
@@ -355,6 +382,7 @@ td button:last-child:hover {
   td button {
     width: 100%;
     margin-top: 5px;
+    min-height: 44px;
   }
 
   td:last-child {

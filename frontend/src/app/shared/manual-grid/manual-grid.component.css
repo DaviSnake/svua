@@ -1,0 +1,313 @@
+/* 🔥 Grilla genérica de ingreso en tiempo real (tipo planilla) */
+
+.manual-grid-wrapper {
+  text-align: left;
+}
+
+.manual-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.manual-grid-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  -webkit-overflow-scrolling: touch; /* scroll con inercia en iOS */
+}
+
+.manual-grid,
+.manual-resultados {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+/* El ancho mínimo se adapta a la cantidad de columnas de cada entidad
+   (Activos tiene 14 columnas, Ubicación solo 3, etc.) mediante la
+   variable --col-count fijada desde el componente. */
+.manual-grid {
+  min-width: max(500px, calc(var(--col-count, 8) * 105px));
+}
+
+.manual-grid th,
+.manual-grid td,
+.manual-resultados th,
+.manual-resultados td {
+  border: 1px solid #e5e7eb;
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.manual-grid th {
+  background: #f8fafc;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #333;
+}
+
+/* 🔒 primera columna fija al hacer scroll horizontal en tablet/desktop,
+   para no perder la referencia de la fila que se está editando */
+.manual-grid th:first-child,
+.manual-grid td:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.manual-grid thead th:first-child {
+  z-index: 2;
+  background: #f8fafc;
+}
+
+.manual-grid input {
+  width: 100%;
+  min-width: 95px;
+  border: none;
+  padding: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.manual-grid input:focus {
+  outline: 2px solid #007bff;
+  background: #f0f8ff;
+}
+
+/* Campos calculados automáticamente (ej. horas estimadas, costo mano de
+   obra estimado): se ven distintos para que quede claro que no se editan
+   a mano. */
+.manual-grid input.campo-calculado {
+  background: #f1f5f9;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.manual-grid input.campo-calculado:focus {
+  outline: none;
+  background: #f1f5f9;
+}
+
+.btn-quitar-fila {
+  border: none;
+  background: transparent;
+  color: #b00020;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.manual-grid-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.btn-primario,
+.btn-secundario {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+  min-height: 44px;
+  flex: 1 1 160px;
+}
+
+.btn-primario {
+  background: #28a745;
+  color: white;
+}
+
+.btn-primario:hover {
+  background: #21883b;
+}
+
+.btn-primario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  background: #eef2f7;
+  color: #333;
+}
+
+.btn-secundario:hover {
+  background: #e2e8f0;
+}
+
+.alert {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #ffe0e0;
+  color: #b00020;
+}
+
+.alert-info {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.manual-resultados {
+  margin-top: 15px;
+}
+
+.fila-ok {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.fila-error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ============================================================
+   📱 RESPONSIVE: tablets (iPad, Android tablets) y celulares
+   (iPhone, Android).
+   ============================================================ */
+
+/* Tablets: la grilla mantiene sus columnas con scroll horizontal
+   suave (queda la primera columna fija como referencia). */
+@media (max-width: 1024px) {
+
+  .manual-grid {
+    min-width: max(420px, calc(var(--col-count, 8) * 80px));
+  }
+}
+
+/* Celulares (iPhone y Android): la grilla pasa de tabla a lista
+   de tarjetas apiladas (una por fila) porque muchas columnas no
+   caben ni haciendo scroll horizontal en una pantalla de este
+   tamaño. */
+@media (max-width: 640px) {
+
+  /* Tabla → tarjetas apiladas */
+  .manual-grid-scroll {
+    overflow-x: visible;
+    border: none;
+  }
+
+  .manual-grid {
+    min-width: 0;
+    display: block;
+  }
+
+  .manual-grid thead {
+    display: none;
+  }
+
+  .manual-grid tbody {
+    display: block;
+  }
+
+  .manual-grid tr {
+    display: block;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    background: #fff;
+  }
+
+  .manual-grid td {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 8px 2px;
+  }
+
+  .manual-grid td:last-child {
+    border-bottom: none;
+    justify-content: flex-end;
+  }
+
+  /* Etiqueta de cada campo (viene del atributo data-label en el HTML) */
+  .manual-grid td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 11px;
+    color: #64748b;
+    min-width: 105px;
+    flex-shrink: 0;
+  }
+
+  .manual-grid td:last-child::before {
+    content: '';
+    min-width: 0;
+  }
+
+  /* La primera columna ya no necesita quedar fija en modo tarjeta */
+  .manual-grid th:first-child,
+  .manual-grid td:first-child {
+    position: static;
+  }
+
+  .manual-grid input {
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Tabla de resultados también en formato tarjeta */
+  .manual-resultados,
+  .manual-resultados thead,
+  .manual-resultados tbody,
+  .manual-resultados tr {
+    display: block;
+    width: 100%;
+  }
+
+  .manual-resultados thead {
+    display: none;
+  }
+
+  .manual-resultados tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+  }
+
+  .manual-resultados td {
+    display: flex;
+    gap: 8px;
+    border: none;
+    padding: 4px 2px;
+  }
+
+  .manual-resultados td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 11px;
+    color: #64748b;
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+
+  .manual-grid-actions .btn-primario,
+  .manual-grid-actions .btn-secundario {
+    flex: 1 1 100%;
+  }
+}
+
+/* Evita que iOS Safari haga zoom automático al enfocar un input
+   con font-size menor a 16px. */
+@media (max-width: 768px) {
+  .manual-grid input,
+  .btn-primario,
+  .btn-secundario {
+    font-size: 16px;
+  }
+}
