@@ -60,6 +60,7 @@ public class ActivoServiceImpl implements ActivoService {
     public ActivoResponse crearActivo(ActivoCreateRequest req) {
 
         validarCodigoUnico(req.getCodigoInterno());
+        validarVidaUtilMeses(req.getVidaUtilMeses());
 
         Activo activo = construirActivo(req);
 
@@ -139,6 +140,10 @@ public class ActivoServiceImpl implements ActivoService {
         }
 
         if (request.getVidaUtilMeses() != null) {
+            // 🔒 Evita dejar el activo con una vida útil en 0 (o negativa),
+            // que más adelante rompería el cálculo de depreciación con una
+            // división por cero.
+            validarVidaUtilMeses(request.getVidaUtilMeses());
             activo.setVidaUtilMeses(request.getVidaUtilMeses());
         }
 
@@ -356,6 +361,18 @@ public class ActivoServiceImpl implements ActivoService {
     private void validarCodigoUnico(String codigo) {
         if (activoRepository.existsByCodigoInterno(codigo)) {
             throw new BusinessException("El código interno ya existe");
+        }
+    }
+
+    // 🔒 La vida útil (en meses) es el denominador del cálculo de
+    // depreciación mensual (ver DepreciacionServiceImpl). Sin esta
+    // validación, un valor en null, 0 o negativo llegaba hasta ese cálculo
+    // y rompía la creación/actualización del activo con una
+    // ArithmeticException (división por cero) o un NullPointerException,
+    // en el caso de "crear" incluso después de haber guardado el activo.
+    private void validarVidaUtilMeses(Integer vidaUtilMeses) {
+        if (vidaUtilMeses == null || vidaUtilMeses <= 0) {
+            throw new BusinessException("La vida útil (meses) debe ser un número mayor a 0");
         }
     }
 

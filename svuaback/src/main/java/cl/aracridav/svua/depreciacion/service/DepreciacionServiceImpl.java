@@ -85,7 +85,22 @@ public class DepreciacionServiceImpl implements DepreciacionService {
 
         BigDecimal costo = activo.getValorAdquisicion();
         BigDecimal residual = activo.getValorResidual();
-        int vida = activo.getVidaUtilMeses();
+
+        // 🔒 `vidaUtilMeses` es el denominador del cálculo de depreciación
+        // mensual. Ya se valida al crear/actualizar el activo
+        // (ActivoServiceImpl.validarVidaUtilMeses), pero se vuelve a
+        // validar acá como segunda barrera: sin esto, un activo con vida
+        // útil en null o 0 (por ejemplo, uno cargado antes de que existiera
+        // esa validación, o vía otro flujo que llame directamente a este
+        // método) rompía el cálculo con un NullPointerException o una
+        // ArithmeticException ("/ by zero").
+        Integer vidaUtilMeses = activo.getVidaUtilMeses();
+
+        if (vidaUtilMeses == null || vidaUtilMeses <= 0) {
+            vidaUtilMeses = 1;
+        }
+
+        int vida = vidaUtilMeses;
 
         BigDecimal depMensual = calcularDepreciacionMensual(costo, residual, vida);
 

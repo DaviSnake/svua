@@ -29,6 +29,7 @@ export class CargaMasivaService {
   // ==========================================================
 
   importarActivosManual(filas: ActivoImportRow[]): Observable<ActivoImportResult> {
+    console.log("Filas: " + filas)
     return this.http.post<ActivoImportResult>(`${this.apiUrl}/import/activo/manual`, filas);
   }
 

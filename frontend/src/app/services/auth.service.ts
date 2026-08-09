@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { LoginRequest } from '../auth/models/login-request';
 import { LoginResponse } from '../auth/models/login-response';
 import { jwtDecode } from 'jwt-decode';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { EmailResetRequest } from '../auth/models/email-reset-request';
 import Swal from 'sweetalert2';
@@ -28,10 +28,12 @@ export class AuthService {
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
 
-  // 🔥 Evita que se disparen dos llamadas a /auth/refresh en paralelo desde
-  // esta misma pestaña (el refresh token es de un solo uso: la segunda
-  // llamada siempre recibiría 401 porque el backend ya rotó el token).
-  private refrescando = false;
+  // 🔥 Single-flight: si ya hay un refresh en curso (disparado por el timer
+  // proactivo o por un 401 de cualquier endpoint), todos los que lo pidan
+  // mientras tanto reciben el MISMO resultado en vez de disparar llamadas
+  // duplicadas (el refresh token es de un solo uso: una segunda llamada en
+  // paralelo con el mismo token siempre recibiría 401 del backend).
+  private refreshInProgress$: Observable<any> | null = null;
 
   // 🔥 Evita mostrar el aviso de "sesión expirada" más de una vez si varias
   // peticiones fallan casi al mismo tiempo.
@@ -180,28 +182,37 @@ export class AuthService {
     return sessionStorage.getItem('token');
   }
 
-  getRefreshToken() {
+  /**
+   * Refresco "silencioso" del access token. Se usa desde dos lugares:
+   *  1) El timer proactivo (`startRefreshTimer`), 2 minutos antes de que
+   *     venza el token.
+   *  2) El interceptor `sessionExpiredInterceptor`, cuando CUALQUIER
+   *     petición devuelve 401: en vez de cerrar sesión de inmediato, se
+   *     intenta renovar el token y reintentar esa misma petición. Solo si
+   *     este refresh también falla (el refresh token venció o ya no es
+   *     válido) es que la sesión terminó de verdad.
+   *
+   * `refreshInProgress$` asegura que, si llegan varias peticiones con 401
+   * casi al mismo tiempo, todas esperen el MISMO refresh en vez de disparar
+   * llamadas duplicadas (el refresh token es de un solo uso).
+   */
+  refrescarToken(): Observable<any> {
 
-    // Ya hay un refresh en curso en esta pestaña: no dispares una segunda
-    // llamada con el mismo refresh token (el backend lo rota en cada uso,
-    // así que la segunda llamada siempre recibiría 401).
-    if (this.refrescando) return;
+    if (this.refreshInProgress$) {
+      return this.refreshInProgress$;
+    }
 
     const refreshToken = sessionStorage.getItem('refreshToken');
 
     if (!refreshToken) {
       this.sesionExpirada();
-      return;
+      return throwError(() => new Error('No hay refresh token'));
     }
 
-    this.refrescando = true;
-
-    this.http.post<any>(`${this.apiUrl}/auth/refresh`, {
+    this.refreshInProgress$ = this.http.post<any>(`${this.apiUrl}/auth/refresh`, {
       refreshToken
-    }).subscribe({
-      next: (res) => {
-        this.refrescando = false;
-
+    }).pipe(
+      tap((res) => {
         sessionStorage.setItem('token', res.accessToken);
         sessionStorage.setItem('refreshToken', res.refreshToken);
         this.init();
@@ -214,14 +225,30 @@ export class AuthService {
           refreshToken: res.refreshToken
         } satisfies MensajeAuthBroadcast);
 
-        // 🔁 reiniciar timer
+        // 🔁 reiniciar timer del refresco proactivo
         this.startRefreshTimer();
-      },
-      error: () => {
-        this.refrescando = false;
+      }),
+      catchError((err) => {
+        // El refresh token ya no sirve: ahí sí terminó la sesión de verdad.
         this.sesionExpirada();
-      }
-    });
+        return throwError(() => err);
+      }),
+      finalize(() => {
+        this.refreshInProgress$ = null;
+      }),
+      shareReplay(1)
+    );
+
+    return this.refreshInProgress$;
+  }
+
+  /**
+   * Refresco proactivo "fire and forget" (disparado por el timer). No
+   * necesita reintentar ninguna petición, solo dejar el token renovado
+   * antes de que venza.
+   */
+  getRefreshToken() {
+    this.refrescarToken().subscribe({ error: () => { /* ya manejado en refrescarToken() */ } });
   }
 
   validateToken(token: string) {
@@ -255,10 +282,14 @@ export class AuthService {
   }
 
   /**
-   * Sesión inválida o vencida (falló el refresh, o cualquier otra llamada
-   * devolvió 401 con el token actual). Limpia todo, avisa al usuario con un
-   * mensaje claro (en vez del salto silencioso a /login de antes) y avisa a
-   * las demás pestañas para que hagan lo mismo.
+   * Sesión inválida o vencida DE VERDAD: falló el refresh del token (o no
+   * había refresh token disponible). Limpia todo, avisa al usuario con un
+   * mensaje claro y avisa a las demás pestañas para que hagan lo mismo.
+   *
+   * IMPORTANTE: esto ya NO se llama por cualquier 401 de cualquier
+   * endpoint — eso ahora primero intenta renovar el token y reintentar la
+   * petición (ver `refrescarToken()` y `sessionExpiredInterceptor`). Solo
+   * se llega acá cuando ese refresh también falla.
    */
   sesionExpirada(mensaje = 'Tu sesión terminó. Inicia sesión nuevamente.') {
 
