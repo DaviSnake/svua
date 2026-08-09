@@ -142,10 +142,24 @@ tbody tr:hover {
   background: #f5f7fa;
 }
 
-/* BOTONES ACCIONES */
+/* BOTONES ACCIONES (grilla) */
+td:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 td button {
-  margin-right: 5px;
   font-size: 13px;
+  padding: 8px 14px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+td button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
 
 .acciones {
