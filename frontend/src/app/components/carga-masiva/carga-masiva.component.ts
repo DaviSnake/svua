@@ -337,7 +337,17 @@ export class CargaMasivaComponent implements OnInit {
 
       this.cargaMasivaService.getProgress(jobId).subscribe(p => {
 
-        console.log(p?.estado);
+        // 🔒 El backend puede responder 200 con cuerpo vacío/null para este
+        // jobId (por ejemplo, si el servidor se reinició mientras la carga
+        // estaba en curso y el progreso en memoria se perdió). Sin este
+        // guard, "p.estado" de más abajo rompía con
+        // "Cannot read properties of null (reading 'estado')". Se ignora
+        // este tick del polling y se sigue esperando el próximo.
+        if (!p) {
+          return;
+        }
+
+        console.log(p.estado);
 
       if (p.estado === 'COMPLETADO' || p.estado === 'COMPLETADO_CON_ERRORES' || p.estado === 'ERROR') {
         clearInterval(this.interval);

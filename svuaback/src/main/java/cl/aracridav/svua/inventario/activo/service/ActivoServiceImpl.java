@@ -316,7 +316,7 @@ public class ActivoServiceImpl implements ActivoService {
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
         activo.setUbicacion(obtenerUbicacion(req.getUbicacionId()));
         activo.setProveedor(obtenerProveedor(req.getProveedorId()));
-        activo.setCuentaContable(req.getCuentaContable());
+        activo.setCuentaContable(req.getCuentaContable() != null ? req.getCuentaContable() : "0");
         activo.setFechaCreacion(LocalDateTime.now());
         activo.setEmpresa(empresa);
 

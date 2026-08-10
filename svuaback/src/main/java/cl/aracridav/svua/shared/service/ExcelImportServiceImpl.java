@@ -963,7 +963,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         activo.setValorAdquisicion(valorAdquisicion != null ? valorAdquisicion : BigDecimal.ZERO);
         activo.setValorResidual(valorResidual != null ? valorResidual : BigDecimal.ZERO);
         activo.setVidaUtilMeses(vidaUtilMeses != null ? vidaUtilMeses : 0);
-        activo.setCuentaContable(cuentaContable);
+        activo.setCuentaContable(cuentaContable != null ? cuentaContable : "0");
         activo.setEstadoActual(EstadoActivo.OPERATIVO);
         activo.setFechaCreacion(LocalDateTime.now());
         activo.setUbicacion(ubicacion);
@@ -1253,14 +1253,23 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         try {
             String valor = getString(row, index);
 
+            // 🔒 Celda vacía: se asume "hoy" en vez de fallar la fila.
+            if (valor == null || valor.isBlank()) {
+                return LocalDate.now();
+            }
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
             return LocalDate.parse(valor, formatter);
 
         } catch (DateTimeParseException e) {
-            throw new BusinessException("Fecha inválida en columna " + index + ". Formato esperado: dd-MM-yyyy");
+            // 🔒 Formato inválido (ej: "31/13/2025", "no-es-una-fecha"): en
+            // vez de rechazar toda la fila con un BusinessException, se usa
+            // la fecha actual del servidor. Un dato mal tipeado en la fecha
+            // de adquisición no debería bloquear el ingreso del activo.
+            return LocalDate.now();
         } catch (Exception e) {
-            throw new BusinessException("Error al leer fecha en columna " + index);
+            return LocalDate.now();
         }
     }
 
