@@ -255,10 +255,17 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             System.out.println("Total Filas: " + total);
             System.out.println("Total procesados: " + procesados);
 
-            if (!huboErrores && procesados == total) {
-                progressService.finalizar(jobId);
-            } else if (procesados != 0) {
+            // 🔒 Antes, si TODAS las filas fallaban (procesados == 0),
+            // no entraba en ninguna de las dos ramas y el job se quedaba
+            // para siempre en estado "PROCESANDO": el frontend seguía
+            // haciendo polling sin parar y el usuario nunca veía ni el
+            // error ni ningún mensaje de finalización en la pantalla de
+            // carga masiva. Ahora el resultado depende únicamente de si
+            // hubo errores, sin importar cuántas filas se procesaron bien.
+            if (huboErrores) {
                 progressService.finalizarConErrores(jobId);
+            } else {
+                progressService.finalizar(jobId);
             }
 
             importFileLogService.registrarResumen(

@@ -24,6 +24,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
+  flex-shrink: 0; /* 🔒 nunca se achica, aunque el menu no entre */
 }
 
 .brand {
@@ -39,7 +40,25 @@
 /* ===== MENU ===== */
 .menu {
   flex: 1;
+  min-height: 0;      /* 🔒 sin esto un flex-item no se achica y el */
+                       /* overflow del padre lo recorta en vez de scrollear */
   padding: 10px;
+  overflow-y: auto;   /* 🔒 scroll SOLO si el contenido no entra */
+  overflow-x: hidden;
+}
+
+/* scrollbar delgado y discreto, acorde al fondo oscuro del sidebar */
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .menu li {
@@ -130,6 +149,7 @@
 .footer {
   padding: 16px;
   border-top: 1px solid #1e293b;
+  flex-shrink: 0; /* 🔒 nunca se achica: siempre queda visible (perfil, salir, etc.) */
 }
 
 .user {

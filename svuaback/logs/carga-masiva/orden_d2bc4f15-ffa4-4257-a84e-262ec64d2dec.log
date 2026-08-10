@@ -1,0 +1,4 @@
+=== INICIO carga 'orden' (jobId=d2bc4f15-ffa4-4257-a84e-262ec64d2dec) - 2 filas - 2026-08-10 16:22:18 ===
+[FILA 1] Proveedor no existe: 78316693-3 | datos: Mantención equipo | 25-ago-2026 | 31-dic-1899 | 120.0 | PREVENTIVO | PROGRAMADA | Mantención equipo | Activo Demo 3 | 78316693-3 | 35000.0 | D2/60 | J2*K2 | 
+[FILA 2] Activo no existe: Activo Demo 8 | datos: Reparacion equipo | 25-ago-2026 | 31-dic-1899 | 60.0 | PREVENTIVO | PROGRAMADA | Reparacion equipo | Activo Demo 8 | 80316693-3 | 55000.0 | D3/60 | J3*K3 | 
+=== FIN carga 'orden' (jobId=d2bc4f15-ffa4-4257-a84e-262ec64d2dec) - estado=PROCESANDO - total=2, procesados=0, errores=2 - 2026-08-10 16:22:19 ===

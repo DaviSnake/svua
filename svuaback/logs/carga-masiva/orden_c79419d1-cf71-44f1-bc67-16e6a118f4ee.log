@@ -1,0 +1,3 @@
+=== INICIO carga 'orden' (jobId=c79419d1-cf71-44f1-bc67-16e6a118f4ee) - 2 filas - 2026-08-10 16:34:56 ===
+[FILA 1] Proveedor no existe: 78316693-3 | datos: Mantención equipo | 25-ago-2026 | 31-dic-1899 | 120.0 | PREVENTIVO | PROGRAMADA | Mantención equipo | Activo Demo 3 | 78316693-3 | 35000.0 | D2/60 | J2*K2 | 
+=== FIN carga 'orden' (jobId=c79419d1-cf71-44f1-bc67-16e6a118f4ee) - estado=COMPLETADO_CON_ERRORES - total=2, procesados=1, errores=1 - 2026-08-10 16:34:56 ===
