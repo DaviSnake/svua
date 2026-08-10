@@ -84,6 +84,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final UbicacionRepository ubicacionRepository;
     private final ProveedorRepository proveedorRepository;
     private final ImportProgressService progressService;
+    private final ImportFileLogService importFileLogService;
 
     @PersistenceContext
     private EntityManager em;
@@ -107,6 +108,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             int total = sheet.getLastRowNum();
 
             progressService.iniciar(jobId, total);
+            importFileLogService.registrarInicio(jobId, archivo, total);
 
             List<Activo> batchActivo = new ArrayList<>();
             List<Proveedor> batchProveedor = new ArrayList<>();
@@ -203,6 +205,9 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         e.getMessage(),
                         getRowData(row)
                     );
+                    importFileLogService.registrarError(
+                        jobId, archivo, row.getRowNum(), e.getMessage(), getRowData(row)
+                    );
 
                 } catch (Exception e) {
                     huboErrores = true; // 👈 clave
@@ -213,6 +218,9 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         row.getRowNum(),
                         e.getMessage(),
                         getRowData(row)
+                    );
+                    importFileLogService.registrarError(
+                        jobId, archivo, row.getRowNum(), e.getMessage(), getRowData(row)
                     );
                 }
             }
@@ -252,6 +260,10 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             } else if (procesados != 0) {
                 progressService.finalizarConErrores(jobId);
             }
+
+            importFileLogService.registrarResumen(
+                jobId, archivo, total, procesados, p.getErrores(), p.getEstado()
+            );
 
         } catch (IOException e) {
             huboErrores = true; // 👈 clave

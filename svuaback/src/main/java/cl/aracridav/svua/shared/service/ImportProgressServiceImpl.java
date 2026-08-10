@@ -42,7 +42,16 @@ public class ImportProgressServiceImpl implements ImportProgressService {
                 new ErrorFilaDTO(fila, mensaje, contenido)
             );
 
-            p.setEstado("ERROR");
+            // 🔒 OJO: acá NO se marca el job como "ERROR". Esto se llama
+            // una vez por CADA fila que falla, mientras el resto de la
+            // carga sigue procesándose en el loop. Si se pisaba el estado
+            // acá, el frontend (que corta el polling en cuanto ve un
+            // estado terminal) daba por terminada la carga completa en
+            // la primera fila con error, aunque el backend siguiera
+            // procesando el resto — el usuario nunca veía el resultado
+            // final ni el resto de las filas fallidas. El estado "final"
+            // (COMPLETADO / COMPLETADO_CON_ERRORES) lo define únicamente
+            // finalizar()/finalizarConErrores() al terminar todo el loop.
         }
     }
 
