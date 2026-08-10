@@ -4,6 +4,9 @@
   min-width: 260px;
   max-width: 260px;
   height: 100vh;
+  height: 100dvh; /* 🔒 iOS Safari: 100vh no baja cuando la barra de */
+                   /* direcciones está visible y deja contenido del */
+                   /* final (el ícono "Salir") fuera de lo visible */
   background: #0f172a;
   color: #cbd5f5;
   display: flex;
@@ -148,6 +151,10 @@
 /* ===== FOOTER ===== */
 .footer {
   padding: 16px;
+  /* 🔒 en iPhones sin botón físico (ej: 15 Pro Max) el "home indicator"
+     puede tapar/superponerse al ícono de Salir si no se le da este
+     margen extra abajo */
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid #1e293b;
   flex-shrink: 0; /* 🔒 nunca se achica: siempre queda visible (perfil, salir, etc.) */
 }
