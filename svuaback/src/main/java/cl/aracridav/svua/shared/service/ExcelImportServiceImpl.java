@@ -1224,7 +1224,15 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     }
 
     private Proveedor obtenerProveedor(String rut) {
-        return proveedorRepository.findByRut(rut)
+
+        // 🔒 Quien completa el Excel/grilla puede escribir el RUT del
+        // proveedor con puntos (ej: "12.345.678-9"), pero en la BD el
+        // proveedor está guardado sin puntos. Sin esto, la búsqueda no
+        // encontraba coincidencia y tiraba "Proveedor no existe" aunque
+        // el proveedor sí existiera.
+        String rutLimpio = RutUtils.limpiarRut(rut);
+
+        return proveedorRepository.findByRut(rutLimpio)
             .orElseThrow(() -> new BusinessException("Proveedor no existe: " + rut));
     }
 
