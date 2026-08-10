@@ -79,7 +79,7 @@
         <tr *ngFor="let proveedor of proveedores">
           <td>{{ proveedor.id }}</td>
           <td>{{ proveedor.nombre }}</td>
-          <td>{{ proveedor.rut }}</td>
+          <td>{{ formatearRut(proveedor.rut) }}</td>
           <td>{{ proveedor.contacto }}</td>
           <td>{{ proveedor.telefono }}</td>
           <td>{{ proveedor.email }}</td>

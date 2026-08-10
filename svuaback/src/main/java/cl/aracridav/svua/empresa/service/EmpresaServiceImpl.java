@@ -26,6 +26,7 @@ import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.shared.enums.RolUsuario;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
+import cl.aracridav.svua.shared.util.RutUtils;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
@@ -53,6 +54,11 @@ public class EmpresaServiceImpl implements EmpresaService {
     @Override
     public EmpresaResponse registrarEmpresa(CreateEmpresaRequest request) {
 
+        // 🔒 Si el RUT viene con puntos (ej: "12.345.678-9"), se guarda
+        // sin puntos (ej: "12345678-9") para que la validación de RUT
+        // único no dependa del formato ingresado.
+        request.setRut(RutUtils.limpiarRut(request.getRut()));
+
         validarEmpresaUnica(request.getRut(), request.getNombre());
 
         Empresa empresa = construirEmpresaBase(request);
@@ -66,6 +72,11 @@ public class EmpresaServiceImpl implements EmpresaService {
     @Override
     @Transactional
     public EmpresaResponse registrarEmpresaConAdmin(CreateEmpresaWithAdminRequest request) {
+
+        // 🔒 Si el RUT viene con puntos (ej: "12.345.678-9"), se guarda
+        // sin puntos (ej: "12345678-9") para que la validación de RUT
+        // único no dependa del formato ingresado.
+        request.setRut(RutUtils.limpiarRut(request.getRut()));
 
         validarEmpresaUnica(request.getRut(), request.getNombre());
         validarEmailUnico(request.getAdminEmail());
@@ -83,6 +94,11 @@ public class EmpresaServiceImpl implements EmpresaService {
     @Override
     @Transactional
     public AuthResponse onboarding(CreateEmpresaWithAdminRequest request, HttpServletRequest httpRequest) {
+
+        // 🔒 Si el RUT viene con puntos (ej: "12.345.678-9"), se guarda
+        // sin puntos (ej: "12345678-9") para que la validación de RUT
+        // único no dependa del formato ingresado.
+        request.setRut(RutUtils.limpiarRut(request.getRut()));
 
         validarEmpresaUnica(request.getRut(), request.getNombre());
         validarEmailUnico(request.getAdminEmail());
@@ -304,7 +320,7 @@ public class EmpresaServiceImpl implements EmpresaService {
     private void actualizarCamposBasicos(Empresa empresa, UpdateEmpresaRequest request) {
 
         if (request.getNombre() != null) empresa.setNombre(request.getNombre());
-        if (request.getRut() != null) empresa.setRut(request.getRut());
+        if (request.getRut() != null) empresa.setRut(RutUtils.limpiarRut(request.getRut()));
         if (request.getDireccion() != null) empresa.setDireccion(request.getDireccion());
         if (request.getTelefono() != null) empresa.setTelefono(request.getTelefono());
         if (request.getActiva() != null) empresa.setActiva(request.getActiva());

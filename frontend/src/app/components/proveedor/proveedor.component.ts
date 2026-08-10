@@ -260,4 +260,24 @@ export class ProveedorComponent implements OnInit {
     });
   }
 
+
+  // 🔥 En la BD el RUT se guarda sin puntos (ej: "12345678-9"); acá
+  // solo se formatea para mostrarlo en la grilla (ej: "12.345.678-9").
+  formatearRut(rut: string): string {
+
+    if (!rut) {
+      return '';
+    }
+
+    const [cuerpo, dv] = rut.split('-');
+
+    // Si no viene con el guión del dígito verificador, se muestra tal
+    // cual en vez de romper (dato legado con formato inesperado).
+    if (!dv || isNaN(Number(cuerpo))) {
+      return rut;
+    }
+
+    return `${Number(cuerpo).toLocaleString('es-CL')}-${dv.toUpperCase()}`;
+  }
+
 }

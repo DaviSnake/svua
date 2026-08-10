@@ -15,6 +15,7 @@ import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.proveedor.repository.ProveedorRepository;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
+import cl.aracridav.svua.shared.util.RutUtils;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,11 @@ public class ProveedorServiceImpl implements ProveedorService {
      */
     @Override
     public ProveedorResponse registrarProveedor(ProveedorCreateRequest request) {
+
+        // 🔒 Si el RUT viene con puntos (ej: "12.345.678-9"), se guarda
+        // sin puntos (ej: "12345678-9") para que la validación de RUT
+        // único y las búsquedas no dependan del formato ingresado.
+        request.setRut(RutUtils.limpiarRut(request.getRut()));
 
         validarRequest(request);
 
@@ -90,6 +96,9 @@ public class ProveedorServiceImpl implements ProveedorService {
      */
     @Override
     public ProveedorResponse actualizar(Long id, ProveedorUpdateRequest request) {
+
+        // 🔒 Mismo criterio que al crear: se guarda el RUT sin puntos.
+        request.setRut(RutUtils.limpiarRut(request.getRut()));
 
         validarRequest(request);
 

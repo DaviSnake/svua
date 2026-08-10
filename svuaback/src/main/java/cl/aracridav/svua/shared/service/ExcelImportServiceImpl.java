@@ -60,6 +60,7 @@ import cl.aracridav.svua.shared.dto.response.ImportProgressDTO;
 import cl.aracridav.svua.shared.dto.response.ImportRowResultDTO;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
+import cl.aracridav.svua.shared.util.RutUtils;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
 import jakarta.persistence.EntityManager;
@@ -393,7 +394,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
             try {
 
-                String rut = datos.getRut();
+                String rut = RutUtils.limpiarRut(datos.getRut());
                 String email = datos.getEmail();
 
                 if (rut != null && !rut.isBlank() && !rutsEnLote.add(rut)) {
@@ -987,6 +988,11 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         String tipoProveedorStr,
         Long empresaId
     ) {
+
+        // 🔒 Si el RUT viene con puntos (ej: "12.345.678-9"), se guarda
+        // sin puntos (ej: "12345678-9"), igual que en la creación
+        // individual de proveedor.
+        rut = RutUtils.limpiarRut(rut);
 
         if (nombre == null || nombre.isBlank()) {
             throw new BusinessException("El nombre del proveedor es obligatorio");
