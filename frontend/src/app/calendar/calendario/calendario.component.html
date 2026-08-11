@@ -81,12 +81,18 @@
 
         <div class="form-group">
           <label>Tipo</label>
-          <select formControlName="tipoMantenimiento">
-            <option value="null">Seleccione Tipo Mantención</option>
-            <option value="PREVENTIVO">PREVENTIVO</option>
-            <option value="CORRECTIVO">CORRECTIVO</option>
-            <option value="PREDICTIVO">PREDICTIVO</option>
-          </select>
+          <div class="combo-wrapper">
+            <input type="text"
+                   [matAutocomplete]="autoTipoMantenimiento"
+                   [formControl]="tipoMantenimientoControl"
+                   (focus)="onFocusTipoMantenimiento()"
+                   placeholder="Seleccione tipo mantención">
+            <mat-autocomplete #autoTipoMantenimiento="matAutocomplete">
+              <mat-option *ngFor="let tipo of tiposMantenimientoFiltrados" [value]="tipo">
+                {{ tipo }}
+              </mat-option>
+            </mat-autocomplete>
+          </div>
         </div>
 
         <div class="form-group full">
@@ -98,18 +104,17 @@
 
         <div class="form-group full">
           <label>Activo</label>
-          <mat-form-field appearance="outline" class="full-width">
-            <input matInput
+          <div class="combo-wrapper">
+            <input type="text"
                    [matAutocomplete]="auto"
                    [formControl]="activoControl"
                    placeholder="Seleccione activo">
-
             <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
               <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
                 {{ activo.nombre }}
               </mat-option>
             </mat-autocomplete>
-          </mat-form-field>
+          </div>
         </div>
 
         <div class="form-group">
@@ -137,12 +142,18 @@
 
         <div class="form-group">
           <label>Proveedor</label>
-          <select formControlName="proveedorId">
-            <option value="null">Seleccione Proveedor</option>
-            <option *ngFor="let p of proveedores" [ngValue]="p.id">
-              {{ p.nombre }}
-            </option>
-          </select>
+          <div class="combo-wrapper">
+            <input type="text"
+                   [matAutocomplete]="autoProveedor"
+                   [formControl]="proveedorControl"
+                   (focus)="onFocusProveedor()"
+                   placeholder="Seleccione proveedor">
+            <mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="displayProveedor">
+              <mat-option *ngFor="let p of proveedoresFiltrados" [value]="p">
+                {{ p.nombre }}
+              </mat-option>
+            </mat-autocomplete>
+          </div>
         </div>
 
         <div class="form-group">

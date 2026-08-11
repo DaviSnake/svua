@@ -17,8 +17,6 @@ import { Activo } from '../../model/activo';
 import { OrdenResponse } from '../../model/ordenResponse';
 
 import { MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
 import { RepuestoService } from '../../services/repuesto.service';
@@ -29,7 +27,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule, MatFormFieldModule],
+  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule],
   templateUrl: './calendario.component.html',
   styleUrls: ['./calendario.component.css']
 })
@@ -54,6 +52,17 @@ export class CalendarioComponent implements OnInit {
 
   activoControl = new FormControl();
   activosFiltrados: Activo[] = [];
+
+  // 🔥 Autocompletado "escribir para buscar" (mismo patrón que activoControl),
+  // manteniendo el envío por ID hacia el backend (proveedorId).
+  proveedorControl = new FormControl();
+  proveedoresFiltrados: any[] = [];
+
+  // 🔥 "Tipo" es una lista fija (no viene de una tabla), pero igual se
+  // muestra como autocompletado por consistencia visual con el resto.
+  tiposMantenimiento = ['PREVENTIVO', 'CORRECTIVO', 'PREDICTIVO'];
+  tiposMantenimientoFiltrados: string[] = this.tiposMantenimiento;
+  tipoMantenimientoControl = new FormControl();
 
   estadoOrden: string = 'PENDIENTE';
 
@@ -354,6 +363,27 @@ export class CalendarioComponent implements OnInit {
       });
     });
 
+    this.proveedorControl.valueChanges.subscribe(value => {
+      const seleccionado = value && typeof value === 'object' ? value : null;
+      this.ordenMantencionForm.patchValue({ proveedorId: seleccionado?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.proveedoresFiltrados = !search
+        ? this.proveedores
+        : this.proveedores.filter(p => p.nombre.toLowerCase().includes(search));
+    });
+
+    // 🔥 Acá el valor ya es directamente el string ("PREVENTIVO"/etc.),
+    // no un objeto con id/nombre, así que se sincroniza tal cual.
+    this.tipoMantenimientoControl.valueChanges.subscribe(value => {
+      this.ordenMantencionForm.patchValue({ tipoMantenimiento: value || null });
+
+      const search = (value || '').toLowerCase().trim();
+      this.tiposMantenimientoFiltrados = !search
+        ? this.tiposMantenimiento
+        : this.tiposMantenimiento.filter(t => t.toLowerCase().includes(search));
+    });
+
     this.ordenMantencionForm.get('duracionMinutos')?.valueChanges
       .subscribe(valor => {
 
@@ -441,6 +471,7 @@ export class CalendarioComponent implements OnInit {
       this.proveedorService.getAll(this.page, this.size).subscribe({
         next: (data) => {
           this.proveedores = data.content;
+          this.proveedoresFiltrados = data.content;
 
           //console.log("DATA:", this.proveedores)
         },
@@ -729,6 +760,8 @@ export class CalendarioComponent implements OnInit {
 
     // 🔥 AQUÍ LA MAGIA
     this.setActivoSeleccionado(activoId);
+    this.setProveedorSeleccionado(info.event.extendedProps?.proveedorId);
+    this.tipoMantenimientoControl.setValue(info.event.extendedProps?.tipoMantenimiento || '');
 
     this.aplicarEstadoFormulario();
 
@@ -1158,6 +1191,16 @@ export class CalendarioComponent implements OnInit {
     this.activosFiltrados = this.activos;
   }
 
+  displayProveedor = (proveedor: any): string => proveedor?.nombre ?? '';
+
+  onFocusProveedor() {
+    this.proveedoresFiltrados = this.proveedores;
+  }
+
+  onFocusTipoMantenimiento() {
+    this.tiposMantenimientoFiltrados = this.tiposMantenimiento;
+  }
+
   setActivoSeleccionado(activoId: number) {
 
     if (!this.activos || this.activos.length === 0) {
@@ -1178,6 +1221,26 @@ export class CalendarioComponent implements OnInit {
     }
   }
 
+  setProveedorSeleccionado(proveedorId: number) {
+
+    if (!this.proveedores || this.proveedores.length === 0) {
+      setTimeout(() => this.setProveedorSeleccionado(proveedorId), 200);
+      return;
+    }
+
+    const proveedor = this.proveedores.find(p => p.id === proveedorId);
+
+    if (proveedor) {
+
+      this.proveedoresFiltrados = [...this.proveedores];
+
+      setTimeout(() => {
+        this.proveedorControl.setValue(proveedor);
+      });
+
+    }
+  }
+
   puedeEditar(): boolean {
     if (!this.modoEdicion) return true; // 🔥 nueva orden
 
@@ -1189,9 +1252,13 @@ export class CalendarioComponent implements OnInit {
     if (!this.isReadOnly) {
       this.ordenMantencionForm.enable();
       this.activoControl.enable();
+      this.proveedorControl.enable();
+      this.tipoMantenimientoControl.enable();
     } else {
       this.ordenMantencionForm.disable();
       this.activoControl.disable();
+      this.proveedorControl.disable();
+      this.tipoMantenimientoControl.disable();
     }
   }
 
@@ -1344,6 +1411,8 @@ export class CalendarioComponent implements OnInit {
     this.ordenMantencionForm.reset();
     this.repuestosFormArray.clear();
     this.activoControl.reset();
+    this.proveedorControl.reset();
+    this.tipoMantenimientoControl.reset();
   }
 
   formatFechaLocal(date: Date): string {

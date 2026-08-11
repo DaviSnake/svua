@@ -125,10 +125,45 @@ input, textarea, select {
   border-radius: 8px;
   padding: 8px;
   color: white;
+  box-sizing: border-box;
 }
 
 textarea {
   resize: none;
+}
+
+/* 🔥 Combos con autocompletado (Tipo, Activo, Proveedor): al pasar el
+   mouse por encima aparece un triángulo a la derecha, igual que la
+   flechita de un <select>, para que quede claro que se puede desplegar
+   una lista. Se usa un color claro (no negro) porque el input tiene
+   fondo oscuro. */
+.combo-wrapper {
+  position: relative;
+}
+
+.combo-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 28px;
+}
+
+.combo-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid transparent;
+  pointer-events: none;
+  transition: border-top-color 0.15s;
+}
+
+.combo-wrapper:hover::after {
+  border-top-color: #cbd5e1; /* 🔒 triángulo claro solo al pasar por encima */
 }
 
 .btn {
