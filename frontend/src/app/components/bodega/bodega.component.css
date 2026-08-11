@@ -17,6 +17,36 @@
   flex-direction: column;
 }
 
+/* 🔥 Combo con autocompletado (Empresa): al pasar el mouse por encima
+   aparece un triángulo negro a la derecha, igual que la flechita de un
+   <select>, para que quede claro que se puede desplegar una lista. */
+.form-group--combo {
+  position: relative;
+}
+
+.form-group--combo input {
+  padding-right: 28px;
+}
+
+.form-group--combo::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid transparent;
+  pointer-events: none;
+  transition: border-top-color 0.15s;
+}
+
+.form-group--combo:hover::after {
+  border-top-color: #000; /* 🔒 triángulo negro solo al pasar por encima */
+}
+
 .error {
   color: red;
   font-size: 0.75rem;

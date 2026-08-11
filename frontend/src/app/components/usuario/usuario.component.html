@@ -4,12 +4,18 @@
       <form [formGroup]="usuarioForm" (ngSubmit)="guardar()" class="form-container">        
           <div class="card-section">
               <input type="text" placeholder="Nombre" formControlName="nombre" />
-              <select formControlName="empresaId">
-                <option [ngValue]="null" disabled>Seleccione una empresa</option>
-                <option *ngFor="let empresa of empresas" [value]="empresa.id">
-                  {{ empresa.nombre }}
-                </option>
-              </select>
+              <div class="form-group--combo">
+                <input type="text"
+                       placeholder="Empresa"
+                       [matAutocomplete]="autoEmpresa"
+                       [formControl]="empresaControl"
+                       (focus)="onFocusEmpresa()">
+                <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                  <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                    {{ empresa.nombre }}
+                  </mat-option>
+                </mat-autocomplete>
+              </div>
               <input type="email" placeholder="Email" formControlName="email" />
               @if (!editando) {
                   <input type="password" placeholder="Password" formControlName="password" />

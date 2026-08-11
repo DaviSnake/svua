@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Usuario } from '../../model/usuario';
 import { CommonModule } from '@angular/common';
 import { UsuarioService } from '../../services/usuario.service';
@@ -13,7 +14,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-usuario',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, CommonModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatAutocompleteModule],
   templateUrl: './usuario.component.html',
   styleUrl: './usuario.component.css'
 })
@@ -26,6 +27,11 @@ export class UsuarioComponent implements OnInit {
   fb = inject(FormBuilder);
 
   usuarioForm!: FormGroup;
+
+  // 🔥 Autocompletado "escribir para buscar" (mismo patrón que Activo),
+  // manteniendo el envío por ID hacia el backend (empresaId).
+  empresaControl = new FormControl();
+
   usuarios: Usuario[] = [];
   usuariosFiltrados: Usuario[] = [];
   empresas: Empresa[] = [];
@@ -61,6 +67,7 @@ export class UsuarioComponent implements OnInit {
     this.cargarRolesFiltrados();
 
     this.initForm();
+    this.initAutocompletes();
 
     this.cargarUsuarios();
 
@@ -84,6 +91,40 @@ export class UsuarioComponent implements OnInit {
       rol: ['USUARIO', Validators.required],
       activo: [false] // 👈 checkbox
     });
+  }
+
+  // 🔥 Filtra la lista de empresas a medida que se escribe y mantiene
+  // sincronizado el empresaId real que se manda al backend.
+  initAutocompletes() {
+    this.empresaControl.valueChanges.subscribe(value => {
+      const seleccionada = value && typeof value === 'object' ? value : null;
+      this.usuarioForm.patchValue({ empresaId: seleccionada?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.empresasFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+    });
+  }
+
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  onFocusEmpresa() {
+    this.empresasFiltradas = this.empresas;
+  }
+
+  // 🔥 Espera a que el combo de empresas ya haya cargado antes de setear
+  // el valor mostrado en el autocompletado, para que muestre el nombre.
+  setEmpresaSeleccionada(empresaId: number) {
+    if (!this.empresas || this.empresas.length === 0) {
+      setTimeout(() => this.setEmpresaSeleccionada(empresaId), 200);
+      return;
+    }
+    const empresa = this.empresas.find(e => e.id === empresaId);
+    if (empresa) {
+      this.empresasFiltradas = [...this.empresas];
+      setTimeout(() => this.empresaControl.setValue(empresa));
+    }
   }
 
   cargarRolesFiltrados(){
@@ -228,6 +269,8 @@ export class UsuarioComponent implements OnInit {
       activo: usuario.activo
     });
 
+    this.setEmpresaSeleccionada(usuario.empresaId);
+
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
     }
@@ -282,6 +325,7 @@ export class UsuarioComponent implements OnInit {
 
   resetForm() {
     this.usuarioForm.reset({ rol: 'USUARIO' });
+    this.empresaControl.reset();
     this.editando = false;
     this.usuarioEditandoId = null;
   }

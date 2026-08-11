@@ -27,20 +27,29 @@
           <div class="form-group">
             <input type="email" placeholder="Email" formControlName="email" />
           </div>
-          <div class="form-group">
-            <select formControlName="tipoProveedor">
-              <option [ngValue]="null" disabled>Seleccione tipo proveedor</option>
-              <option value="INTERNO">INTERNO</option>
-              <option value="EXTERNO">EXTERNO</option>
-            </select>
+          <div class="form-group form-group--combo">
+            <input type="text"
+                   placeholder="Tipo Proveedor"
+                   [matAutocomplete]="autoTipoProveedor"
+                   [formControl]="tipoProveedorControl"
+                   (focus)="onFocusTipoProveedor()">
+            <mat-autocomplete #autoTipoProveedor="matAutocomplete">
+              <mat-option *ngFor="let tipo of tiposProveedorFiltrados" [value]="tipo">
+                {{ tipo }}
+              </mat-option>
+            </mat-autocomplete>
           </div>
-          <div class="form-group">
-            <select formControlName="empresaId">
-              <option [ngValue]="null" disabled>Seleccione una empresa</option>
-              <option *ngFor="let empresa of empresas" [value]="empresa.id">
+          <div class="form-group form-group--combo">
+            <input type="text"
+                   placeholder="Empresa"
+                   [matAutocomplete]="autoEmpresa"
+                   [formControl]="empresaControl"
+                   (focus)="onFocusEmpresa()">
+            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
                 {{ empresa.nombre }}
-              </option>
-            </select>
+              </mat-option>
+            </mat-autocomplete>
           </div>
         </div>
       </div>

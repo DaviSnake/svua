@@ -25,20 +25,29 @@
           <div class="form-group">
             <input type="text" placeholder="Cuenta Contable" formControlName="cuentaContable" />
           </div>
-          <div class="form-group">
-            <select formControlName="tipoRepuesto">
-              <option value="null">Seleccione Tipo</option>
-              <option value="REPUESTO">REPUESTO</option>
-              <option value="FUNGIBLE">FUNGIBLE</option>
-            </select>
+          <div class="form-group form-group--combo">
+            <input type="text"
+                   placeholder="Tipo Repuesto"
+                   [matAutocomplete]="autoTipoRepuesto"
+                   [formControl]="tipoRepuestoControl"
+                   (focus)="onFocusTipoRepuesto()">
+            <mat-autocomplete #autoTipoRepuesto="matAutocomplete">
+              <mat-option *ngFor="let tipo of tiposRepuestoFiltrados" [value]="tipo">
+                {{ tipo }}
+              </mat-option>
+            </mat-autocomplete>
           </div>
-          <div class="form-group">
-            <select formControlName="empresaId">
-              <option [ngValue]="null" disabled>Seleccione una empresa</option>
-              <option *ngFor="let empresa of empresas" [value]="empresa.id">
+          <div class="form-group form-group--combo">
+            <input type="text"
+                   placeholder="Empresa"
+                   [matAutocomplete]="autoEmpresa"
+                   [formControl]="empresaControl"
+                   (focus)="onFocusEmpresa()">
+            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
                 {{ empresa.nombre }}
-              </option>
-            </select>
+              </mat-option>
+            </mat-autocomplete>
           </div>
         </div>
       </div>

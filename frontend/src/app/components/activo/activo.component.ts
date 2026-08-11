@@ -1,8 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Activo } from '../../model/activo';
 import { ActivoService } from '../../services/activo.service';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TipoActivo } from '../../model/tipoActivo';
 import { Proveedor } from '../../model/proveedor';
 import { Ubicacion } from '../../model/ubicacion';
@@ -18,7 +19,7 @@ import { FormUtils } from '../../shared/form-utils';
 @Component({
   selector: 'app-activo',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, CommonModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatAutocompleteModule],
   templateUrl: './activo.component.html',
   styleUrl: './activo.component.css'
 })
@@ -33,6 +34,18 @@ export class ActivoComponent implements OnInit {
   fb = inject(FormBuilder);
 
   activoForm!: FormGroup;
+
+  // 🔥 Autocompletado tipo "escribir para buscar" (mismo patrón que Calendario.activoControl),
+  // igual que la carga masiva manual, pero manteniendo el envío por ID hacia el backend
+  // (ActivoCreateRequest/ActivoUpdateRequest siguen esperando tipoActivoId/ubicacionId/proveedorId).
+  tipoActivoControl = new FormControl();
+  ubicacionControl = new FormControl();
+  proveedorControl = new FormControl();
+  empresaControl = new FormControl();
+
+  tipoActivosFiltrados: TipoActivo[] = [];
+  ubicacionesFiltrados: Ubicacion[] = [];
+  proveedoresFiltrados: Proveedor[] = [];
 
   activos: Activo[] = [];
   tipoActivos: TipoActivo[] = [];
@@ -64,6 +77,7 @@ export class ActivoComponent implements OnInit {
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
     this.initForm();
+    this.initAutocompletes();
     this.cargarActivos();
     this.cargarTipoActivos();
     this.cargarUbicaciones();
@@ -98,6 +112,72 @@ export class ActivoComponent implements OnInit {
     });
   }
 
+  // 🔥 Filtra las 3 listas a medida que se escribe (igual que Calendario.initFiltroActivos)
+  // y mantiene sincronizado el id real (tipoActivoId/ubicacionId/proveedorId) que se manda al backend.
+  initAutocompletes() {
+    this.tipoActivoControl.valueChanges.subscribe(value => {
+      const seleccionado = value && typeof value === 'object' ? value : null;
+      this.activoForm.patchValue({ tipoActivoId: seleccionado?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.tipoActivosFiltrados = !search
+        ? this.tipoActivos
+        : this.tipoActivos.filter(t => t.nombre.toLowerCase().includes(search));
+    });
+
+    this.ubicacionControl.valueChanges.subscribe(value => {
+      const seleccionado = value && typeof value === 'object' ? value : null;
+      this.activoForm.patchValue({ ubicacionId: seleccionado?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.ubicacionesFiltrados = !search
+        ? this.ubicaciones
+        : this.ubicaciones.filter(u => u.nombre.toLowerCase().includes(search));
+    });
+
+    this.proveedorControl.valueChanges.subscribe(value => {
+      const seleccionado = value && typeof value === 'object' ? value : null;
+      this.activoForm.patchValue({ proveedorId: seleccionado?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.proveedoresFiltrados = !search
+        ? this.proveedores
+        : this.proveedores.filter(p => p.nombre.toLowerCase().includes(search));
+    });
+
+    this.empresaControl.valueChanges.subscribe(value => {
+      const seleccionado = value && typeof value === 'object' ? value : null;
+      this.activoForm.patchValue({ empresaId: seleccionado?.id || null });
+
+      const search = (typeof value === 'string' ? value : value?.nombre || '').toLowerCase().trim();
+      this.empresasFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+    });
+  }
+
+  displayTipoActivo = (tipoActivo: any): string => tipoActivo?.nombre ?? '';
+  displayUbicacion = (ubicacion: any): string => ubicacion?.nombre ?? '';
+  displayProveedor = (proveedor: any): string => proveedor?.nombre ?? '';
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  onFocusTipoActivo() {
+    // 🔥 al enfocar sin haber escrito nada, muestra todas las opciones
+    this.tipoActivosFiltrados = this.tipoActivos;
+  }
+
+  onFocusUbicacion() {
+    this.ubicacionesFiltrados = this.ubicaciones;
+  }
+
+  onFocusProveedor() {
+    this.proveedoresFiltrados = this.proveedores;
+  }
+
+  onFocusEmpresa() {
+    this.empresasFiltradas = this.empresas;
+  }
+
   cargarActivos() {
     this.activoService.getAll(this.page, this.size).subscribe({
       next: (data) => {
@@ -118,6 +198,7 @@ export class ActivoComponent implements OnInit {
     this.tipoActivoService.getTipoActivoCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
+        this.tipoActivosFiltrados = data.content;
       },
       error: () => {
         console.log("error");
@@ -129,6 +210,7 @@ export class ActivoComponent implements OnInit {
     this.ubicacionService.getUbicacionCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.ubicaciones = data.content;
+        this.ubicacionesFiltrados = data.content;
       },
       error: () => {
         console.log("error");
@@ -140,6 +222,7 @@ export class ActivoComponent implements OnInit {
     this.proveedorService.getProveedorCombo(this.page, this.sizeCombo).subscribe({
       next: (data) => {
         this.proveedores = data.content;
+        this.proveedoresFiltrados = data.content;
       },
       error: () => {
         console.log("error");
@@ -178,8 +261,63 @@ export class ActivoComponent implements OnInit {
 
   resetForm() {
     this.activoForm.reset();
+    this.tipoActivoControl.reset();
+    this.ubicacionControl.reset();
+    this.proveedorControl.reset();
+    this.empresaControl.reset();
     this.editando = false;
     this.activoEditandoId = null;
+  }
+
+  // 🔥 Espera a que el combo correspondiente ya haya cargado (igual que
+  // Calendario.setActivoSeleccionado) antes de setear el valor mostrado
+  // en el autocompletado, para que muestre el nombre y no quede vacío.
+  setTipoActivoSeleccionado(tipoActivoId: number) {
+    if (!this.tipoActivos || this.tipoActivos.length === 0) {
+      setTimeout(() => this.setTipoActivoSeleccionado(tipoActivoId), 200);
+      return;
+    }
+    const tipoActivo = this.tipoActivos.find(t => t.id === tipoActivoId);
+    if (tipoActivo) {
+      this.tipoActivosFiltrados = [...this.tipoActivos];
+      setTimeout(() => this.tipoActivoControl.setValue(tipoActivo));
+    }
+  }
+
+  setUbicacionSeleccionada(ubicacionId: number) {
+    if (!this.ubicaciones || this.ubicaciones.length === 0) {
+      setTimeout(() => this.setUbicacionSeleccionada(ubicacionId), 200);
+      return;
+    }
+    const ubicacion = this.ubicaciones.find(u => u.id === ubicacionId);
+    if (ubicacion) {
+      this.ubicacionesFiltrados = [...this.ubicaciones];
+      setTimeout(() => this.ubicacionControl.setValue(ubicacion));
+    }
+  }
+
+  setProveedorSeleccionado(proveedorId: number) {
+    if (!this.proveedores || this.proveedores.length === 0) {
+      setTimeout(() => this.setProveedorSeleccionado(proveedorId), 200);
+      return;
+    }
+    const proveedor = this.proveedores.find(p => p.id === proveedorId);
+    if (proveedor) {
+      this.proveedoresFiltrados = [...this.proveedores];
+      setTimeout(() => this.proveedorControl.setValue(proveedor));
+    }
+  }
+
+  setEmpresaSeleccionada(empresaId: number) {
+    if (!this.empresas || this.empresas.length === 0) {
+      setTimeout(() => this.setEmpresaSeleccionada(empresaId), 200);
+      return;
+    }
+    const empresa = this.empresas.find(e => e.id === empresaId);
+    if (empresa) {
+      this.empresasFiltradas = [...this.empresas];
+      setTimeout(() => this.empresaControl.setValue(empresa));
+    }
   }
 
   editar(activo: Activo) {
@@ -209,6 +347,11 @@ export class ActivoComponent implements OnInit {
       estadoActual: activo.estadoActual,
       cuentaContable: activo.cuentaContable,
     });
+
+    this.setTipoActivoSeleccionado(activo.tipoActivo.id!);
+    this.setUbicacionSeleccionada(activo.ubicacion.id!);
+    this.setProveedorSeleccionado(activo.proveedor.id!);
+    this.setEmpresaSeleccionada(activo.empresa.id!);
 
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
@@ -246,7 +389,7 @@ export class ActivoComponent implements OnInit {
       vidaUtilMeses: activo.vidaUtilMeses,
       ubicacionId: this.activoForm.value.ubicacionId,
       proveedorId: this.activoForm.value.proveedorId,
-      cuentaContable: this.activoForm.value.cuentaContable 
+      cuentaContable: this.activoForm.value.cuentaContable
     };
 
     if (this.editando && this.activoEditandoId !== null) {
@@ -288,7 +431,7 @@ export class ActivoComponent implements OnInit {
                 text: err.error?.message || 'No se pudo actualizar'
               });
             }
-            
+
           });
         }
       });
@@ -371,7 +514,7 @@ export class ActivoComponent implements OnInit {
               });
               this.cargarActivos(); // 🔄 refrescar tabla
             },
-            error: () => {    
+            error: () => {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -379,7 +522,7 @@ export class ActivoComponent implements OnInit {
               });
             }
           });
-        });        
+        });
       }
     });
   }
@@ -422,7 +565,7 @@ export class ActivoComponent implements OnInit {
     this.activoForm.get('cuentaContable')?.disable(); // 🔥 aquí
   }
 
-  
+
 
   cerrarModal() {
     this.activoForm.get('codigoInterno')?.enable(); // 🔥 aquí
