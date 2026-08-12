@@ -10,6 +10,7 @@ import { Empresa } from '../../model/empresa';
 import Swal from 'sweetalert2';
 import { FormUtils } from '../../shared/form-utils';
 import { Router } from '@angular/router';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 
 @Component({
   selector: 'app-usuario',
@@ -186,6 +187,12 @@ export class UsuarioComponent implements OnInit {
   cambiarPagina(p: number) {
     this.page = p;
     this.cargarUsuarios();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
   guardar() {

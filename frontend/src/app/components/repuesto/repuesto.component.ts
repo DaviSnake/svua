@@ -8,6 +8,7 @@ import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 import { Repuesto } from '../../model/repuesto';
 import { FormUtils } from '../../shared/form-utils';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -186,6 +187,12 @@ export class RepuestoComponent implements OnInit {
   cambiarPagina(p: number) {
     this.page = p;
     this.cargarRepuestos();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
   guardar() {

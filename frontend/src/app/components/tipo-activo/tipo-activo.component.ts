@@ -8,6 +8,7 @@ import { TipoActivo } from '../../model/tipoActivo';
 import { Empresa } from '../../model/empresa';
 import { EmpresaService } from '../../services/empresa.service';
 import { FormUtils } from '../../shared/form-utils';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -163,6 +164,12 @@ export class TipoActivoComponent implements OnInit {
   cambiarPagina(p: number) {
     this.page = p;
     this.cargarTipoActivos();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
   guardar() {

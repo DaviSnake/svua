@@ -6,6 +6,7 @@ import { SesionUsuarioService } from '../../services/sesion-usuario.service';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 import { SesionUsuarioResponse } from '../sesion-usuario/models/sesion-usuario.model';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 
 @Component({
   selector: 'app-informe-conexiones',
@@ -118,6 +119,12 @@ export class InformeConexionesComponent implements OnInit {
 
     this.page = p;
     this.cargarConexiones();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
 }

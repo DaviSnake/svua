@@ -9,6 +9,7 @@ import { ProveedorService } from '../../services/proveedor.service';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 import { FormUtils } from '../../shared/form-utils';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -195,6 +196,12 @@ export class ProveedorComponent implements OnInit {
   cambiarPagina(p: number) {
     this.page = p;
     this.cargarProveedores();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
    guardar() {

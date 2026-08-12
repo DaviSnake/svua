@@ -218,12 +218,15 @@
     ⬅ Anterior
   </button>
 
-  <button
-    *ngFor="let p of [].constructor(totalPages); let i = index"
-    (click)="cambiarPagina(i)"
-    [class.activa]="i === page">
-    {{ i + 1 }}
-  </button>
+  <ng-container *ngFor="let p of paginasVisibles()">
+    <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+    <button
+      *ngIf="p !== -1"
+      (click)="cambiarPagina(p)"
+      [class.activa]="p === page">
+      {{ p + 1 }}
+    </button>
+  </ng-container>
 
   <button (click)="cambiarPagina(page + 1)"
           [disabled]="page + 1 >= totalPages">

@@ -151,6 +151,12 @@
   font-weight: bold;
 }
 
+.paginacion-puntos {
+  padding: 6px 4px;
+  color: #9ca3af;
+  user-select: none;
+}
+
 /* ======================================
    MOVIL
    ====================================== */

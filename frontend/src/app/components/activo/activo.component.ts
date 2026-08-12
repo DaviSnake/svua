@@ -15,6 +15,7 @@ import { UbicacionService } from '../../services/ubicacion.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import Swal from 'sweetalert2';
 import { FormUtils } from '../../shared/form-utils';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 
 @Component({
   selector: 'app-activo',
@@ -274,6 +275,12 @@ export class ActivoComponent implements OnInit {
   cambiarPagina(p: number) {
     this.page = p;
     this.cargarActivos();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
   get activosFiltrados() {

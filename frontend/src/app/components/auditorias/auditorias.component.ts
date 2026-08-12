@@ -9,6 +9,7 @@ import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
 
 @Component({
   selector: 'app-auditorias',
@@ -160,6 +161,12 @@ export class AuditoriasComponent implements OnInit {
 
     this.page = p;
     this.actualizarPaginacion();
+  }
+
+  // 🔥 Botones de página a mostrar (con "..." si hay muchas), en vez de
+  // listar un botón por cada página.
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
   toggleActivo(activoId: number): void {
