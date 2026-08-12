@@ -1,2 +1,0 @@
-ALTER TABLE activo
-ADD COLUMN cuenta_contable VARCHAR(255) NOT NULL DEFAULT '';

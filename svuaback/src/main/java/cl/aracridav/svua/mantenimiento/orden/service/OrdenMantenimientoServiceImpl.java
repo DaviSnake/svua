@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.Normalizer;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -83,7 +84,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     @Override
     public OrdenEjecucionResponse ejecutarOrden(Long idOrden) {
-        
+
         return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.EN_EJECUCION);
 
     }
@@ -125,7 +126,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         OrdenMantenimiento orden = obtenerOrden(id);
 
         // 🔥 guardamos el archivo ANTES del cambio de estado
-        String ruta = guardarArchivoSeguro(archivo, orden.getId());
+        String ruta = guardarArchivoSeguro(archivo, orden);
 
         orden.setRutaArchivo(ruta);
 
@@ -333,8 +334,8 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                     ordenRepuesto.setCostoTotal(
                         calcularCostoRepuesto(repuesto.getCostoUnitario(), nuevaCantidad)
                     );
-                }         
-                
+                }
+
                 ordenRepuestoRepository.save(ordenRepuesto);
                 nuevosRepuestos.add(ordenRepuesto);
             }
@@ -512,7 +513,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         Usuario usuario = getUsuarioActual();
 
         EstadoActivo viejoEstado = orden.getActivo().getEstadoActual();
-        
+
         validarTransicion(orden.getEstado(), nuevoEstado);
 
         aplicarReglas(orden, nuevoEstado);
@@ -524,7 +525,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
 
             orden.setHorasRealesProveedor(horasSistema);
-    
+
             orden.setCostoManoObraProveedor(
                 calcularCosto(
                     horasSistema,
@@ -552,7 +553,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         if (nuevoEstado != EstadoOrden.PRE_COMPLETADA) {
             historialEstadoActivoService.registrarCambioEstado(
                 ordenGuardada.getActivo().getId(), nuevoActivo, viejoEstado, comentario, usuario.getId()
-            );            
+            );
         }
 
 
@@ -658,12 +659,18 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setUsuarioFinalizacion(getUsuarioActual());
     }
 
-    private String guardarArchivoSeguro(MultipartFile archivo, Long ordenId) {
+    private String guardarArchivoSeguro(MultipartFile archivo, OrdenMantenimiento orden) {
 
         try {
             String carpetaBase = "uploads/mantenimientos/";
 
-            Path carpeta = Paths.get(carpetaBase);
+            // 🔥 cada empresa guarda sus archivos en su propia subcarpeta
+            // dentro de "mantenimientos": si no existe se crea, y si ya
+            // existe simplemente se reutiliza (Files.createDirectories no
+            // falla cuando la carpeta ya está creada).
+            String carpetaEmpresa = obtenerCarpetaEmpresa(orden.getEmpresa());
+
+            Path carpeta = Paths.get(carpetaBase, carpetaEmpresa);
 
             System.out.println("Ruta absoluta: " + carpeta.toAbsolutePath());
 
@@ -674,7 +681,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
             String nombreLimpio = StringUtils.cleanPath(archivo.getOriginalFilename());
 
-            String nombreArchivo = ordenId + "_" + System.currentTimeMillis() + "_" + nombreLimpio;
+            String nombreArchivo = orden.getId() + "_" + System.currentTimeMillis() + "_" + nombreLimpio;
 
             Path ruta = carpeta.resolve(nombreArchivo);
 
@@ -685,6 +692,29 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         } catch (IOException e) {
             throw new BusinessException("Error al guardar archivo");
         }
+    }
+
+    // 🔥 Nombre de carpeta seguro para el sistema de archivos: usa el id
+    // de la empresa (estable y único) más su nombre saneado (sin tildes
+    // ni caracteres especiales), para que la carpeta sea legible pero
+    // nunca choque entre dos empresas con nombres parecidos.
+    private String obtenerCarpetaEmpresa(Empresa empresa) {
+
+        if (empresa == null || empresa.getId() == null) {
+            return "sin_empresa";
+        }
+
+        String nombreSaneado = Normalizer.normalize(
+                empresa.getNombre() != null ? empresa.getNombre() : "",
+                Normalizer.Form.NFD
+            )
+            .replaceAll("\\p{M}", "")
+            .replaceAll("[^a-zA-Z0-9]+", "_")
+            .replaceAll("^_+|_+$", "");
+
+        return nombreSaneado.isEmpty()
+            ? String.valueOf(empresa.getId())
+            : empresa.getId() + "_" + nombreSaneado;
     }
 
     private void calcularDuracion(OrdenMantenimiento orden) {
@@ -839,7 +869,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         }
 
         Set<OrdenRepuesto> lista = new HashSet<>();
-        
+
 
         for (OrdenRepuestoRequest req : repuestos) {
 
