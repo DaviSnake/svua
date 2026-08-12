@@ -83,6 +83,16 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- 🔥 Reinicio automático del servidor al detectar cambios en el
+		     classpath (target/classes). Requiere que algo recompile el
+		     .java modificado -> .class (el IDE con "build automático"
+		     activado, o "mvn compile"); devtools solo detecta el cambio
+		     y reinicia, no compila por sí solo. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

@@ -113,6 +113,15 @@
       <span class="tooltip">SesionesActivas</span>
     </li>
 
+    <!-- INFORME DE CONEXIONES (solo SUPER_ADMIN) -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
+      <a routerLink="/inicio/informeConexiones" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-list-check'></i>
+        <span *ngIf="!isCollapsed">Informe de Conexiones</span>
+      </a>
+      <span class="tooltip">Informe de Conexiones</span>
+    </li>
+
   </ul>
 
   <!-- FOOTER -->

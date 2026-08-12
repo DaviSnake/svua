@@ -22,6 +22,7 @@ import { AuditoriasComponent } from './components/auditorias/auditorias.componen
 import { NotificacionComponent } from './components/notificacion/notificacion.component';
 import { SoporteComponent } from './components/soporte/soporte.component';
 import { SesionUsuarioComponent } from './components/sesion-usuario/sesion-usuario.component';
+import { InformeConexionesComponent } from './components/informe-conexiones/informe-conexiones.component';
 
 export const routes: Routes = [
     {
@@ -231,6 +232,17 @@ export const routes: Routes = [
             {
                 path: 'SesionesActivas',
                 component: SesionUsuarioComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'informeConexiones',
+                component: InformeConexionesComponent
             }
         ]
     },

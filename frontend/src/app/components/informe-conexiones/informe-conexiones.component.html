@@ -1,0 +1,100 @@
+<div class="page-header">
+
+  <h1>Informe de Conexiones</h1>
+
+  <p>
+    Historial de usuarios que se han conectado a la aplicación, con
+    filtros por usuario, empresa y fecha.
+  </p>
+
+</div>
+
+<!-- FILTROS -->
+<div class="filtro-grilla">
+
+  <div class="form-group">
+    <label>Usuario</label>
+    <input type="text"
+           placeholder="Buscar por usuario..."
+           [(ngModel)]="filtroUsuario"
+           (ngModelChange)="onFiltroUsuarioChange()">
+  </div>
+
+  <div class="form-group">
+    <label>Fecha de conexión</label>
+    <input type="date"
+           [(ngModel)]="filtroFecha"
+           (ngModelChange)="onFiltroFechaChange()">
+  </div>
+
+  <div class="form-group form-group--combo">
+    <label>Empresa</label>
+    <input type="text"
+           placeholder="Todas las empresas"
+           [matAutocomplete]="autoFiltroEmpresa"
+           [formControl]="filtroEmpresaControl"
+           (focus)="onFocusFiltroEmpresa()">
+    <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+      <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+        {{ empresa.nombre }}
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+  <small>
+    {{ totalElements }} conexiones encontradas
+  </small>
+
+</div>
+
+<!-- TABLA -->
+<div class="tabla-container">
+
+  <table class="tabla-conexiones">
+
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Fecha de Conexión</th>
+        <th>Empresa</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let conexion of conexiones">
+        <td>{{ conexion.usuario }}</td>
+        <td>{{ conexion.fechaLogin | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+        <td>{{ conexion.empresa }}</td>
+      </tr>
+
+      <tr *ngIf="!conexiones.length">
+        <td colspan="3" class="sin-datos">
+          No hay conexiones registradas para el filtro seleccionado.
+        </td>
+      </tr>
+    </tbody>
+
+  </table>
+
+</div>
+
+<!-- PAGINACIÓN -->
+<div class="paginacion">
+
+  <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+    ⬅ Anterior
+  </button>
+
+  <button
+    *ngFor="let p of [].constructor(totalPages); let i = index"
+    (click)="cambiarPagina(i)"
+    [class.activa]="i === page">
+    {{ i + 1 }}
+  </button>
+
+  <button (click)="cambiarPagina(page + 1)"
+          [disabled]="page + 1 >= totalPages">
+    Siguiente ➡
+  </button>
+
+</div>
