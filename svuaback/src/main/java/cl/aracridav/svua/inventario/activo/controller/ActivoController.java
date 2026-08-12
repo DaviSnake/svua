@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoCreateRequest;
@@ -76,15 +77,19 @@ public class ActivoController {
         activoService.darDeBaja(id, request);
         return ResponseEntity.noContent().build();
     }
-    
+
     @PreAuthorize(
         "hasAnyRole('SUPER_ADMIN', 'ADMIN_EMPRESA') or " +
         "(hasAuthority('ACTIVO_VIEW')) "
     )
     @GetMapping
-    public ResponseEntity<Page<ActivoResponse>> mostrarActivos(Pageable pageable) {
+    public ResponseEntity<Page<ActivoResponse>> mostrarActivos(
+            Pageable pageable,
+            @RequestParam(required = false) Long empresaId) {
 
-        Page<ActivoResponse> response = activoService.mostrarActivos(pageable);
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver ActivoServiceImpl).
+        Page<ActivoResponse> response = activoService.mostrarActivos(pageable, empresaId);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

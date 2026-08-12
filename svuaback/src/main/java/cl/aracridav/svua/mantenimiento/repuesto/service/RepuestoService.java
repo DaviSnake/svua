@@ -10,7 +10,7 @@ public interface RepuestoService {
 
     RepuestoResponse crear(RepuestoRequest request);
 
-    public Page<RepuestoResponse> listarRepuestos(Pageable pageable);
+    public Page<RepuestoResponse> listarRepuestos(Pageable pageable, Long empresaId);
 
     RepuestoResponse obtener(Long id);
 

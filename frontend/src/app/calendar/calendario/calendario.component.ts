@@ -1296,6 +1296,9 @@ export class CalendarioComponent implements OnInit {
   eliminarRepuesto(index: number): void {
 
     this.repuestosFormArray?.removeAt(index);
+
+    // 🔥 mantener sincronizada la tabla "Repuestos o Fungibles"
+    this.sincronizarRepuestosAsociados();
   }
 
   abrirModalRepuesto(): void {
@@ -1348,6 +1351,10 @@ export class CalendarioComponent implements OnInit {
       this.repuestosFormArray?.push(repuesto);
     }
 
+    // 🔥 reflejar de inmediato en la tabla "Repuestos o Fungibles"
+    // (repuestosAsociados), sin esperar a guardar/recargar la orden.
+    this.sincronizarRepuestosAsociados();
+
     // 🔥 limpiar form
     this.repuestoForm.reset({
       repuestoId: null,
@@ -1355,6 +1362,25 @@ export class CalendarioComponent implements OnInit {
     });
 
     this.cerrarModalRepuesto();
+  }
+
+  // 🔥 Reconstruye repuestosAsociados (tabla de solo lectura del modal
+  // principal) a partir del carrito real (repuestosFormArray), buscando
+  // nombre y costo unitario en el catálogo ya cargado (this.repuestos).
+  // El costoTotal mostrado acá es una estimación con el precio actual del
+  // catálogo; al guardar, el backend recalcula el valor real.
+  private sincronizarRepuestosAsociados(): void {
+    this.repuestosAsociados = this.repuestosFormArray.getRawValue().map((r: any) => {
+      const repuesto = this.repuestos.find(x => Number(x.id) === Number(r.repuestoId));
+      const costoUnitario = Number(repuesto?.costoUnitario) || 0;
+
+      return {
+        repuestoId: r.repuestoId,
+        repuestoNombre: repuesto?.nombre || '',
+        cantidad: r.cantidad,
+        costoTotal: costoUnitario * Number(r.cantidad)
+      };
+    });
   }
 
 

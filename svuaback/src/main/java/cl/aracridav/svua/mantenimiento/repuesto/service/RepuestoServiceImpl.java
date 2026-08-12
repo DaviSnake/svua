@@ -59,16 +59,25 @@ public class RepuestoServiceImpl implements RepuestoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<RepuestoResponse> listarRepuestos(Pageable pageable) {
-
-        Long empresaId = resolveEmpresaId(null);
+    public Page<RepuestoResponse> listarRepuestos(Pageable pageable, Long empresaId) {
 
         if (esSuperAdmin()) {
+
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            if (empresaId != null) {
+                return repository.findByEmpresaId(empresaId, pageable)
+                    .map(mapper::mapRepuestoResponse);
+            }
+
             return repository.findAll(pageable)
                 .map(mapper::mapRepuestoResponse);
         }
 
-        return repository.findByEmpresaId(empresaId, pageable)
+        // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
+        // sin importar lo que llegue en empresaId.
+        Long propiaEmpresaId = resolveEmpresaId(null);
+
+        return repository.findByEmpresaId(propiaEmpresaId, pageable)
             .map(mapper::mapRepuestoResponse);
     }
 
@@ -121,7 +130,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         repository.save(repuesto);
     }
 
-    
+
     /*
      * =========================================
      * HELPERS
@@ -144,7 +153,7 @@ public class RepuestoServiceImpl implements RepuestoService {
 
         if (existe) {
             // 🔥 evita falso positivo en update
-            if (idActual == null || 
+            if (idActual == null ||
                repository.findById(idActual)
                     .map(r -> !r.getCodigo().equals(codigo))
                     .orElse(true)) {

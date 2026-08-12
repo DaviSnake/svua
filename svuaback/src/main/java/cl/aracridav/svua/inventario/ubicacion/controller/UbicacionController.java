@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.ubicacion.dto.request.UbicacionCreateRequest;
@@ -56,10 +57,13 @@ public class UbicacionController {
     )
     @GetMapping
     public ResponseEntity<Page<UbicacionResponse>> listarUbicaciones(
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestParam(required = false) Long empresaId) {
 
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver UbicacionServiceImpl).
         Page<UbicacionResponse> response =
-                ubicacionService.listarUbicaciones(pageable);
+                ubicacionService.listarUbicaciones(pageable, empresaId);
 
         return ResponseEntity.ok(response); // ✅ FIX
     }

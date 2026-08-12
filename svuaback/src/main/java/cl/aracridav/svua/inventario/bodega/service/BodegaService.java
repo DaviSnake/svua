@@ -10,7 +10,7 @@ public interface BodegaService {
 
     BodegaResponse crear(BodegaRequest request);
 
-    Page<BodegaResponse> listar(Pageable pageable);
+    Page<BodegaResponse> listar(Pageable pageable, Long empresaId);
 
     BodegaResponse obtener(Long id);
 

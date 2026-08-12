@@ -54,6 +54,25 @@
   margin-top: 4px;
 }
 
+/* FILTRO DE LA GRILLA POR EMPRESA */
+.filtro-grilla {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.filtro-grilla label {
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.filtro-grilla .form-group {
+  width: 100%;
+  max-width: 320px;
+}
+
 /* TÍTULO */
 h2 {
   text-align: center;
@@ -357,6 +376,16 @@ td button:hover {
   .container {
     padding: 12px;
     margin: 20px auto;
+  }
+
+  /* FILTRO GRILLA */
+  .filtro-grilla {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtro-grilla .form-group {
+    max-width: 100%;
   }
 
   h2 {

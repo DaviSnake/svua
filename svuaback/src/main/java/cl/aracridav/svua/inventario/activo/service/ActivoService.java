@@ -13,7 +13,7 @@ public interface ActivoService {
 
     public ActivoResponse crearActivo(ActivoCreateRequest nuevoEstado);
     public ActivoResponse actualizarActivo(Long activoId, ActivoUpdateRequest request);
-    public Page<ActivoResponse> mostrarActivos(Pageable pageable);
+    public Page<ActivoResponse> mostrarActivos(Pageable pageable, Long empresaId);
     public void darDeBaja(Long activoId, DarDeBajaActivoRequest request);
     public void actualizarEstado(Long idActivo, EstadoActivo estado);
     public double calcularRiesgo(Long activoId);

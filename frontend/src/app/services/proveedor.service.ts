@@ -13,8 +13,16 @@ export class ProveedorService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  getAll(page = 0, size = 10): Observable<Page<Proveedor>> {
-    return this.http.get<Page<Proveedor>>(`${this.apiUrl}/proveedores?page=${page}&size=${size}&sort=nombre,asc`);
+  getAll(page = 0, size = 10, empresaId?: number | null): Observable<Page<Proveedor>> {
+    let url = `${this.apiUrl}/proveedores?page=${page}&size=${size}&sort=nombre,asc`;
+
+    // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
+    // backend lo ignora para el resto de los roles).
+    if (empresaId) {
+      url += `&empresaId=${empresaId}`;
+    }
+
+    return this.http.get<Page<Proveedor>>(url);
   }
 
   getProveedorCombo(page = 0, size = 50): Observable<Page<Proveedor>> {

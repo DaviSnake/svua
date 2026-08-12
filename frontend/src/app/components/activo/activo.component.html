@@ -117,6 +117,23 @@
   }
   <hr />
 
+  <!-- FILTRO POR EMPRESA (solo SUPER_ADMIN ve varias empresas a la vez) -->
+  <div class="filtro-grilla" *ngIf="esSuperAdmin">
+    <label>Filtrar por empresa</label>
+    <div class="form-group form-group--combo">
+      <input type="text"
+             placeholder="Todas las empresas"
+             [matAutocomplete]="autoFiltroEmpresa"
+             [formControl]="filtroEmpresaControl"
+             (focus)="onFocusFiltroEmpresa()">
+      <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+        <mat-option *ngFor="let empresa of empresasFiltroFiltradas" [value]="empresa">
+          {{ empresa.nombre }}
+        </mat-option>
+      </mat-autocomplete>
+    </div>
+  </div>
+
   <!-- TABLA -->
   <h2>Activos</h2>
   <div class="table-wrapper">

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.auth.dto.request.ChangePasswordRequest;
@@ -35,7 +36,7 @@ public class UsuarioController {
     )
     @PostMapping
     public ResponseEntity<UsuarioResponse> register(@RequestBody RegisterRequest request) {
-        
+
         UsuarioResponse response = usuarioService.registrarUsuario(request);
 
         return ResponseEntity
@@ -53,7 +54,7 @@ public class UsuarioController {
 
         usuarioService.eliminarUsuario(usuarioId);
 
-        return ResponseEntity.noContent().build();   
+        return ResponseEntity.noContent().build();
 
     }
 
@@ -77,7 +78,7 @@ public class UsuarioController {
     public ResponseEntity<?> cambiarPassword(
             @PathVariable Long usuarioId,
             @RequestBody ChangePasswordRequest request) {
-        
+
         usuarioService.cambiarPassword(usuarioId, request);
 
         return ResponseEntity.noContent().build();
@@ -88,9 +89,13 @@ public class UsuarioController {
         "(hasAuthority('USUARIO_VIEW'))"
     )
     @GetMapping
-    public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(Pageable pageable) {
+    public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(
+            Pageable pageable,
+            @RequestParam(required = false) Long empresaId) {
 
-        return ResponseEntity.ok(usuarioService.listarUsuarios(pageable));
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver UsuarioServiceImpl).
+        return ResponseEntity.ok(usuarioService.listarUsuarios(pageable, empresaId));
     }
 
     @PreAuthorize(

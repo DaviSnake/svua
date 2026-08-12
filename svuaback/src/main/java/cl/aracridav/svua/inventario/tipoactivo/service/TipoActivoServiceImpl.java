@@ -124,21 +124,28 @@ public class TipoActivoServiceImpl implements TipoActivoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable) {
+    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable, Long empresaId) {
 
         Page<TipoActivo> tipos = null;
 
         boolean esAdmin = false;
 
         if (esSuperAdmin()) {
-            tipos = repository.findAll(pageable);
+
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            tipos = (empresaId != null)
+                    ? repository.findByEmpresaId(empresaId, pageable)
+                    : repository.findAll(pageable);
             esAdmin = true;
         }
 
         if (esAdminEmpresa()) {
+
+            // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
+            // importar lo que llegue en empresaId.
             tipos = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
             esAdmin = true;
-        } 
+        }
 
         if (!esAdmin){
             throw new BusinessException("No tienes permisos para ver tipos activos");

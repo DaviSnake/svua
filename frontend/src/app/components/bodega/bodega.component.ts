@@ -34,6 +34,13 @@ export class BodegaComponent implements OnInit {
   empresas: Empresa[] = [];
   empresasFiltradas: Empresa[] = [];
 
+  // 🔥 Filtro de la grilla por empresa (mismo patrón de autocompletado;
+  // solo tiene efecto real para SUPER_ADMIN, que es el único rol que ve
+  // registros de más de una empresa a la vez).
+  filtroEmpresaControl = new FormControl();
+  empresasFiltroFiltradas: Empresa[] = [];
+  filtroEmpresaId: number | null = null;
+
   esSuperAdmin = false;
   esAdminEmpresa = false;
   editando: boolean = false;
@@ -79,12 +86,39 @@ export class BodegaComponent implements OnInit {
         ? this.empresas
         : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
     });
+
+    // 🔥 Filtro de la grilla por empresa. Solo recarga la grilla cuando
+    // se selecciona una empresa (objeto) o cuando se borra el texto por
+    // completo (para volver a ver todas); mientras se escribe, solo
+    // filtra las opciones del desplegable.
+    this.filtroEmpresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltroFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroEmpresaId = value.id;
+        this.page = 0;
+        this.cargarBodegas();
+      } else if (!search && this.filtroEmpresaId !== null) {
+        this.filtroEmpresaId = null;
+        this.page = 0;
+        this.cargarBodegas();
+      }
+    });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
 
   onFocusEmpresa() {
     this.empresasFiltradas = this.empresas;
+  }
+
+  onFocusFiltroEmpresa() {
+    this.empresasFiltroFiltradas = this.empresas;
   }
 
   // 🔥 Espera a que el combo de empresas ya haya cargado antes de setear
@@ -102,7 +136,7 @@ export class BodegaComponent implements OnInit {
   }
 
   cargarBodegas() {
-    this.bodegaService.getAll(this.page, this.size).subscribe({
+    this.bodegaService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
       next: (data) => {
         this.bodegas = data.content;
         this.totalPages = data.page.totalPages;

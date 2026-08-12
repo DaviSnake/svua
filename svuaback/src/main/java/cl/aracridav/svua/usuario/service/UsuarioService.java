@@ -12,17 +12,17 @@ import cl.aracridav.svua.usuario.entity.PasswordResetToken;
 import cl.aracridav.svua.usuario.entity.Usuario;
 
 public interface UsuarioService {
-    
+
     public UsuarioResponse registrarUsuario(RegisterRequest request);
 
     public UsuarioResponse actualizarUsuario(Long usuarioId, UpdateUsuarioRequest request);
-    
+
     public void eliminarUsuario(Long usuarioId);
 
     public void cambiarPassword(Long usuarioId, ChangePasswordRequest request);
 
-    public Page<UsuarioResponse> listarUsuarios(Pageable pageable);
-    
+    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId);
+
     public PerfilUsuarioDTO perfilUsuario();
 
     public String createToken(Usuario user);

@@ -181,17 +181,24 @@ public class UsuarioServiceImpl implements UsuarioService {
     // LIST
     // ===============================
     @Override
-    public Page<UsuarioResponse> listarUsuarios(Pageable pageable) {
+    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        Long empresaPropia = SecurityUtils.getEmpresaId();
 
         if (esSuperAdmin()) {
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            if (empresaId != null) {
+                return usuarioRepository.findByEmpresaId(empresaId, pageable)
+                        .map(generalMapper::mapUsuarioToResponse);
+            }
             return usuarioRepository.findAll(pageable)
                     .map(generalMapper::mapUsuarioToResponse);
         }
 
         if (esAdminEmpresa()) {
-            return usuarioRepository.findByEmpresaId(empresaId, pageable)
+            // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
+            // importar lo que llegue en empresaId.
+            return usuarioRepository.findByEmpresaId(empresaPropia, pageable)
                     .map(generalMapper::mapUsuarioToResponse);
         }
 

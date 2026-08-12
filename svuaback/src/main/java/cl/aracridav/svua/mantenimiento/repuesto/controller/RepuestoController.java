@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.mantenimiento.repuesto.dto.request.RepuestoRequest;
@@ -40,9 +41,13 @@ public class RepuestoController {
         "(hasAuthority('REPUESTO_VIEW')) "
     )
     @GetMapping
-    public ResponseEntity<Page<RepuestoResponse>> listarRepuestos(Pageable pegable) {
+    public ResponseEntity<Page<RepuestoResponse>> listarRepuestos(
+            Pageable pegable,
+            @RequestParam(required = false) Long empresaId) {
 
-        Page<RepuestoResponse> response = repuestoService.listarRepuestos(pegable);
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver RepuestoServiceImpl).
+        Page<RepuestoResponse> response = repuestoService.listarRepuestos(pegable, empresaId);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

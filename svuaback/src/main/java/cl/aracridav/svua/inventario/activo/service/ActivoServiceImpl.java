@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import cl.aracridav.svua.depreciacion.service.DepreciacionService;
@@ -196,8 +197,24 @@ public class ActivoServiceImpl implements ActivoService {
      * =========================================
      */
     @Override
-    public Page<ActivoResponse> mostrarActivos(Pageable pageable) {
-        return activoRepository.findAll(pageable)
+    public Page<ActivoResponse> mostrarActivos(Pageable pageable, Long empresaId) {
+
+        if (esSuperAdmin()) {
+
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            if (empresaId != null) {
+                return activoRepository.findByEmpresaId(empresaId, pageable)
+                        .map(mapper::mapActivoResponse);
+            }
+
+            return activoRepository.findAll(pageable)
+                    .map(mapper::mapActivoResponse);
+        }
+
+        // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
+        // sin importar lo que llegue en empresaId (mismo criterio que
+        // Repuesto/Proveedor/Bodega/Tipo de Activo).
+        return activoRepository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable)
                 .map(mapper::mapActivoResponse);
     }
 
@@ -404,5 +421,11 @@ public class ActivoServiceImpl implements ActivoService {
     private Empresa obtenerEmpresaActual() {
         return empresaRepository.findById(SecurityUtils.getEmpresaId())
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+    }
+
+    private boolean esSuperAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 }

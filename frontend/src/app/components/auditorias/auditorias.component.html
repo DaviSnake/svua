@@ -41,7 +41,7 @@
 
   <div
     class="activo-card"
-    *ngFor="let activo of historialesFiltrados">
+    *ngFor="let activo of historialesPaginados">
 
     <div
       class="activo-header clickable"
@@ -186,5 +186,26 @@
     </div>
 
   </div>
+
+</div>
+
+<!-- PAGINACIÓN -->
+<div class="paginacion">
+
+  <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+    ⬅ Anterior
+  </button>
+
+  <button
+    *ngFor="let p of [].constructor(totalPages); let i = index"
+    (click)="cambiarPagina(i)"
+    [class.activa]="i === page">
+    {{ i + 1 }}
+  </button>
+
+  <button (click)="cambiarPagina(page + 1)"
+          [disabled]="page + 1 >= totalPages">
+    Siguiente ➡
+  </button>
 
 </div>

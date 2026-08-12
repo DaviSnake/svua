@@ -12,6 +12,6 @@ public interface TipoActivoService {
     public TipoActivoResponse actualizar(Long id, TipoActivoCreateRequest request);
     public void eliminar(Long id);
     public TipoActivoResponse obtener(Long id);
-    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable);
+    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable, Long empresaId);
 
 }

@@ -34,7 +34,7 @@ public class UbicacionServiceImpl implements UbicacionService {
      */
     @Override
     public UbicacionResponse registrarUbicacion(UbicacionCreateRequest request) {
-        
+
         Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRequest(request);
@@ -120,18 +120,23 @@ public class UbicacionServiceImpl implements UbicacionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable) {
+    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable, Long empresaId) {
 
         Page<Ubicacion> ubicaciones = null;
 
         boolean esAdmin = false;
 
         if (esSuperAdmin()) {
-            ubicaciones = repository.findAll(pageable);
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            ubicaciones = (empresaId != null)
+                    ? repository.findByEmpresaId(empresaId, pageable)
+                    : repository.findAll(pageable);
             esAdmin = true;
         }
 
         if (esAdminEmpresa()) {
+            // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
+            // importar lo que llegue en empresaId.
             ubicaciones = repository.findByEmpresaId(
                 SecurityUtils.getEmpresaId(), pageable);
             esAdmin = true;
@@ -204,7 +209,7 @@ public class UbicacionServiceImpl implements UbicacionService {
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
-    
+
 
     private boolean esSuperAdmin() {
         return SecurityContextHolder.getContext().getAuthentication()

@@ -19,6 +19,7 @@ export class AuditoriasComponent implements OnInit {
 
   historiales: HistorialActivoCompleto[] = [];
   historialesFiltrados: HistorialActivoCompleto[] = [];
+  historialesPaginados: HistorialActivoCompleto[] = [];
 
   activosExpandidos: Set<number> = new Set();
 
@@ -55,6 +56,8 @@ export class AuditoriasComponent implements OnInit {
         next: (data) => {
           this.historiales = data;
           this.historialesFiltrados = [...data];
+          this.page = 0;
+          this.actualizarPaginacion();
         }
       });
   }
@@ -68,14 +71,40 @@ export class AuditoriasComponent implements OnInit {
     if (!texto) {
 
       this.historialesFiltrados = [...this.historiales];
+    } else {
+
+      this.historialesFiltrados =
+        this.historiales.filter(activo =>
+          activo.nombreActivo.toLowerCase().includes(texto)
+          || activo.activoId.toString().includes(texto)
+        );
+    }
+
+    this.page = 0;
+    this.actualizarPaginacion();
+  }
+
+  // 🔥 El historial completo ya viene cargado de una sola vez
+  // (obtenerHistorialCompleto), así que la paginación es en el cliente:
+  // se recorta el arreglo ya filtrado según la página actual.
+  actualizarPaginacion(): void {
+
+    this.totalElements = this.historialesFiltrados.length;
+    this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.size));
+
+    const inicio = this.page * this.size;
+    this.historialesPaginados =
+      this.historialesFiltrados.slice(inicio, inicio + this.size);
+  }
+
+  cambiarPagina(p: number): void {
+
+    if (p < 0 || p >= this.totalPages) {
       return;
     }
 
-    this.historialesFiltrados =
-      this.historiales.filter(activo =>
-        activo.nombreActivo.toLowerCase().includes(texto)
-        || activo.activoId.toString().includes(texto)
-      );
+    this.page = p;
+    this.actualizarPaginacion();
   }
 
   toggleActivo(activoId: number): void {

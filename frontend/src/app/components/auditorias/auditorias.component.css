@@ -183,6 +183,33 @@
   font-size: 13px;
 }
 
+.paginacion {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.paginacion button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+
+.paginacion button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.paginacion button.activa {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+  font-weight: bold;
+}
+
 /* ======================================
    TABLET
    ====================================== */
@@ -251,6 +278,16 @@
 
   .evento-detalle {
     padding: 10px;
+  }
+
+  .paginacion {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .paginacion button {
+    flex: 1;
+    min-width: 60px;
   }
 
 }

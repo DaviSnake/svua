@@ -55,16 +55,23 @@ public class BodegaServiceImpl implements BodegaService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<BodegaResponse> listar(Pageable pageable) {
+    public Page<BodegaResponse> listar(Pageable pageable, Long empresaId) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         Page<Bodega> bodegas;
 
         if (tieneRol(auth, "ROLE_SUPER_ADMIN")) {
-            bodegas = repository.findAll(pageable);
+
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            bodegas = (empresaId != null)
+                    ? repository.findByEmpresaId(empresaId, pageable)
+                    : repository.findAll(pageable);
 
         } else if (tieneRol(auth, "ROLE_ADMIN_EMPRESA")) {
+
+            // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
+            // importar lo que llegue en empresaId.
             bodegas = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
 
         } else {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.proveedor.dto.request.ProveedorCreateRequest;
@@ -57,9 +58,13 @@ public class ProveedorController {
         "hasAuthority('PROVEEDOR_VIEW')"
     )
     @GetMapping
-    public ResponseEntity<Page<ProveedorResponse>> listarProveedores(Pageable pageable) {
+    public ResponseEntity<Page<ProveedorResponse>> listarProveedores(
+            Pageable pageable,
+            @RequestParam(required = false) Long empresaId) {
 
-        Page<ProveedorResponse> response = proveedorService.listarProveedores(pageable);
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver ProveedorServiceImpl).
+        Page<ProveedorResponse> response = proveedorService.listarProveedores(pageable, empresaId);
 
         return ResponseEntity.ok(response);
     }

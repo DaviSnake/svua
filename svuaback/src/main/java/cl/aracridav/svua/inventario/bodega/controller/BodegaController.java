@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.bodega.dto.request.BodegaRequest;
@@ -55,9 +56,13 @@ public class BodegaController {
         "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or hasAuthority('BODEGA_VIEW')"
     )
     @GetMapping
-    public ResponseEntity<Page<BodegaResponse>> listar(Pageable pageable) {
+    public ResponseEntity<Page<BodegaResponse>> listar(
+            Pageable pageable,
+            @RequestParam(required = false) Long empresaId) {
 
-        Page<BodegaResponse> response = bodegaService.listar(pageable);
+        // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
+        // (solo tiene efecto para SUPER_ADMIN, ver BodegaServiceImpl).
+        Page<BodegaResponse> response = bodegaService.listar(pageable, empresaId);
 
         return ResponseEntity.ok(response);
     }

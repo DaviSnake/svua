@@ -13,8 +13,16 @@ export class BodegaService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  getAll(page = 0, size = 10): Observable<Page<Bodega>> {
-    return this.http.get<Page<Bodega>>(`${this.apiUrl}/bodegas?page=${page}&size=${size}&sort=nombre,asc`);
+  getAll(page = 0, size = 10, empresaId?: number | null): Observable<Page<Bodega>> {
+    let url = `${this.apiUrl}/bodegas?page=${page}&size=${size}&sort=nombre,asc`;
+
+    // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
+    // backend lo ignora para el resto de los roles).
+    if (empresaId) {
+      url += `&empresaId=${empresaId}`;
+    }
+
+    return this.http.get<Page<Bodega>>(url);
   }
 
   getId(id: number): Observable<Bodega> {

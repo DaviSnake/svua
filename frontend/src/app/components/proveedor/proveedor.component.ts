@@ -42,6 +42,13 @@ export class ProveedorComponent implements OnInit {
   empresas: Empresa[] = [];
   empresasFiltradas: Empresa[] = [];
 
+  // 🔥 Filtro de la grilla por empresa (mismo patrón de autocompletado;
+  // solo tiene efecto real para SUPER_ADMIN, que es el único rol que ve
+  // registros de más de una empresa a la vez).
+  filtroEmpresaControl = new FormControl();
+  empresasFiltroFiltradas: Empresa[] = [];
+  filtroEmpresaId: number | null = null;
+
   esSuperAdmin = false;
   esAdminEmpresa = false;
   editando: boolean = false;
@@ -103,6 +110,29 @@ export class ProveedorComponent implements OnInit {
         ? this.tiposProveedor
         : this.tiposProveedor.filter(t => t.toLowerCase().includes(search));
     });
+
+    // 🔥 Filtro de la grilla por empresa. Solo recarga la grilla cuando
+    // se selecciona una empresa (objeto) o cuando se borra el texto por
+    // completo (para volver a ver todas); mientras se escribe, solo
+    // filtra las opciones del desplegable.
+    this.filtroEmpresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltroFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroEmpresaId = value.id;
+        this.page = 0;
+        this.cargarProveedores();
+      } else if (!search && this.filtroEmpresaId !== null) {
+        this.filtroEmpresaId = null;
+        this.page = 0;
+        this.cargarProveedores();
+      }
+    });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
@@ -113,6 +143,10 @@ export class ProveedorComponent implements OnInit {
 
   onFocusTipoProveedor() {
     this.tiposProveedorFiltrados = this.tiposProveedor;
+  }
+
+  onFocusFiltroEmpresa() {
+    this.empresasFiltroFiltradas = this.empresas;
   }
 
   // 🔥 Espera a que el combo de empresas ya haya cargado antes de setear
@@ -130,7 +164,7 @@ export class ProveedorComponent implements OnInit {
   }
 
   cargarProveedores() {
-    this.proveedorService.getAll(this.page, this.size).subscribe({
+    this.proveedorService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
       next: (data) => {
         this.proveedores = data.content;
         this.totalPages = data.page.totalPages;
