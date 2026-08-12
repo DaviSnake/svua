@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.mappers.GeneralMapper;
+import cl.aracridav.svua.shared.util.SecurityUtils;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import cl.aracridav.svua.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -234,6 +236,12 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
             .cantidadMantenciones(
                 cantidadMantenciones
             )
+            .empresaId(
+                activo.getEmpresa() != null ? activo.getEmpresa().getId() : null
+            )
+            .empresaNombre(
+                activo.getEmpresa() != null ? activo.getEmpresa().getNombre() : null
+            )
             .eventos(
                 eventos
             )
@@ -274,9 +282,24 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
 
     @Override
     @Transactional(readOnly = true)
-    public List<HistorialActivoCompletoResponse> obtenerHistorialCompletoTodos() {
+    public List<HistorialActivoCompletoResponse> obtenerHistorialCompletoTodos(Long empresaId) {
 
-        List<Activo> activos = activoRepository.findAllConHistorial();
+        List<Activo> activos;
+
+        if (esSuperAdmin()) {
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
+            activos = (empresaId != null)
+                    ? activoRepository.findAllConHistorialByEmpresa(empresaId)
+                    : activoRepository.findAllConHistorial();
+        } else {
+            // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
+            // sin importar lo que llegue en empresaId (mismo criterio que
+            // el resto de los mantenedores). Antes de este fix, aquí no
+            // existía ninguna restricción: cualquier usuario veía el
+            // historial de TODAS las empresas.
+            activos = activoRepository.findAllConHistorialByEmpresa(
+                    SecurityUtils.getEmpresaId());
+        }
 
         return activos.stream()
                 .map(this::construirHistorialActivo)
@@ -347,7 +370,7 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                             .distinct()
                             .toList();
                     }
-                    
+
                     eventos.add(
                         HistorialActivoResponse.builder()
                             .fecha(
@@ -404,6 +427,12 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
             .costoMantenciones(costoMantenciones)
             .cantidadMantenciones(
                 activo.getOrdenesMantenimiento().size()
+            )
+            .empresaId(
+                activo.getEmpresa() != null ? activo.getEmpresa().getId() : null
+            )
+            .empresaNombre(
+                activo.getEmpresa() != null ? activo.getEmpresa().getNombre() : null
             )
             .eventos(eventos)
             .build();
@@ -473,5 +502,11 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
 
     private String nombreDe(Proveedor proveedor) {
         return proveedor != null ? proveedor.getNombre() : null;
+    }
+
+    private boolean esSuperAdmin() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 }

@@ -12,9 +12,11 @@ public class HistorialActivoCompletoResponse {
 
     private Long activoId;
     private String nombreActivo;
-    private BigDecimal valorAdquisicion;    
+    private BigDecimal valorAdquisicion;
     private BigDecimal valorResidual;
     private BigDecimal costoMantenciones;
     private Integer cantidadMantenciones;
+    private Long empresaId;
+    private String empresaNombre;
     private List<HistorialActivoResponse> eventos;
 }

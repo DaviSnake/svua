@@ -116,6 +116,76 @@
   font-size: 14px;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* FILTRO POR EMPRESA */
+.filtro-grilla {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.filtro-grilla label {
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.filtro-grilla .form-group {
+  width: 100%;
+  max-width: 320px;
+}
+
+.filtro-grilla input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* 🔥 Combo con autocompletado (Empresa): al pasar el mouse por encima
+   aparece un triángulo negro a la derecha, igual que la flechita de un
+   <select>, para que quede claro que se puede desplegar una lista. */
+.form-group--combo {
+  position: relative;
+}
+
+.form-group--combo input {
+  padding-right: 28px;
+}
+
+.form-group--combo::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid transparent;
+  pointer-events: none;
+  transition: border-top-color 0.15s;
+}
+
+.form-group--combo:hover::after {
+  border-top-color: #000; /* 🔒 triángulo negro solo al pasar por encima */
+}
+
+.empresa-tag {
+  display: inline-block;
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
 .clickable {
   cursor: pointer;
 }
@@ -252,6 +322,15 @@
 
   .filtro-container small {
     text-align: center;
+  }
+
+  .filtro-grilla {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtro-grilla .form-group {
+    max-width: 100%;
   }
 
   .resumen {

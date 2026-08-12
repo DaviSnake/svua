@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.activo.entity.Activo;
@@ -46,10 +47,14 @@ public class HistorialEstadoActivoController {
     )
     @GetMapping("/historial")
     public ResponseEntity<List<HistorialActivoCompletoResponse>>
-    obtenerHistorialTodos() {
+    obtenerHistorialTodos(
+            @RequestParam(required = false) Long empresaId) {
 
+        // 🔥 empresaId es opcional: permite filtrar la auditoría por
+        // empresa (solo tiene efecto para SUPER_ADMIN, ver
+        // HistorialEstadoActivoServiceImpl).
         return ResponseEntity.ok(
-            service.obtenerHistorialCompletoTodos()
+            service.obtenerHistorialCompletoTodos(empresaId)
         );
     }
 

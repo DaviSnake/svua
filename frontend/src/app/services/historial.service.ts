@@ -17,7 +17,15 @@ export class HistorialService {
     return this.http.get<Page<HistorialActivoCompleto>>(`${this.apiUrl}/historial-activo/historial?page=${page}&size=${size}&sort=nombre,asc`);
   }
 
-  obtenerHistorialCompleto(): Observable<HistorialActivoCompleto[]> {
-    return this.http.get<HistorialActivoCompleto[]>(`${this.apiUrl}/historial-activo/historial`);
+  obtenerHistorialCompleto(empresaId?: number | null): Observable<HistorialActivoCompleto[]> {
+    let url = `${this.apiUrl}/historial-activo/historial`;
+
+    // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
+    // backend lo ignora para el resto de los roles).
+    if (empresaId) {
+      url += `?empresaId=${empresaId}`;
+    }
+
+    return this.http.get<HistorialActivoCompleto[]>(url);
   }
 }

@@ -2,20 +2,26 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HistorialActivoCompleto } from './models/historial-completo.model';
 import { HistorialService } from '../../services/historial.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { AuthService } from '../../services/auth.service';
+import { EmpresaService } from '../../services/empresa.service';
+import { Empresa } from '../../model/empresa';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-auditorias',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule],
   templateUrl: './auditorias.component.html',
   styleUrl: './auditorias.component.css'
 })
 export class AuditoriasComponent implements OnInit {
 
   private historialService = inject(HistorialService);
+  private authService = inject(AuthService);
+  private empresaService = inject(EmpresaService);
 
   historiales: HistorialActivoCompleto[] = [];
   historialesFiltrados: HistorialActivoCompleto[] = [];
@@ -25,6 +31,16 @@ export class AuditoriasComponent implements OnInit {
 
   textoBusqueda = '';
 
+  esSuperAdmin = false;
+
+  // 🔥 Filtro por empresa (mismo patrón de autocompletado que en los
+  // mantenedores); solo tiene efecto real para SUPER_ADMIN, que es el
+  // único rol que ve registros de más de una empresa a la vez.
+  empresas: Empresa[] = [];
+  empresasFiltroFiltradas: Empresa[] = [];
+  filtroEmpresaControl = new FormControl();
+  filtroEmpresaId: number | null = null;
+
   page = 0;
   size = 10;
 
@@ -32,7 +48,10 @@ export class AuditoriasComponent implements OnInit {
   totalElements = 0;
 
   ngOnInit() {
+    this.esSuperAdmin = this.authService.isAdmin();
+    this.initFiltroEmpresa();
     this.cargarHistorial();
+    this.cargarEmpresas();
   }
 
   cargarHistorialPage() {
@@ -51,7 +70,7 @@ export class AuditoriasComponent implements OnInit {
 
   cargarHistorial() {
 
-    this.historialService.obtenerHistorialCompleto()
+    this.historialService.obtenerHistorialCompleto(this.filtroEmpresaId)
       .subscribe({
         next: (data) => {
           this.historiales = data;
@@ -60,6 +79,42 @@ export class AuditoriasComponent implements OnInit {
           this.actualizarPaginacion();
         }
       });
+  }
+
+  cargarEmpresas() {
+    this.empresaService.getAll().subscribe(data => {
+      this.empresas = data;
+      this.empresasFiltroFiltradas = data;
+    });
+  }
+
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  onFocusFiltroEmpresa() {
+    this.empresasFiltroFiltradas = this.empresas;
+  }
+
+  // 🔥 Filtro de la grilla por empresa. Solo recarga cuando se selecciona
+  // una empresa (objeto) o cuando se borra el texto por completo (para
+  // volver a ver todas); mientras se escribe, solo filtra las opciones
+  // del desplegable.
+  initFiltroEmpresa() {
+    this.filtroEmpresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltroFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroEmpresaId = value.id;
+        this.cargarHistorial();
+      } else if (!search && this.filtroEmpresaId !== null) {
+        this.filtroEmpresaId = null;
+        this.cargarHistorial();
+      }
+    });
   }
 
   filtrarActivos() {

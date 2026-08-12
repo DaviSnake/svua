@@ -27,6 +27,6 @@ public interface HistorialEstadoActivoService {
 
     public HistorialActivoCompletoResponse obtenerHistorialCompleto(Long activoId);
 
-    public List<HistorialActivoCompletoResponse> obtenerHistorialCompletoTodos();
+    public List<HistorialActivoCompletoResponse> obtenerHistorialCompletoTodos(Long empresaId);
 
 }
