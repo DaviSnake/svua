@@ -85,6 +85,7 @@ export class OrdenMantencionService {
     size: number,
     usuario?: string,
     empresaId?: number,
+    estado?: string,
     fecha?: string
   ): Observable<Page<OrdenMantenimientoReporte>> {
 
@@ -98,6 +99,10 @@ export class OrdenMantencionService {
 
     if (empresaId != null) {
       params = params.set('empresaId', empresaId);
+    }
+
+    if (estado) {
+      params = params.set('estado', estado);
     }
 
     if (fecha) {

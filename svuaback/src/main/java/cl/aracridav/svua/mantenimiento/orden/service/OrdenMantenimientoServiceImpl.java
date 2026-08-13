@@ -452,7 +452,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     @Override
     @Transactional(readOnly = true)
-    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses() {
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(Long activoId) {
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
@@ -463,8 +463,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             .withMinute(0)
             .withSecond(0);
 
-        List<Object[]> resultados =
-            ordenRepository
+        // 🔥 Filtro por activo opcional: si no viene, se mantiene el
+        // comportamiento actual (costos de toda la empresa).
+        List<Object[]> resultados = activoId != null
+            ? ordenRepository
+                .obtenerCostosUltimosMesesPorActivo(fechaInicio, empresaId, activoId)
+            : ordenRepository
                 .obtenerCostosUltimosMeses(fechaInicio, empresaId);
 
         Map<Integer, BigDecimal> costosPorMes = new HashMap<>();
@@ -960,6 +964,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             String usuario,
             Long empresaId,
+            EstadoOrden estado,
             LocalDate fecha,
             Pageable pageable) {
 
@@ -997,9 +1002,14 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
             List<Predicate> predicates = new ArrayList<>();
 
-            // 🔒 Este informe es un comprobante de trabajos ya
-            // ejecutados: solo ordenes completadas.
-            predicates.add(cb.equal(root.get("estado"), EstadoOrden.COMPLETADA));
+            // 🔒 Filtro por estado opcional: el frontend parte con
+            // "Completada" seleccionada (para que el informe siga
+            // funcionando por defecto como comprobante de trabajos ya
+            // ejecutados), pero el usuario puede elegir otro estado o
+            // "Todos" para no filtrar por estado.
+            if (estado != null) {
+                predicates.add(cb.equal(root.get("estado"), estado));
+            }
 
             if (usuarioFiltro != null) {
                 predicates.add(

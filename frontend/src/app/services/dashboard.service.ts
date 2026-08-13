@@ -37,9 +37,16 @@ export class DashboardService {
     );
   }
 
-  getCostos() {
-    return this.http.get<any>(`${this.apiUrl}/ordenes-mantenimiento/grafico/costos`
-    );
+  // 🔥 activoId es opcional: filtra la evolución de costos de
+  // mantención a un solo activo (disponible para todos los usuarios).
+  getCostos(activoId?: number | null) {
+    let url = `${this.apiUrl}/ordenes-mantenimiento/grafico/costos`;
+
+    if (activoId != null) {
+      url += `?activoId=${activoId}`;
+    }
+
+    return this.http.get<any>(url);
   }
 
 }

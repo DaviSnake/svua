@@ -1,13 +1,18 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { DashboardResponse } from './models/reportes.model';
 import { DashboardService } from '../../services/dashboard.service';
+import { ActivoService } from '../../services/activo.service';
+import { Activo } from '../../model/activo';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [NgChartsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, NgChartsModule],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })
@@ -16,8 +21,17 @@ export class ReportesComponent implements OnInit {
   data?: DashboardResponse;
 
    dashboardService = inject(DashboardService);
+   private activoService = inject(ActivoService);
 
    dataCostos: any;
+
+  // 🔥 Filtro por activo (para todos los usuarios): acota la evolución
+  // de costos de mantención a un solo activo. Mismo patrón de
+  // autocompletado usado en los informes (Empresa).
+  activos: Activo[] = [];
+  activosFiltrados: Activo[] = [];
+  filtroActivoControl = new FormControl();
+  filtroActivoId: number | null = null;
 
    public lineChartType: ChartType = 'line';
 
@@ -58,6 +72,8 @@ export class ReportesComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDashboard();
+    this.cargarActivos();
+    this.initFiltroActivo();
     this.cargarCostos();
   }
 
@@ -69,8 +85,43 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  cargarActivos(): void {
+    this.activoService.getActivoCombo().subscribe(data => {
+      this.activos = data.content;
+      this.activosFiltrados = data.content;
+    });
+  }
+
+  displayActivo = (activo: any): string => activo?.nombre ?? '';
+
+  onFocusFiltroActivo(): void {
+    this.activosFiltrados = this.activos;
+  }
+
+  // 🔥 Igual que los filtros de Empresa en los informes: solo recarga
+  // cuando se selecciona un activo (objeto) o cuando se borra el texto
+  // por completo.
+  initFiltroActivo(): void {
+    this.filtroActivoControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.activosFiltrados = !search
+        ? this.activos
+        : this.activos.filter(a => a.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroActivoId = value.id;
+        this.cargarCostos();
+      } else if (!search && this.filtroActivoId !== null) {
+        this.filtroActivoId = null;
+        this.cargarCostos();
+      }
+    });
+  }
+
   cargarCostos(): void {
-    this.dashboardService.getCostos().subscribe({
+    this.dashboardService.getCostos(this.filtroActivoId).subscribe({
       next: (res) => {
         this.setData(res);
       },

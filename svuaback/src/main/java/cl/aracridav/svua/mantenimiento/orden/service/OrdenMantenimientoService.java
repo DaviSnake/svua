@@ -16,6 +16,7 @@ import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoReporteResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
+import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 
 public interface OrdenMantenimientoService {
@@ -46,7 +47,9 @@ public interface OrdenMantenimientoService {
             Long id,
             ActualizarOrdenMantenimientoRequest request);
 
-    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses();
+    // 🔥 activoId es opcional: filtra el grafico de evolucion de
+    // costos a un solo activo (disponible para todos los usuarios).
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(Long activoId);
 
     public Resource obtenerArchivo(Long id);
 
@@ -55,6 +58,7 @@ public interface OrdenMantenimientoService {
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             String usuario,
             Long empresaId,
+            EstadoOrden estado,
             LocalDate fecha,
             Pageable pageable);
 }

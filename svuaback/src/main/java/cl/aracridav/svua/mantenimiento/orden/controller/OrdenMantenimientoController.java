@@ -32,6 +32,7 @@ import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoReporteResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
+import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.service.OrdenMantenimientoService;
 import lombok.RequiredArgsConstructor;
 
@@ -162,11 +163,12 @@ public class OrdenMantenimientoController {
     }
 
     @GetMapping("/grafico/costos")
-    public ResponseEntity<CostosGraficoReponse> obtenerGraficoCostos() {
+    public ResponseEntity<CostosGraficoReponse> obtenerGraficoCostos(
+            @RequestParam(required = false) Long activoId) {
 
         return ResponseEntity.ok(
             ordenMantenimientoService
-                .obtenerGraficoCostosUltimos6Meses()
+                .obtenerGraficoCostosUltimos6Meses(activoId)
         );
     }
 
@@ -177,6 +179,7 @@ public class OrdenMantenimientoController {
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             @RequestParam(required = false) String usuario,
             @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) EstadoOrden estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -184,7 +187,7 @@ public class OrdenMantenimientoController {
         Pageable pageable = PageRequest.of(page, size);
 
         return ordenMantenimientoService
-            .obtenerInformeMantenciones(usuario, empresaId, fecha, pageable);
+            .obtenerInformeMantenciones(usuario, empresaId, estado, fecha, pageable);
     }
 
 }

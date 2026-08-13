@@ -213,6 +213,30 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         @Param("fechaInicio") LocalDateTime fechaInicio,
         @Param("empresaId") Long empresaId);
 
+    // 🔥 Mismo grafico de costos, pero acotado a un activo puntual
+    // (filtro opcional en el frontend: "Evolucion Costo de Mantencion").
+    // Se hace un metodo separado en vez de un ":activoId IS NULL OR ..."
+    // en la misma query, siguiendo el mismo patron ya usado arriba para
+    // empresaId: en Postgres un bind param que solo aparece dentro de
+    // "? IS NULL" no siempre puede inferir su tipo.
+    @Query("""
+        SELECT 
+            YEAR(o.fechaEjecucion),
+            MONTH(o.fechaEjecucion),
+            COALESCE(SUM(o.costoTotal), 0)
+        FROM OrdenMantenimiento o
+        WHERE o.fechaEjecucion >= :fechaInicio
+        AND o.activo.empresa.id = :empresaId
+        AND o.activo.id = :activoId
+        AND o.estado = 'COMPLETADA'
+        GROUP BY YEAR(o.fechaEjecucion), MONTH(o.fechaEjecucion)
+        ORDER BY YEAR(o.fechaEjecucion), MONTH(o.fechaEjecucion)
+    """)
+    List<Object[]> obtenerCostosUltimosMesesPorActivo(
+        @Param("fechaInicio") LocalDateTime fechaInicio,
+        @Param("empresaId") Long empresaId,
+        @Param("activoId") Long activoId);
+
     List<OrdenMantenimiento> findByEstadoAndTipoMantenimientoAndFechaProgramadaBetween(
         EstadoOrden estado,
         TipoMantenimiento tipoMantenimiento,

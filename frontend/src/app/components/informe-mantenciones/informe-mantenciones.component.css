@@ -41,13 +41,15 @@
   font-size: 13px;
 }
 
-.filtro-grilla input {
+.filtro-grilla input,
+.filtro-grilla select {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  background: #fff;
 }
 
 .filtro-grilla small {

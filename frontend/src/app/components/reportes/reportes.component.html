@@ -56,6 +56,25 @@
     Indicador de Costos Operativos
   </p>
 
+  <!-- FILTRO POR ACTIVO -->
+  <div class="filtro-grilla">
+
+    <div class="form-group form-group--combo">
+      <label>Activo</label>
+      <input type="text"
+             placeholder="Todos los activos"
+             [matAutocomplete]="autoFiltroActivo"
+             [formControl]="filtroActivoControl"
+             (focus)="onFocusFiltroActivo()">
+      <mat-autocomplete #autoFiltroActivo="matAutocomplete" [displayWith]="displayActivo">
+        <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
+          {{ activo.nombre }}
+        </mat-option>
+      </mat-autocomplete>
+    </div>
+
+  </div>
+
   <div class="chart-card">
 
     <div class="chart-container">

@@ -23,9 +23,26 @@ export class InformeMantencionesComponent implements OnInit {
   ordenes: OrdenMantenimientoReporte[] = [];
 
   // 🔥 Mismos filtros que el informe de conexiones: usuario (texto
-  // libre), fecha (input date) y empresa (autocompletado).
+  // libre), fecha (input date) y empresa (autocompletado); además el
+  // filtro por estado, propio de este informe.
   filtroUsuario = '';
   filtroFecha = '';
+
+  // 🔥 Filtro por estado: parte en "Completada" para que el informe
+  // siga funcionando por defecto como comprobante de trabajos ya
+  // ejecutados; el usuario puede elegir otro estado o "Todos" (valor
+  // vacío = sin filtro).
+  filtroEstado = 'COMPLETADA';
+  estadosDisponibles = [
+    { value: '', label: 'Todos' },
+    { value: 'PENDIENTE', label: 'Pendiente' },
+    { value: 'PROGRAMADA', label: 'Programada' },
+    { value: 'EN_EJECUCION', label: 'En Ejecución' },
+    { value: 'PRE_COMPLETADA', label: 'Pre Completada' },
+    { value: 'COMPLETADA', label: 'Completada' },
+    { value: 'CANCELADA', label: 'Cancelada' },
+    { value: 'ATRASADA', label: 'Atrasada' }
+  ];
 
   empresas: Empresa[] = [];
   empresasFiltradas: Empresa[] = [];
@@ -94,6 +111,11 @@ export class InformeMantencionesComponent implements OnInit {
     this.cargarOrdenes();
   }
 
+  onFiltroEstadoChange(): void {
+    this.page = 0;
+    this.cargarOrdenes();
+  }
+
   cargarOrdenes(): void {
 
     this.ordenMantencionService
@@ -102,6 +124,7 @@ export class InformeMantencionesComponent implements OnInit {
         this.size,
         this.filtroUsuario || undefined,
         this.filtroEmpresaId ?? undefined,
+        this.filtroEstado || undefined,
         this.filtroFecha || undefined
       )
       .subscribe({
