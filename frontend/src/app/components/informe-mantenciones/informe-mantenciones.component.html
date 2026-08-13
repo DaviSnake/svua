@@ -100,6 +100,8 @@
               <h3>Orden #{{ orden.id }} - {{ orden.titulo }} ({{ orden.estado }})</h3>
 
               <div class="comprobante-datos">
+                <div><strong>Descripción:</strong> {{ orden.observaciones || '—' }}</div>
+                <div><strong>Tipo de mantención:</strong> {{ orden.tipoMantenimiento }}</div>
                 <div><strong>Fecha programada:</strong> {{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</div>
                 <div><strong>Fecha ejecución:</strong> {{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</div>
                 <div><strong>Activo:</strong> {{ orden.activoNombre }}</div>

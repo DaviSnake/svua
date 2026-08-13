@@ -3,6 +3,7 @@ export interface HistorialActivoEvento {
   fechaProgramada: string;
   fechaEjecucion: string;
   tipo: string;
+  tipoMantenimiento: string | null;
   descripcion: string;
   usuario: string | null;
   proveedor: string | null;

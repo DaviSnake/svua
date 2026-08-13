@@ -16,6 +16,7 @@ export interface OrdenRepuestoReporte {
 export interface OrdenMantenimientoReporte {
   id?: number;
   titulo?: string;
+  observaciones?: string;
   estado?: string;
   tipoMantenimiento?: string;
   fechaProgramada?: string;

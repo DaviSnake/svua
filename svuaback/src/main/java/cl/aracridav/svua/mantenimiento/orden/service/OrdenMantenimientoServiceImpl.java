@@ -1063,6 +1063,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         return OrdenMantenimientoReporteResponse.builder()
             .id(o.getId())
             .titulo(o.getTitulo())
+            .observaciones(o.getObservaciones())
             .estado(o.getEstado())
             .tipoMantenimiento(o.getTipoMantenimiento())
             .fechaProgramada(o.getFechaProgramada())

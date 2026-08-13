@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class HistorialActivoResponse {
     private LocalDateTime fechaProgramada;
     private LocalDateTime fechaEjecucion;
     private String tipo;
+    private TipoMantenimiento tipoMantenimiento;
     private String descripcion;
     private String usuario;
     private String proveedor;

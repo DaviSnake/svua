@@ -21,6 +21,7 @@ public class OrdenMantenimientoReporteResponse {
 
     private Long id;
     private String titulo;
+    private String observaciones;
     private EstadoOrden estado;
     private TipoMantenimiento tipoMantenimiento;
     private LocalDateTime fechaProgramada;

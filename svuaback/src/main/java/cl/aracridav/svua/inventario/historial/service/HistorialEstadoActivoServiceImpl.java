@@ -158,6 +158,9 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                                 orden.getFechaEjecucion()
                             )
                             .tipo("MANTENCION")
+                            .tipoMantenimiento(
+                                orden.getTipoMantenimiento()
+                            )
                             .descripcion(
                                 "Orden #"
                                     + orden.getId()
@@ -381,6 +384,7 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                             .fechaProgramada(orden.getFechaProgramada())
                             .fechaEjecucion(orden.getFechaEjecucion())
                             .tipo("MANTENCION")
+                            .tipoMantenimiento(orden.getTipoMantenimiento())
                             .descripcion(
                                 "Orden #" + orden.getId()
                                 + " - "

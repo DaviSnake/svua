@@ -145,6 +145,10 @@
 
           <div *ngIf="evento.tipo === 'MANTENCION'">
 
+            <div *ngIf="evento.tipoMantenimiento">
+              Tipo de mantención: {{ evento.tipoMantenimiento }}
+            </div>
+
             <div *ngIf="evento.fechaProgramada">
               Fecha programada: {{ evento.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}
             </div>

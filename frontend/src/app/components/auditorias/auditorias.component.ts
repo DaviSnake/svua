@@ -206,6 +206,7 @@ export class AuditoriasComponent implements OnInit {
               year: 'numeric'
             }),
           'Tipo Evento': evento.tipo,
+          'Tipo Mantención': evento.tipoMantenimiento ?? '',
           'Descripción': evento.descripcion,
           'Usuario': evento.usuario ?? '',
           'Proveedor': evento.proveedor ?? '',
