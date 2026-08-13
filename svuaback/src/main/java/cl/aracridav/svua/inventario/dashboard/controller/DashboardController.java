@@ -21,9 +21,20 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
+    // 🔒 Filtro por empresa opcional, solo para SUPER_ADMIN: si el
+    // usuario no es SUPER_ADMIN se ignora cualquier empresaId recibido y
+    // se usa siempre la empresa del propio usuario (igual que antes).
     @GetMapping("/full")
-    public ResponseEntity<DashboardResponse> obtenerDashboard() {
-        return ResponseEntity.ok(dashboardService.obtenerDashboard());
+    public ResponseEntity<DashboardResponse> obtenerDashboard(
+            @RequestParam(required = false) Long empresaId) {
+
+        Long empresaIdEfectivo = (empresaId != null && SecurityUtils.esSuperAdmin())
+            ? empresaId
+            : SecurityUtils.getEmpresaId();
+
+        return ResponseEntity.ok(
+            dashboardService.obtenerDashboardFull(empresaIdEfectivo)
+        );
     }
 
     @GetMapping("/cumplimiento/semanal")

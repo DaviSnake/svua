@@ -1,5 +1,24 @@
 <div class="dashboard">
 
+  <!-- FILTRO POR EMPRESA (solo SUPER_ADMIN) -->
+  <div class="filtro-grilla" *ngIf="esSuperAdmin">
+
+    <div class="form-group form-group--combo">
+      <label>Empresa</label>
+      <input type="text"
+             placeholder="Todas las empresas"
+             [matAutocomplete]="autoFiltroEmpresa"
+             [formControl]="filtroEmpresaControl"
+             (focus)="onFocusFiltroEmpresa()">
+      <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+        <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+          {{ empresa.nombre }}
+        </mat-option>
+      </mat-autocomplete>
+    </div>
+
+  </div>
+
   <!-- KPIs -->
   <div class="kpi-grid">
 

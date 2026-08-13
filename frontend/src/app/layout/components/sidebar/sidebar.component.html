@@ -104,15 +104,6 @@
       <span class="tooltip">Notificaciones</span>
     </li>
 
-    <!-- SESIONES ACTIVAS -->
-    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
-      <a routerLink="/inicio/SesionesActivas" (click)="closeAllMenus(); $event.stopPropagation()">
-        <i class='bx bx-wifi'></i>
-        <span *ngIf="!isCollapsed">Sesiones Activas</span>
-      </a>
-      <span class="tooltip">SesionesActivas</span>
-    </li>
-
     <!-- INFORME DE CONEXIONES (solo SUPER_ADMIN) -->
     <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
       <a routerLink="/inicio/informeConexiones" (click)="closeAllMenus(); $event.stopPropagation()">
@@ -129,6 +120,15 @@
         <span *ngIf="!isCollapsed">Informe de Mantenciones</span>
       </a>
       <span class="tooltip">Informe de Mantenciones</span>
+    </li>
+
+    <!-- SESIONES ACTIVAS -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
+      <a routerLink="/inicio/SesionesActivas" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-wifi'></i>
+        <span *ngIf="!isCollapsed">Sesiones Activas</span>
+      </a>
+      <span class="tooltip">SesionesActivas</span>
     </li>
 
   </ul>

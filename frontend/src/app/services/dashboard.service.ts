@@ -28,8 +28,16 @@ export class DashboardService {
     });
   }
 
-  getDashboard(): Observable<DashboardKPIs> {
-    return this.http.get<DashboardKPIs>(`${this.apiUrl}/dashboard/full`);
+  // 🔒 empresaId es opcional y solo tiene efecto si quien llama es
+  // SUPER_ADMIN (el backend lo ignora para el resto de los roles).
+  getDashboard(empresaId?: number | null): Observable<DashboardKPIs> {
+    let url = `${this.apiUrl}/dashboard/full`;
+
+    if (empresaId != null) {
+      url += `?empresaId=${empresaId}`;
+    }
+
+    return this.http.get<DashboardKPIs>(url);
   }
 
   // 🔒 empresaId es opcional y solo tiene efecto si quien llama es

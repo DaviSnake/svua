@@ -7,7 +7,7 @@ import cl.aracridav.svua.inventario.dashboard.dto.response.IndicadorMTTRResponse
 
 public interface DashboardService {
 
-    public DashboardResponse obtenerDashboard();
+    public DashboardResponse obtenerDashboardFull(Long empresaId);
 
     public double calcularCumplimiento(Long empresaId);
 

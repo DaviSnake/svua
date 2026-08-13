@@ -41,9 +41,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final DepreciacionMensualRepository dMensualRepository;
 
     @Override
-    public DashboardResponse obtenerDashboard() {
-
-        Long empresaId = SecurityUtils.getEmpresaId();
+    public DashboardResponse obtenerDashboardFull(Long empresaId) {
 
         // KPIs
         Long totalActivos = activoRepository.countByEmpresaId(empresaId);
