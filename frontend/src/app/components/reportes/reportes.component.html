@@ -12,6 +12,26 @@
 
 </div>
 
+<!-- FILTRO POR EMPRESA (solo SUPER_ADMIN): acota el monitoreo de -->
+<!-- mantenimiento y la evolución de costos de mantención. -->
+<div class="filtro-grilla" *ngIf="esAdmin">
+
+  <div class="form-group form-group--combo">
+    <label>Empresa</label>
+    <input type="text"
+           placeholder="Todas las empresas"
+           [matAutocomplete]="autoFiltroEmpresa"
+           [formControl]="filtroEmpresaControl"
+           (focus)="onFocusFiltroEmpresa()">
+    <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+      <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+        {{ empresa.nombre }}
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+</div>
+
 <div class="dashboard-grid">
 
   <div class="dashboard-card cumplimiento">

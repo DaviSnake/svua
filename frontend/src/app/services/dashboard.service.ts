@@ -32,18 +32,36 @@ export class DashboardService {
     return this.http.get<DashboardKPIs>(`${this.apiUrl}/dashboard/full`);
   }
 
-  getDashboardIndicadores() {
-    return this.http.get<DashboardResponse>(`${this.apiUrl}/dashboard`
-    );
+  // 🔒 empresaId es opcional y solo tiene efecto si quien llama es
+  // SUPER_ADMIN (el backend lo ignora para el resto de los roles).
+  getDashboardIndicadores(empresaId?: number | null) {
+    let url = `${this.apiUrl}/dashboard`;
+
+    if (empresaId != null) {
+      url += `?empresaId=${empresaId}`;
+    }
+
+    return this.http.get<DashboardResponse>(url);
   }
 
   // 🔥 activoId es opcional: filtra la evolución de costos de
   // mantención a un solo activo (disponible para todos los usuarios).
-  getCostos(activoId?: number | null) {
+  // 🔒 empresaId es opcional y solo tiene efecto para SUPER_ADMIN.
+  getCostos(activoId?: number | null, empresaId?: number | null) {
     let url = `${this.apiUrl}/ordenes-mantenimiento/grafico/costos`;
 
+    const params: string[] = [];
+
     if (activoId != null) {
-      url += `?activoId=${activoId}`;
+      params.push(`activoId=${activoId}`);
+    }
+
+    if (empresaId != null) {
+      params.push(`empresaId=${empresaId}`);
+    }
+
+    if (params.length) {
+      url += `?${params.join('&')}`;
     }
 
     return this.http.get<any>(url);

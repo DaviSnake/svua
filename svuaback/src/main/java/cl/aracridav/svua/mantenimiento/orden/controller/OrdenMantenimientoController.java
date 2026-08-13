@@ -162,13 +162,16 @@ public class OrdenMantenimientoController {
         );
     }
 
+    // 🔒 empresaId es opcional y solo tiene efecto si quien llama es
+    // SUPER_ADMIN (ver OrdenMantenimientoServiceImpl).
     @GetMapping("/grafico/costos")
     public ResponseEntity<CostosGraficoReponse> obtenerGraficoCostos(
-            @RequestParam(required = false) Long activoId) {
+            @RequestParam(required = false) Long activoId,
+            @RequestParam(required = false) Long empresaId) {
 
         return ResponseEntity.ok(
             ordenMantenimientoService
-                .obtenerGraficoCostosUltimos6Meses(activoId)
+                .obtenerGraficoCostosUltimos6Meses(activoId, empresaId)
         );
     }
 

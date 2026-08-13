@@ -5,7 +5,10 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { DashboardResponse } from './models/reportes.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { ActivoService } from '../../services/activo.service';
+import { EmpresaService } from '../../services/empresa.service';
+import { AuthService } from '../../services/auth.service';
 import { Activo } from '../../model/activo';
+import { Empresa } from '../../model/empresa';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 
@@ -22,6 +25,8 @@ export class ReportesComponent implements OnInit {
 
    dashboardService = inject(DashboardService);
    private activoService = inject(ActivoService);
+   private empresaService = inject(EmpresaService);
+   private authService = inject(AuthService);
 
    dataCostos: any;
 
@@ -32,6 +37,15 @@ export class ReportesComponent implements OnInit {
   activosFiltrados: Activo[] = [];
   filtroActivoControl = new FormControl();
   filtroActivoId: number | null = null;
+
+  // 🔒 Filtro por empresa, solo visible/con efecto para SUPER_ADMIN:
+  // acota tanto el monitoreo de mantenimiento (KPIs) como la evolución
+  // de costos a una empresa puntual.
+  esAdmin = false;
+  empresas: Empresa[] = [];
+  empresasFiltradas: Empresa[] = [];
+  filtroEmpresaControl = new FormControl();
+  filtroEmpresaId: number | null = null;
 
    public lineChartType: ChartType = 'line';
 
@@ -71,6 +85,13 @@ export class ReportesComponent implements OnInit {
 
 
   ngOnInit(): void {
+    this.esAdmin = this.authService.isAdmin();
+
+    if (this.esAdmin) {
+      this.cargarEmpresas();
+      this.initFiltroEmpresa();
+    }
+
     this.cargarDashboard();
     this.cargarActivos();
     this.initFiltroActivo();
@@ -78,15 +99,63 @@ export class ReportesComponent implements OnInit {
   }
 
   cargarDashboard() {
-    this.dashboardService.getDashboardIndicadores().subscribe({
+    this.dashboardService.getDashboardIndicadores(this.filtroEmpresaId).subscribe({
       next: (res) => {
         this.data = res;
       }
     });
   }
 
+  cargarEmpresas(): void {
+    this.empresaService.getAll().subscribe(data => {
+      this.empresas = data;
+      this.empresasFiltradas = data;
+    });
+  }
+
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  onFocusFiltroEmpresa(): void {
+    this.empresasFiltradas = this.empresas;
+  }
+
+  // 🔥 Igual que en los informes: solo recarga cuando se selecciona una
+  // empresa (objeto) o cuando se borra el texto por completo. Al
+  // cambiar la empresa se recargan los KPIs, el gráfico de costos y el
+  // combo de Activo (acotado a la nueva empresa).
+  initFiltroEmpresa(): void {
+    this.filtroEmpresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroEmpresaId = value.id;
+        this.onEmpresaCambiada();
+      } else if (!search && this.filtroEmpresaId !== null) {
+        this.filtroEmpresaId = null;
+        this.onEmpresaCambiada();
+      }
+    });
+  }
+
+  // 🔥 El activo seleccionado puede no pertenecer a la nueva empresa:
+  // se limpia el filtro de Activo y se recarga su combo acotado a la
+  // empresa elegida (o a todas, si se borró el filtro de empresa).
+  private onEmpresaCambiada(): void {
+    this.filtroActivoId = null;
+    this.filtroActivoControl.setValue('', { emitEvent: false });
+
+    this.cargarActivos();
+    this.cargarDashboard();
+    this.cargarCostos();
+  }
+
   cargarActivos(): void {
-    this.activoService.getActivoCombo().subscribe(data => {
+    this.activoService.getActivoCombo(0, 200, this.filtroEmpresaId).subscribe(data => {
       this.activos = data.content;
       this.activosFiltrados = data.content;
     });
@@ -121,7 +190,7 @@ export class ReportesComponent implements OnInit {
   }
 
   cargarCostos(): void {
-    this.dashboardService.getCostos(this.filtroActivoId).subscribe({
+    this.dashboardService.getCostos(this.filtroActivoId, this.filtroEmpresaId).subscribe({
       next: (res) => {
         this.setData(res);
       },

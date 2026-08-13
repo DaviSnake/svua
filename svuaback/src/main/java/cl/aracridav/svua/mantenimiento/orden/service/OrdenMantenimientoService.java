@@ -49,7 +49,9 @@ public interface OrdenMantenimientoService {
 
     // 🔥 activoId es opcional: filtra el grafico de evolucion de
     // costos a un solo activo (disponible para todos los usuarios).
-    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(Long activoId);
+    // 🔒 empresaId es opcional y solo tiene efecto para SUPER_ADMIN.
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(
+            Long activoId, Long empresaId);
 
     public Resource obtenerArchivo(Long id);
 

@@ -452,9 +452,15 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     @Override
     @Transactional(readOnly = true)
-    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(Long activoId) {
+    public CostosGraficoReponse obtenerGraficoCostosUltimos6Meses(
+            Long activoId, Long empresaIdFiltro) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        // 🔒 Filtro por empresa opcional, solo para SUPER_ADMIN: para
+        // el resto de roles se ignora y se usa siempre la empresa del
+        // propio usuario (igual que antes).
+        Long empresaId = (empresaIdFiltro != null && SecurityUtils.esSuperAdmin())
+            ? empresaIdFiltro
+            : SecurityUtils.getEmpresaId();
 
         LocalDateTime fechaInicio = LocalDateTime.now()
             .minusMonths(5)

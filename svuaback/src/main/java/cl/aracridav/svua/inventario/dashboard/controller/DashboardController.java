@@ -3,6 +3,7 @@ package cl.aracridav.svua.inventario.dashboard.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.aracridav.svua.inventario.dashboard.dto.response.DashboardIndicadoresResponse;
@@ -57,13 +58,19 @@ public class DashboardController {
                 .obtenerMTTRMensual(empresaId));
     }
 
+    // 🔒 Filtro por empresa opcional, solo para SUPER_ADMIN: si el
+    // usuario no es SUPER_ADMIN se ignora cualquier empresaId recibido y
+    // se usa siempre la empresa del propio usuario (igual que antes).
     @GetMapping
-    public ResponseEntity<DashboardIndicadoresResponse> getDashboard() {
+    public ResponseEntity<DashboardIndicadoresResponse> getDashboard(
+            @RequestParam(required = false) Long empresaId) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        Long empresaIdEfectivo = (empresaId != null && SecurityUtils.esSuperAdmin())
+            ? empresaId
+            : SecurityUtils.getEmpresaId();
 
         return ResponseEntity.ok(
-                dashboardService.obtenerDashboard(empresaId)
+                dashboardService.obtenerDashboard(empresaIdEfectivo)
         );
     }
 
