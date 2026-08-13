@@ -57,7 +57,7 @@
 }
 
 /* 🔥 Combo con autocompletado (Empresa): mismo patrón visual usado en
-   los mantenedores y en auditorías. */
+   los mantenedores, auditorías e informe de conexiones. */
 .form-group--combo {
   position: relative;
 }
@@ -92,38 +92,105 @@
   overflow-x: auto;
 }
 
-.tabla-conexiones {
+.tabla-mantenciones {
   width: 100%;
   border-collapse: collapse;
 }
 
-.tabla-conexiones th,
-.tabla-conexiones td {
+.tabla-mantenciones th,
+.tabla-mantenciones td {
   padding: 12px 16px;
   text-align: left;
   font-size: 14px;
 }
 
 /* 🔥 Mismo estilo de encabezado de tabla que usa la grilla de Activos. */
-.tabla-conexiones th {
+.tabla-mantenciones th {
   background: #34495e;
   color: white;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.tabla-conexiones tbody tr {
+.tabla-mantenciones tbody tr:not(.fila-detalle) {
   border-top: 1px solid #e5e7eb;
 }
 
-.tabla-conexiones tbody tr:hover {
+.tabla-mantenciones tbody tr:not(.fila-detalle):hover {
   background: #f8fafc;
+}
+
+.text-right {
+  text-align: right !important;
 }
 
 .sin-datos {
   text-align: center;
   color: #6b7280;
   padding: 24px !important;
+}
+
+/* 🔥 Botón "Ver detalle": mismo patrón visual que los botones de
+   paginación, para no introducir un estilo de botón nuevo. */
+.btn-detalle {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.btn-detalle:hover {
+  background: #f3f4f6;
+}
+
+/* COMPROBANTE (detalle expandido) */
+.fila-detalle td {
+  padding: 0 16px 16px 16px;
+  background: #f8fafc;
+}
+
+.comprobante {
+  padding: 16px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.comprobante h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.comprobante-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 24px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.comprobante-repuestos {
+  font-size: 14px;
+  color: #374151;
+}
+
+.comprobante-repuestos ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.comprobante-repuestos li {
+  margin-bottom: 4px;
+}
+
+.sin-datos-inline {
+  margin: 8px 0 0 0;
+  color: #6b7280;
 }
 
 /* PAGINACIÓN */
@@ -177,6 +244,10 @@
 
   .filtro-grilla .form-group {
     max-width: 100%;
+  }
+
+  .comprobante-datos {
+    grid-template-columns: 1fr;
   }
 
   .paginacion {

@@ -3,9 +3,14 @@ package cl.aracridav.svua.mantenimiento.orden.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +30,7 @@ import cl.aracridav.svua.mantenimiento.orden.dto.request.OrdenMantenimientoReque
 import cl.aracridav.svua.mantenimiento.orden.dto.request.ReprogramarOrdenRequest;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.CostosGraficoReponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenEjecucionResponse;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoReporteResponse;
 import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.service.OrdenMantenimientoService;
 import lombok.RequiredArgsConstructor;
@@ -162,6 +168,23 @@ public class OrdenMantenimientoController {
             ordenMantenimientoService
                 .obtenerGraficoCostosUltimos6Meses()
         );
+    }
+
+    // 🔥 Informe de Mantenciones: historial paginado y filtrable de
+    // ordenes completadas, visible solo para SUPER_ADMIN.
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @GetMapping("/informe")
+    public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
+            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return ordenMantenimientoService
+            .obtenerInformeMantenciones(usuario, empresaId, fecha, pageable);
     }
 
 }

@@ -1,0 +1,157 @@
+<div class="page-header">
+
+  <h1>Informe de Mantenciones</h1>
+
+  <p>
+    Comprobante de órdenes de mantención completadas, con filtros por
+    usuario, empresa y fecha de ejecución.
+  </p>
+
+</div>
+
+<!-- FILTROS -->
+<div class="filtro-grilla">
+
+  <div class="form-group">
+    <label>Usuario</label>
+    <input type="text"
+           placeholder="Buscar por usuario..."
+           [(ngModel)]="filtroUsuario"
+           (ngModelChange)="onFiltroUsuarioChange()">
+  </div>
+
+  <div class="form-group">
+    <label>Fecha de ejecución</label>
+    <input type="date"
+           [(ngModel)]="filtroFecha"
+           (ngModelChange)="onFiltroFechaChange()">
+  </div>
+
+  <div class="form-group form-group--combo">
+    <label>Empresa</label>
+    <input type="text"
+           placeholder="Todas las empresas"
+           [matAutocomplete]="autoFiltroEmpresa"
+           [formControl]="filtroEmpresaControl"
+           (focus)="onFocusFiltroEmpresa()">
+    <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+      <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+        {{ empresa.nombre }}
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+  <small>
+    {{ totalElements }} órdenes completadas encontradas
+  </small>
+
+</div>
+
+<!-- TABLA -->
+<div class="tabla-container">
+
+  <table class="tabla-mantenciones">
+
+    <thead>
+      <tr>
+        <th>Orden</th>
+        <th>Fecha Programada</th>
+        <th>Fecha Ejecución</th>
+        <th>Usuario</th>
+        <th>Proveedor</th>
+        <th class="text-right">Costo Total</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <ng-container *ngFor="let orden of ordenes">
+
+        <tr>
+          <td>Orden #{{ orden.id }} - {{ orden.titulo }}</td>
+          <td>{{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ orden.usuarioNombre }}</td>
+          <td>{{ orden.proveedorNombre || '—' }}</td>
+          <td class="text-right">{{ orden.costoTotal | currency:'CLP':'symbol':'1.0-0' }}</td>
+          <td class="text-right">
+            <button class="btn-detalle" (click)="toggleDetalle(orden.id)">
+              {{ estaExpandida(orden.id) ? 'Ocultar' : 'Ver detalle' }}
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="estaExpandida(orden.id)" class="fila-detalle">
+          <td colspan="7">
+
+            <div class="comprobante">
+
+              <h3>Orden #{{ orden.id }} - {{ orden.titulo }} ({{ orden.estado }})</h3>
+
+              <div class="comprobante-datos">
+                <div><strong>Fecha programada:</strong> {{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div><strong>Fecha ejecución:</strong> {{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div><strong>Activo:</strong> {{ orden.activoNombre }}</div>
+                <div><strong>Empresa:</strong> {{ orden.empresaNombre }}</div>
+                <div><strong>Usuario:</strong> {{ orden.usuarioNombre }}</div>
+                <div><strong>Proveedor:</strong> {{ orden.proveedorNombre || '—' }}</div>
+                <div><strong>Valor hora:</strong> {{ orden.valorHoraProveedor | currency:'CLP':'symbol':'1.0-0' }}</div>
+                <div><strong>Costo total:</strong> {{ orden.costoTotal | currency:'CLP':'symbol':'1.0-0' }}</div>
+              </div>
+
+              <div class="comprobante-repuestos">
+                <strong>Repuestos utilizados:</strong>
+
+                <ul *ngIf="orden.repuestos?.length; else sinRepuestos">
+                  <li *ngFor="let repuesto of orden.repuestos">
+                    {{ repuesto.repuestoNombre }} x{{ repuesto.cantidad }}
+                    ({{ repuesto.costoTotal | currency:'CLP':'symbol':'1.0-0' }})
+                  </li>
+                </ul>
+
+                <ng-template #sinRepuestos>
+                  <p class="sin-datos-inline">No se utilizaron repuestos en esta orden.</p>
+                </ng-template>
+              </div>
+
+            </div>
+
+          </td>
+        </tr>
+
+      </ng-container>
+
+      <tr *ngIf="!ordenes.length">
+        <td colspan="7" class="sin-datos">
+          No hay órdenes completadas para el filtro seleccionado.
+        </td>
+      </tr>
+    </tbody>
+
+  </table>
+
+</div>
+
+<!-- PAGINACIÓN -->
+<div class="paginacion">
+
+  <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+    ⬅ Anterior
+  </button>
+
+  <ng-container *ngFor="let p of paginasVisibles()">
+    <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+    <button
+      *ngIf="p !== -1"
+      (click)="cambiarPagina(p)"
+      [class.activa]="p === page">
+      {{ p + 1 }}
+    </button>
+  </ng-container>
+
+  <button (click)="cambiarPagina(page + 1)"
+          [disabled]="page + 1 >= totalPages">
+    Siguiente ➡
+  </button>
+
+</div>

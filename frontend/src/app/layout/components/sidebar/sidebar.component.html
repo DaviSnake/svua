@@ -122,6 +122,15 @@
       <span class="tooltip">Informe de Conexiones</span>
     </li>
 
+    <!-- INFORME DE MANTENCIONES (solo SUPER_ADMIN) -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
+      <a routerLink="/inicio/informeMantenciones" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-wrench'></i>
+        <span *ngIf="!isCollapsed">Informe de Mantenciones</span>
+      </a>
+      <span class="tooltip">Informe de Mantenciones</span>
+    </li>
+
   </ul>
 
   <!-- FOOTER -->

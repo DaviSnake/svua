@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,7 +17,11 @@ import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 
-public interface OrdenMantenimientoRepository extends JpaRepository<OrdenMantenimiento, Long> {
+public interface OrdenMantenimientoRepository extends JpaRepository<OrdenMantenimiento, Long>,
+        // 🔥 Informe de Mantenciones: se arma el filtro con Specification
+        // (Criteria API), igual que en SesionUsuarioRepository, para no
+        // enviar nunca un bind param sin tipo ("? IS NULL") a Postgres.
+        JpaSpecificationExecutor<OrdenMantenimiento> {
 
     @Query("""
         SELECT o FROM OrdenMantenimiento o

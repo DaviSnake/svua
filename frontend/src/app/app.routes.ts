@@ -23,6 +23,7 @@ import { NotificacionComponent } from './components/notificacion/notificacion.co
 import { SoporteComponent } from './components/soporte/soporte.component';
 import { SesionUsuarioComponent } from './components/sesion-usuario/sesion-usuario.component';
 import { InformeConexionesComponent } from './components/informe-conexiones/informe-conexiones.component';
+import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
 
 export const routes: Routes = [
     {
@@ -243,6 +244,17 @@ export const routes: Routes = [
             {
                 path: 'informeConexiones',
                 component: InformeConexionesComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'informeMantenciones',
+                component: InformeMantencionesComponent
             }
         ]
     },
