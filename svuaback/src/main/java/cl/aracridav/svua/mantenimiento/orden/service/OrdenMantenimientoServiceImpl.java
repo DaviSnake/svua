@@ -1040,12 +1040,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        // 🔥 Orden fijo por fecha de ejecucion descendente, sin importar
+        // 🔥 Orden fijo por fecha programada descendente, sin importar
         // el sort que traiga el Pageable del controller.
         Pageable pageableOrdenado = PageRequest.of(
             pageable.getPageNumber(),
             pageable.getPageSize(),
-            Sort.by(Sort.Direction.DESC, "fechaEjecucion"));
+            Sort.by(Sort.Direction.DESC, "fechaProgramada"));
 
         return ordenRepository.findAll(spec, pageableOrdenado)
             .map(this::mapearInformeMantencion);

@@ -64,6 +64,7 @@
     <thead>
       <tr>
         <th>Orden</th>
+        <th>Estado</th>
         <th>Fecha Programada</th>
         <th>Fecha Ejecución</th>
         <th>Usuario</th>
@@ -78,6 +79,7 @@
 
         <tr>
           <td>Orden #{{ orden.id }} - {{ orden.titulo }}</td>
+          <td>{{ orden.estado }}</td>
           <td>{{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>{{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>{{ orden.usuarioNombre }}</td>
@@ -91,7 +93,7 @@
         </tr>
 
         <tr *ngIf="estaExpandida(orden.id)" class="fila-detalle">
-          <td colspan="7">
+          <td colspan="8">
 
             <div class="comprobante">
 
@@ -131,7 +133,7 @@
       </ng-container>
 
       <tr *ngIf="!ordenes.length">
-        <td colspan="7" class="sin-datos">
+        <td colspan="8" class="sin-datos">
           No hay órdenes para el filtro seleccionado.
         </td>
       </tr>
