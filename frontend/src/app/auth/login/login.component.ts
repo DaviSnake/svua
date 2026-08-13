@@ -17,6 +17,12 @@ export class LoginComponent {
   showPassword = false;
   esTecnico = false;
 
+  // 🔒 Evita doble submit (doble clic / Enter + clic) mientras el login
+  // está en curso: sin esto, cada clic dispara su propio POST /auth/login
+  // y cada uno crea su propia fila en Sesiones Activas para el mismo
+  // usuario, con segundos de diferencia.
+  enviando = false;
+
   userAgent = navigator.userAgent;
 
   errorMessage = '';
@@ -50,6 +56,11 @@ export class LoginComponent {
 
   login() {
 
+    // 🔒 Si ya hay un login en curso, ignora el submit repetido.
+    if (this.enviando) {
+      return;
+    }
+
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -58,6 +69,8 @@ export class LoginComponent {
       this.errorMessage = 'Completa los campos';
       return;
     }
+
+    this.enviando = true;
 
     this.authService.login(this.loginData).subscribe({
       next: (res) => {
@@ -71,6 +84,8 @@ export class LoginComponent {
 
         this.esTecnico = this.authService.isTecnico()!;
 
+        // 🔒 enviando se mantiene en true hasta la redirección: evita
+        // que un clic extra durante estos 800ms dispare otro login.
         setTimeout(() => {
           if (!this.esTecnico){
             this.router.navigateByUrl('/inicio/dashboard');
@@ -81,6 +96,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.errorMessage = err.error?.error || 'Credenciales incorrectas';
+        this.enviando = false;
       }
     });
 

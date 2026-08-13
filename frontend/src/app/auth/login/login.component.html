@@ -65,8 +65,8 @@
       {{ errorMessage }}
     </div>
 
-    <button type="submit" [disabled]="form.invalid">
-      Entrar
+    <button type="submit" [disabled]="form.invalid || enviando">
+      {{ enviando ? 'Entrando...' : 'Entrar' }}
     </button>
 
     <div class="extra">
