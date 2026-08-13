@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { HeaderComponent } from "./components/header/header.component";
 import { SidebarComponent } from "./components/sidebar/sidebar.component";
 import { Router, RouterOutlet } from '@angular/router';
@@ -7,6 +7,7 @@ import { NotificacionStateService } from '../services/notificacion-state.service
 import { AuthService } from '../services/auth.service';
 import { NotificacionService } from '../services/notificacion.service';
 import { WebSocketService } from '../services/web-socket.service';
+import { InactivityService } from '../services/inactivity.service';
 
 @Component({
   selector: 'app-layout',
@@ -15,12 +16,13 @@ import { WebSocketService } from '../services/web-socket.service';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
-export class LayoutComponent implements OnInit{
+export class LayoutComponent implements OnInit, OnDestroy {
 
   notificacionState = inject(NotificacionStateService);
   authService = inject(AuthService);
   notificacionService = inject(NotificacionService);
   webSocketService = inject(WebSocketService);
+  inactivityService = inject(InactivityService);
   router = inject(Router);
 
   @ViewChild('sidebarPadre') sidebarPadre!: ElementRef;
@@ -38,6 +40,15 @@ export class LayoutComponent implements OnInit{
       this.cantidadNoLeidas = value;
     });
 
+    // 🔥 Cierra la sesión si no hay actividad del usuario (mouse,
+    // teclado, scroll) durante 5 minutos. Solo corre mientras está
+    // dentro del layout autenticado.
+    this.inactivityService.iniciar();
+
+  }
+
+  ngOnDestroy(): void {
+    this.inactivityService.detener();
   }
 
   abrirNotificaciones() {
