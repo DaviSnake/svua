@@ -1,1 +1,80 @@
-<app-paginaencontruccion />
+<div class="page-header">
+
+  <h1>Configuración</h1>
+
+  <p>
+    Variables del archivo .env que utiliza el sistema (base de datos, correo,
+    seguridad, pagos y otras). Acceso exclusivo para Super Administrador.
+  </p>
+
+</div>
+
+<!-- ADVERTENCIA PERMANENTE -->
+<div class="advertencia">
+  ⚠️ Los cambios guardados aquí se escriben directamente en el archivo .env,
+  pero <strong>no toman efecto hasta reiniciar el contenedor del backend</strong>.
+  Modifique estos valores con precaución: varios corresponden a credenciales
+  sensibles (contraseñas, claves y tokens) usadas por toda la aplicación.
+</div>
+
+<!-- CARGANDO -->
+<div class="cargando" *ngIf="cargando">
+  Cargando configuración...
+</div>
+
+<!-- TABLA -->
+<div class="tabla-container" *ngIf="!cargando">
+
+  <table class="tabla-configuracion">
+
+    <thead>
+      <tr>
+        <th>Variable</th>
+        <th>Valor</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let entrada of entradas">
+        <td class="clave">{{ entrada.clave }}</td>
+        <td class="valor">
+          <input
+            [type]="esSensible(entrada.clave) && !visibles[entrada.clave] ? 'password' : 'text'"
+            [(ngModel)]="entrada.valor"
+            [name]="entrada.clave"
+            autocomplete="off"
+            spellcheck="false">
+        </td>
+        <td class="acciones">
+          <button
+            type="button"
+            class="btn-toggle"
+            *ngIf="esSensible(entrada.clave)"
+            (click)="toggleVisible(entrada.clave)">
+            {{ visibles[entrada.clave] ? 'Ocultar' : 'Ver' }}
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="!entradas.length">
+        <td colspan="3" class="sin-datos">
+          No se encontraron variables de configuración.
+        </td>
+      </tr>
+    </tbody>
+
+  </table>
+
+</div>
+
+<!-- ACCIONES -->
+<div class="acciones-guardar" *ngIf="!cargando && entradas.length">
+  <button
+    type="button"
+    class="btn-guardar"
+    [disabled]="!hayCambios() || guardando"
+    (click)="guardar()">
+    {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+  </button>
+</div>

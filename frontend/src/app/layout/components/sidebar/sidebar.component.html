@@ -162,7 +162,7 @@
         <span class="tooltip">Soporte</span>
       </li>
 
-      <li class="menu-item" routerLinkActive="active" *ngIf="!esTecnico">
+      <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
         <a routerLink="/inicio/configuracion" (click)="closeAllMenus()">
           <i class="bx bx-cog"></i>
           <span *ngIf="!isCollapsed">Configuración</span>

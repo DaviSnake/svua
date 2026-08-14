@@ -1,0 +1,167 @@
+.page-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.page-header p {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ADVERTENCIA */
+.advertencia {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.cargando {
+  text-align: center;
+  color: #6b7280;
+  padding: 30px 0;
+}
+
+/* TABLA */
+.tabla-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.tabla-configuracion {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-configuracion th,
+.tabla-configuracion td {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.tabla-configuracion th {
+  background: #34495e;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla-configuracion tbody tr {
+  border-top: 1px solid #e5e7eb;
+}
+
+.tabla-configuracion tbody tr:hover {
+  background: #f8fafc;
+}
+
+.tabla-configuracion td.clave {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.tabla-configuracion td.valor {
+  width: 100%;
+}
+
+.tabla-configuracion td.valor input {
+  width: 100%;
+  min-width: 220px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: 'Courier New', monospace;
+}
+
+.tabla-configuracion td.valor input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.tabla-configuracion td.acciones {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.btn-toggle {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+}
+
+.btn-toggle:hover {
+  background: #f3f4f6;
+}
+
+.sin-datos {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px !important;
+}
+
+/* ACCIONES */
+.acciones-guardar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-guardar {
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-guardar:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* ======================================
+   MOVIL
+   ====================================== */
+
+@media (max-width: 768px) {
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .tabla-configuracion td.valor input {
+    min-width: 160px;
+  }
+
+  .acciones-guardar {
+    justify-content: stretch;
+  }
+
+  .btn-guardar {
+    width: 100%;
+  }
+
+}

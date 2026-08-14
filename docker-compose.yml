@@ -35,6 +35,11 @@ services:
       - svua_net
     volumes:
     - ./uploads:/app/uploads
+    # 🔒 Monta el .env real (solo lectura/escritura desde el propio
+    # backend) para que la pantalla de Configuración (SUPER_ADMIN) pueda
+    # leerlo y editarlo. Los cambios requieren reiniciar este contenedor
+    # para tomar efecto (Spring solo lee estas variables al arrancar).
+    - ./.env:/app/.env
 
   frontend:
     build: ./frontend

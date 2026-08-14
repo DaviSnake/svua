@@ -28,7 +28,6 @@ import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
-import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 
 @Service
