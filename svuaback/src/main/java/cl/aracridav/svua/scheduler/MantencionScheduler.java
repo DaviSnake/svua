@@ -23,8 +23,6 @@ import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
 import cl.aracridav.svua.notificacion.repository.NotificacionRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.service.EmailService;
-import cl.aracridav.svua.usuario.entity.SesionUsuario;
-import cl.aracridav.svua.usuario.repository.SesionUsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,12 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MantencionScheduler {
 
-    private static final int MINUTOS_INACTIVIDAD_SESION = 2;
     private static final int STOCK_INICIAL_DEMO = 15;
 
     private final OrdenMantenimientoRepository ordenRepository;
     private final EmailService emailService;
-    private final SesionUsuarioRepository sesionRepository;
 
     private final NotificacionRepository notificacionRepository;
     private final OrdenRepuestoRepository ordenRepuestoRepository;
@@ -51,7 +47,7 @@ public class MantencionScheduler {
     private boolean enabled;
 
     @Value("${svua.scheduler.mantenciones.diasnotificacion}")
-    private int diasNotificaion;
+    private int diasNotificacion;
 
     @Value("${app.demo.empresa-id}")
     private Long empresaId;
@@ -64,7 +60,7 @@ public class MantencionScheduler {
             return;
         }
 
-        LocalDate fechaNotificacion = LocalDate.now().plusDays(diasNotificaion);
+        LocalDate fechaNotificacion = LocalDate.now().plusDays(diasNotificacion);
         LocalDateTime desde = fechaNotificacion.atStartOfDay();
         LocalDateTime hasta = fechaNotificacion.atTime(23, 59, 59);
 
@@ -87,37 +83,6 @@ public class MantencionScheduler {
 
         }
 
-    }
-
-    @Scheduled(fixedRate = 60000)
-    @Transactional
-    public void cerrarSesionesInactivas() {
-
-        LocalDateTime limite =
-            LocalDateTime.now()
-                .minusMinutes(MINUTOS_INACTIVIDAD_SESION);
-
-        List<SesionUsuario> sesiones =
-            sesionRepository
-                .findByActivaTrueAndUltimaActividadBefore(
-                    limite
-                );
-
-        sesiones.forEach(sesion -> {
-
-            sesion.setActiva(false);
-
-            sesion.setFechaLogout(
-                LocalDateTime.now()
-            );
-
-            log.info(
-                "Sesión cerrada por inactividad: {}",
-                sesion.getUsuario()
-                    .getNombre()
-            );
-
-        });
     }
 
     @Scheduled(cron = "0 0 0 * * *")
