@@ -170,4 +170,17 @@ export class InformeMantencionesComponent implements OnInit {
     return id != null && this.ordenExpandidaId === id;
   }
 
+  // 🔥 Duración de la mantención expresada en horas (redondeada a 2
+  // decimales), a partir de duracionSegundos que entrega el backend.
+  formatearDuracion(duracionSegundos: number | undefined): string {
+
+    if (duracionSegundos == null || duracionSegundos <= 0) {
+      return '—';
+    }
+
+    const horas = Math.round((duracionSegundos / 3600) * 100) / 100;
+
+    return `${horas} h`;
+  }
+
 }

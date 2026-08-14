@@ -21,6 +21,7 @@ export interface OrdenMantenimientoReporte {
   tipoMantenimiento?: string;
   fechaProgramada?: string;
   fechaEjecucion?: string;
+  duracionSegundos?: number;
   activoNombre?: string;
   empresaNombre?: string;
   usuarioNombre?: string;

@@ -1068,6 +1068,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             .tipoMantenimiento(o.getTipoMantenimiento())
             .fechaProgramada(o.getFechaProgramada())
             .fechaEjecucion(o.getFechaEjecucion())
+            .duracionSegundos(o.getDuracionSegundos())
             .activoNombre(o.getActivo().getNombre())
             .empresaNombre(o.getEmpresa().getNombre())
             .usuarioNombre(

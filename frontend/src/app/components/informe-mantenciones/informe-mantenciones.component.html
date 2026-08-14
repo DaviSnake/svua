@@ -104,6 +104,7 @@
                 <div><strong>Tipo de mantención:</strong> {{ orden.tipoMantenimiento }}</div>
                 <div><strong>Fecha programada:</strong> {{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</div>
                 <div><strong>Fecha ejecución:</strong> {{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div><strong>Duración:</strong> {{ formatearDuracion(orden.duracionSegundos) }}</div>
                 <div><strong>Activo:</strong> {{ orden.activoNombre }}</div>
                 <div><strong>Empresa:</strong> {{ orden.empresaNombre }}</div>
                 <div><strong>Usuario:</strong> {{ orden.usuarioNombre }}</div>
