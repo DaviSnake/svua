@@ -104,7 +104,7 @@
                    [formControl]="tipoMantenimientoControl"
                    (focus)="onFocusTipoMantenimiento()"
                    placeholder="Seleccione tipo mantención">
-            <mat-autocomplete #autoTipoMantenimiento="matAutocomplete">
+            <mat-autocomplete #autoTipoMantenimiento="matAutocomplete" panelClass="panel-autocomplete-oscuro">
               <mat-option *ngFor="let tipo of tiposMantenimientoFiltrados" [value]="tipo">
                 {{ tipo }}
               </mat-option>
@@ -126,7 +126,7 @@
                    [matAutocomplete]="auto"
                    [formControl]="activoControl"
                    placeholder="Seleccione activo">
-            <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo">
+            <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayActivo" panelClass="panel-autocomplete-oscuro">
               <mat-option *ngFor="let activo of activosFiltrados" [value]="activo">
                 {{ activo.nombre }}
               </mat-option>
@@ -165,7 +165,7 @@
                    [formControl]="proveedorControl"
                    (focus)="onFocusProveedor()"
                    placeholder="Seleccione proveedor">
-            <mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="displayProveedor">
+            <mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="displayProveedor" panelClass="panel-autocomplete-oscuro">
               <mat-option *ngFor="let p of proveedoresFiltrados" [value]="p">
                 {{ p.nombre }}
               </mat-option>

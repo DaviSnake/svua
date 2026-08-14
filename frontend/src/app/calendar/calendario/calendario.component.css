@@ -55,6 +55,12 @@
   border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
+  /* 🔥 Sin esto, el input queda con el fondo oscuro que define más abajo
+     la regla global "input, textarea, select" (pensada para los combos
+     del modal): esa regla no compite en especificidad, pero como acá no
+     se declaraba background/color, la oscura terminaba ganando igual. */
+  background: #ffffff;
+  color: #1f2937;
 }
 
 .form-group--combo {
@@ -345,19 +351,23 @@ textarea {
   display: none !important;
 }
 
-/* 🔥 PANEL AUTOCOMPLETE */
-.mat-mdc-autocomplete-panel {
+/* 🔥 PANEL AUTOCOMPLETE (oscuro) — SOLO para los combos del modal (tipo
+   mantención, activo, proveedor), que llevan panelClass="panel-autocomplete-oscuro".
+   Antes esto aplicaba sin esa clase (.mat-mdc-autocomplete-panel a secas),
+   así que también oscurecía el combo de filtro de empresa (fuera del
+   modal, sobre fondo claro), que no debía verse oscuro. */
+.panel-autocomplete-oscuro.mat-mdc-autocomplete-panel {
   background: #0f172a !important;
   color: black !important;
   border: 1px solid #334155 !important;
 }
 
 /* 🔥 OPCIONES */
-.mat-mdc-option {
+.panel-autocomplete-oscuro .mat-mdc-option {
   color: black !important;
 }
 
-.mat-mdc-option:hover {
+.panel-autocomplete-oscuro .mat-mdc-option:hover {
   background: #1e293b !important;
 }
 
@@ -503,6 +513,27 @@ textarea {
 .fc-event {
   position: relative;
   overflow: visible !important;
+}
+
+/* 🔥 Achurado: refuerza visualmente que el bloque ocupa exactamente el
+   rango de horas de la duración asignada (fechaProgramada → fechaTermino,
+   ver cargarEventos()), con un patrón de rayas diagonales superpuesto al
+   color sólido del estado en vez de un relleno plano. Solo aplica en las
+   vistas de cuadrícula horaria (semana/día), que son las que dibujan el
+   evento como un bloque proporcional a su duración real. */
+.fc-timegrid-event {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0px,
+    rgba(255, 255, 255, 0.25) 6px,
+    transparent 6px,
+    transparent 14px
+  );
+}
+
+.fc-timegrid-event .fc-event-main {
+  position: relative;
+  z-index: 1;
 }
 
 /* 🔥 TOOLTIP */

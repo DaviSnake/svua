@@ -548,7 +548,7 @@ export class CalendarioComponent implements OnInit {
 
       const eventos = ordenesMantencion || [];
 
-      this.calendarOptions.events = eventos.map(ordenMantencion => ({
+      const eventosMapeados = eventos.map(ordenMantencion => ({
         id: ordenMantencion.id?.toString(),
         title: ordenMantencion.titulo,
         start: ordenMantencion.fechaProgramada,
@@ -576,6 +576,29 @@ export class CalendarioComponent implements OnInit {
           repuestos: ordenMantencion.repuestos
         }
       }));
+
+      // 🔥 El tooltip de cada evento se arma "al vuelo" en eventDidMount,
+      // con el estado/tipo/duración de ese momento quemados en el HTML
+      // del globo. eventDidMount solo se dispara cuando FullCalendar
+      // MONTA un bloque por primera vez — si solo reasignamos
+      // calendarOptions.events con datos nuevos, FullCalendar puede
+      // reconocer que ya existe un evento con ese mismo id y actualizarlo
+      // "in place" sin volver a montarlo, dejando el tooltip viejo (con
+      // el estado anterior) pegado en pantalla aunque la orden ya haya
+      // cambiado de estado (iniciar/detener/cancelar).
+      //
+      // Por eso, cuando el calendario ya está inicializado, se sacan
+      // TODOS los eventos y se vuelven a agregar desde cero: así se
+      // fuerza a que cada bloque (y su tooltip) se vuelva a montar con
+      // los datos actuales, sin necesidad de recargar la página.
+      const api = this.calendarComponent?.getApi();
+
+      if (api) {
+        api.removeAllEvents();
+        api.addEventSource(eventosMapeados);
+      } else {
+        this.calendarOptions.events = eventosMapeados;
+      }
     });
 
   }
