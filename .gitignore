@@ -5,3 +5,5 @@
 .env.*
 certbot/conf
 certbot/www
+# Archivos temporales de parcheo (scripts de patch, verificaciones, locks)
+_to_delete/
