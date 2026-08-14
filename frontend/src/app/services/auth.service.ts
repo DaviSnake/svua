@@ -51,10 +51,26 @@ export class AuthService {
     ? new BroadcastChannel('svua-auth')
     : null;
 
+  // 🔥 Evita mandar el aviso de cierre más de una vez si 'beforeunload' y
+  // 'pagehide' se disparan los dos para el mismo cierre de pestaña.
+  private avisoCierreEnviado = false;
+
   constructor() {
 
     window.addEventListener('beforeunload', () => {
       this.stopRefreshTimer();
+      this.avisarCierrePestana();
+    });
+
+    // 🔥 En navegadores móviles (Safari en particular) 'beforeunload' no es
+    // confiable; 'pagehide' es el evento recomendado para detectar el
+    // cierre real de la pestaña/ventana en cualquier dispositivo. Si
+    // event.persisted es true, la página solo entra a la bfcache (podría
+    // "revivir" con el botón atrás) y no se considera un cierre real.
+    window.addEventListener('pagehide', (event: PageTransitionEvent) => {
+      if (!event.persisted) {
+        this.avisarCierrePestana();
+      }
     });
 
     this.canal?.addEventListener('message', (event: MessageEvent<MensajeAuthBroadcast>) => {
@@ -279,6 +295,52 @@ export class AuthService {
   finalizarSesionLocal() {
     this.clearSession();
     this.canal?.postMessage({ type: 'logout' } satisfies MensajeAuthBroadcast);
+  }
+
+  /**
+   * Al cerrar la pestaña/ventana (en cualquier dispositivo), avisa al
+   * backend para marcar ESTA sesión como desconectada de inmediato en
+   * "Sesiones Activas", en vez de esperar el job de limpieza por
+   * inactividad (2 horas). Usa fetch con keepalive: true en lugar de un
+   * HttpClient/XHR normal porque es el único mecanismo que:
+   *   1) el navegador garantiza seguir enviando aunque la página ya se
+   *      esté destruyendo (un HttpClient normal se cancela), y
+   *   2) permite mandar el header Authorization (navigator.sendBeacon no
+   *      admite headers personalizados, así que no sirve acá).
+   *
+   * IMPORTANTE: esto SOLO marca la sesión como cerrada en el backend; no
+   * borra el token local ni redirige a /login, para no romper un simple
+   * refresh (F5) de la página. Si el usuario solo refrescó, la próxima
+   * petición normal (registro de actividad) vuelve a marcar la sesión
+   * como activa automáticamente.
+   */
+  private avisarCierrePestana(): void {
+
+    if (this.avisoCierreEnviado) {
+      return;
+    }
+
+    const token = sessionStorage.getItem('token');
+    const tokenJti = this.getTokenJti();
+
+    if (!token || !tokenJti) {
+      return;
+    }
+
+    this.avisoCierreEnviado = true;
+
+    fetch(`${this.apiUrl}/sesiones/logout/${tokenJti}`, {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: '{}'
+    }).catch(() => {
+      // Ignorado: la pestaña ya se está cerrando, no hay forma de
+      // reintentar ni de mostrar feedback al usuario.
+    });
   }
 
   /**
