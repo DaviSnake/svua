@@ -24,6 +24,65 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
+/* 🔒 Filtro empresa (SUPER_ADMIN) */
+.filtro-grilla {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.filtro-grilla .form-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 260px;
+}
+
+.filtro-grilla label {
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.filtro-grilla input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group--combo {
+  position: relative;
+}
+
+.form-group--combo input {
+  padding-right: 28px;
+}
+
+.form-group--combo::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid transparent;
+  pointer-events: none;
+  transition: border-top-color 0.15s;
+}
+
+.form-group--combo:hover::after {
+  border-top-color: #000;
+}
+
 .modal-backdrop {
   position: fixed;
   top: 0;

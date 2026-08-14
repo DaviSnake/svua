@@ -23,6 +23,8 @@ import { RepuestoService } from '../../services/repuesto.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { FormUtils } from '../../shared/form-utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { EmpresaService } from '../../services/empresa.service';
+import { Empresa } from '../../model/empresa';
 
 @Component({
   selector: 'app-calendario',
@@ -38,10 +40,21 @@ export class CalendarioComponent implements OnInit {
   private repuestoService = inject(RepuestoService);
   private proveedorService = inject(ProveedorService);
   private authService = inject(AuthService);
+  private empresaService = inject(EmpresaService);
   private sanitizer = inject(DomSanitizer);
   private fb = inject(FormBuilder);
 
   usuario: any;
+
+  // 🔥 Filtro empresa: solo lo ve y lo puede usar el SUPER_ADMIN (mismo
+  // patrón que en Dashboard/Reportes/Informe de Mantenciones); para el
+  // resto de los roles el calendario sigue mostrando solo su propia
+  // empresa, como antes.
+  esSuperAdmin = false;
+  empresas: Empresa[] = [];
+  empresasFiltradas: Empresa[] = [];
+  filtroEmpresaControl = new FormControl();
+  filtroEmpresaId: number | null = null;
 
   activos: Activo[] = [];
 
@@ -332,6 +345,13 @@ export class CalendarioComponent implements OnInit {
       this.usuario = user;
     });
 
+    this.esSuperAdmin = this.authService.isAdmin();
+
+    if (this.esSuperAdmin) {
+      this.initFiltroEmpresa();
+      this.cargarEmpresas();
+    }
+
     this.ordenMantencionForm = this.fb.group({
       titulo: ['', Validators.required],
       observaciones: [''],
@@ -487,9 +507,44 @@ export class CalendarioComponent implements OnInit {
       });
     }
 
+  // 🔥 Filtro empresa (solo SUPER_ADMIN): carga el combo de empresas y
+  // recarga el calendario cuando se selecciona una (o se borra el
+  // filtro), igual que en Dashboard/Reportes/Informe de Mantenciones.
+  cargarEmpresas(): void {
+    this.empresaService.getAll().subscribe(data => {
+      this.empresas = data;
+      this.empresasFiltradas = data;
+    });
+  }
+
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  onFocusFiltroEmpresa(): void {
+    this.empresasFiltradas = this.empresas;
+  }
+
+  initFiltroEmpresa(): void {
+    this.filtroEmpresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroEmpresaId = value.id;
+        this.cargarEventos();
+      } else if (!search && this.filtroEmpresaId !== null) {
+        this.filtroEmpresaId = null;
+        this.cargarEventos();
+      }
+    });
+  }
+
   // 🔥 CARGAR EVENTOS (solo actualiza events)
   cargarEventos() {
-    this.ordenMantencionService.listar().subscribe((ordenesMantencion) => {
+    this.ordenMantencionService.listar(this.filtroEmpresaId ?? undefined).subscribe((ordenesMantencion) => {
 
       const eventos = ordenesMantencion || [];
 

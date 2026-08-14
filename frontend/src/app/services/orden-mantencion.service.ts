@@ -15,9 +15,21 @@ export class OrdenMantencionService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  listar() {
-    //return of([] as Cita[]);
-    return this.http.get<OrdenMantencion[]>(`${this.apiUrl}/ordenes-mantenimiento`);
+  // 🔥 empresaId opcional: solo lo usa el SUPER_ADMIN para ver el
+  // calendario de una empresa distinta a la propia (el backend lo
+  // ignora para el resto de los roles).
+  listar(empresaId?: number) {
+
+    let params = new HttpParams();
+
+    if (empresaId != null) {
+      params = params.set('empresaId', empresaId);
+    }
+
+    return this.http.get<OrdenMantencion[]>(
+      `${this.apiUrl}/ordenes-mantenimiento`,
+      { params }
+    );
   }
 
   crear(ordenMantencion: OrdenMantencion) {

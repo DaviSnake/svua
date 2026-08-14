@@ -6,6 +6,23 @@
       <p>Gestión de orden de mantención y programación</p>
     </div>
   </div>
+  <!-- 🔒 Filtro empresa: solo visible para SUPER_ADMIN -->
+  <div class="filtro-grilla" *ngIf="esSuperAdmin">
+    <div class="form-group form-group--combo">
+      <label>Empresa</label>
+      <input type="text"
+             placeholder="Todas las empresas"
+             [matAutocomplete]="autoFiltroEmpresa"
+             [formControl]="filtroEmpresaControl"
+             (focus)="onFocusFiltroEmpresa()">
+      <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+        <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+          {{ empresa.nombre }}
+        </mat-option>
+      </mat-autocomplete>
+    </div>
+  </div>
+
   <!-- 🟡 LEYENDA (AQUÍ VA) -->
   <div class="legend">
     <div class="item"><span class="dot pendiente"></span> PENDIENTE</div>

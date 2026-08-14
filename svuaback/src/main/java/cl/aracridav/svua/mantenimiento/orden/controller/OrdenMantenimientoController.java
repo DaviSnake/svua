@@ -61,8 +61,9 @@ public class OrdenMantenimientoController {
         "(hasAuthority('ORDEN_MANT_VIEW')) "
     )
     @GetMapping
-    public ResponseEntity<List<OrdenMantenimientoResponse>> listar() {
-        return ResponseEntity.ok(ordenMantenimientoService.listarOrdenesEmpresa());
+    public ResponseEntity<List<OrdenMantenimientoResponse>> listar(
+            @RequestParam(required = false) Long empresaId) {
+        return ResponseEntity.ok(ordenMantenimientoService.listarOrdenesEmpresa(empresaId));
     }
 
     @PreAuthorize(

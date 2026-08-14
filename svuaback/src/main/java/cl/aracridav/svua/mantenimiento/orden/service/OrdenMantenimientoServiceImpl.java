@@ -440,9 +440,14 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrdenMantenimientoResponse> listarOrdenesEmpresa() {
+    public List<OrdenMantenimientoResponse> listarOrdenesEmpresa(Long empresaIdFiltro) {
 
-        Long empresaId = SecurityUtils.getEmpresaId();
+        // Filtro por empresa opcional, solo para SUPER_ADMIN: para
+        // el resto de roles se ignora y se usa siempre la empresa del
+        // propio usuario (mismo patron que obtenerGraficoCostosUltimos6Meses).
+        Long empresaId = (empresaIdFiltro != null && SecurityUtils.esSuperAdmin())
+            ? empresaIdFiltro
+            : SecurityUtils.getEmpresaId();
 
         return ordenRepository.findByEmpresaId(empresaId)
                 .stream()

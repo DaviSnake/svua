@@ -39,7 +39,7 @@ public interface OrdenMantenimientoService {
 
     public OrdenEjecucionResponse ejecutarOrden(Long idOrden);
 
-    public List<OrdenMantenimientoResponse> listarOrdenesEmpresa();
+    public List<OrdenMantenimientoResponse> listarOrdenesEmpresa(Long empresaIdFiltro);
     
     public OrdenMantenimientoResponse reprogramarOrden(Long ordenId, LocalDateTime nuevaFecha, String motivo);
 
