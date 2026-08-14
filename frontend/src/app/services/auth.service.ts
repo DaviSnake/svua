@@ -344,6 +344,76 @@ export class AuthService {
   }
 
   /**
+   * Detecta si el servidor tiene desplegada una versión del frontend más
+   * nueva que la que está corriendo en esta pestaña, y si es así fuerza
+   * una navegación real (no del router de Angular) hacia `destino` en vez
+   * de dejar que el usuario siga usando el bundle viejo (el típico caso
+   * de "no veo los cambios hasta que hago Ctrl+Shift+F5"). Se llama al
+   * iniciar sesión.
+   *
+   * Funciona en cualquier navegador porque no depende de ninguna API de
+   * "limpiar cache" (esa API no existe para el cache HTTP normal): en vez
+   * de eso, compara version.json (que se regenera en cada build, ver
+   * scripts/generar-version.js) pedido con `cache: 'no-store'` — así el
+   * navegador SIEMPRE va a la red a buscarlo, sin importar qué tan
+   * agresivo sea su cache — contra la última versión que esta pestaña
+   * había visto.
+   *
+   * Si difieren, en vez de un simple window.location.reload() (que
+   * recargaría la pantalla de login en la que el usuario sigue parado)
+   * se asigna window.location.href = destino: eso fuerza una navegación
+   * de página completa —no una ruta del SPA— que trae un index.html
+   * fresco (nginx ya lo sirve con no-store, ver nginx.conf) con los
+   * bundles JS/CSS de la versión nueva, y de paso deja al usuario en su
+   * pantalla de inicio (el token ya quedó guardado antes de llamar esto).
+   *
+   * Devuelve true si se disparó la navegación forzada (el llamador no
+   * debe navegar por su cuenta, la página ya se está yendo).
+   */
+  async verificarVersionYRecargarSiCorresponde(destino: string): Promise<boolean> {
+
+    try {
+
+      const resp = await fetch(`/assets/version.json?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+
+      if (!resp.ok) {
+        return false;
+      }
+
+      const data = await resp.json();
+      const versionServidor = data?.version;
+
+      if (!versionServidor) {
+        return false;
+      }
+
+      const versionConocida = sessionStorage.getItem('svua_version_conocida');
+
+      // 🔥 Primera vez que esta pestaña ve la app: solo guarda la
+      // referencia, nada que comparar todavía.
+      if (!versionConocida) {
+        sessionStorage.setItem('svua_version_conocida', versionServidor);
+        return false;
+      }
+
+      if (versionConocida !== versionServidor) {
+        sessionStorage.setItem('svua_version_conocida', versionServidor);
+        window.location.href = destino;
+        return true;
+      }
+
+      return false;
+
+    } catch {
+      // Sin red, version.json no existe (ej. entorno de desarrollo con
+      // "ng serve"), etc.: no bloquea el login por esto.
+      return false;
+    }
+  }
+
+  /**
    * Sesión inválida o vencida DE VERDAD: falló el refresh del token (o no
    * había refresh token disponible). Limpia todo, avisa al usuario con un
    * mensaje claro y avisa a las demás pestañas para que hagan lo mismo.

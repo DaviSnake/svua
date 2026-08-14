@@ -73,7 +73,7 @@ export class LoginComponent {
     this.enviando = true;
 
     this.authService.login(this.loginData).subscribe({
-      next: (res) => {
+      next: async (res) => {
 
         this.successMessage = 'Inicio de sesión exitoso';
 
@@ -84,14 +84,25 @@ export class LoginComponent {
 
         this.esTecnico = this.authService.isTecnico()!;
 
+        const destino = !this.esTecnico
+          ? '/inicio/dashboard'
+          : '/inicio/calendario';
+
+        // 🔥 Si el servidor tiene una versión más nueva del frontend que
+        // la que está corriendo en esta pestaña, esto navega de página
+        // completa a `destino` (no una ruta del router de Angular), lo
+        // que trae la versión nueva del frontend. El token ya quedó
+        // guardado arriba, así que el usuario llega logueado.
+        const recargando = await this.authService.verificarVersionYRecargarSiCorresponde(destino);
+
+        if (recargando) {
+          return;
+        }
+
         // 🔒 enviando se mantiene en true hasta la redirección: evita
         // que un clic extra durante estos 800ms dispare otro login.
         setTimeout(() => {
-          if (!this.esTecnico){
-            this.router.navigateByUrl('/inicio/dashboard');
-          } else {
-            this.router.navigateByUrl('/inicio/calendario');
-          }
+          this.router.navigateByUrl(destino);
         }, 800);
       },
       error: (err) => {

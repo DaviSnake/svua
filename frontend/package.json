@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "set API_URL=http://localhost:8080/api/v1/svua&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL | Set-Content src/assets/env.js\" && ng serve",
     "build": "ng build",
+    "postbuild": "node scripts/generar-version.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
