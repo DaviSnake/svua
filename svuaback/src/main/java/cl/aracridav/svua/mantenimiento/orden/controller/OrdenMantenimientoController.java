@@ -165,6 +165,10 @@ public class OrdenMantenimientoController {
 
     // 🔒 empresaId es opcional y solo tiene efecto si quien llama es
     // SUPER_ADMIN (ver OrdenMantenimientoServiceImpl).
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('ORDEN_MANT_VIEW')) "
+    )
     @GetMapping("/grafico/costos")
     public ResponseEntity<CostosGraficoReponse> obtenerGraficoCostos(
             @RequestParam(required = false) Long activoId,

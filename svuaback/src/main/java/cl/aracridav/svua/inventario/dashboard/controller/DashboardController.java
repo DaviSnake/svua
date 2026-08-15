@@ -1,6 +1,7 @@
 package cl.aracridav.svua.inventario.dashboard.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +25,7 @@ public class DashboardController {
     // 🔒 Filtro por empresa opcional, solo para SUPER_ADMIN: si el
     // usuario no es SUPER_ADMIN se ignora cualquier empresaId recibido y
     // se usa siempre la empresa del propio usuario (igual que antes).
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping("/full")
     public ResponseEntity<DashboardResponse> obtenerDashboard(
             @RequestParam(required = false) Long empresaId) {
@@ -37,6 +39,7 @@ public class DashboardController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping("/cumplimiento/semanal")
     public ResponseEntity<IndicadorCumplimientoResponse> obtenerIndicador() {
 
@@ -47,6 +50,7 @@ public class DashboardController {
                 .obtenerIndicadorSemanal(empresaId));
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping("/cumplimiento/mensual")
     public ResponseEntity<IndicadorCumplimientoResponse>
     obtenerIndicadorMensual() {
@@ -58,6 +62,7 @@ public class DashboardController {
             dashboardService.obtenerIndicadorMensual(empresaId));
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping("/mttr")
     public ResponseEntity<IndicadorMTTRResponse>
     obtenerMTTR() {
@@ -72,6 +77,7 @@ public class DashboardController {
     // 🔒 Filtro por empresa opcional, solo para SUPER_ADMIN: si el
     // usuario no es SUPER_ADMIN se ignora cualquier empresaId recibido y
     // se usa siempre la empresa del propio usuario (igual que antes).
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping
     public ResponseEntity<DashboardIndicadoresResponse> getDashboard(
             @RequestParam(required = false) Long empresaId) {

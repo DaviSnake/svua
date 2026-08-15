@@ -96,6 +96,10 @@ public class ActivoController {
                 .body(response);
     }
 
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_CREATE')) "
+    )
     @GetMapping("/{id}/riesgo")
     public Map<String, Object> getRiesgo(@PathVariable Long id) {
 

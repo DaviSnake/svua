@@ -138,6 +138,19 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   // 🎨 EVENT RENDER (TOOLTIP + STYLE)
   // =====================================================
 
+  // 🔒 estado/tipoMantenimiento son campos de texto libre que vienen del
+  // backend (no un enum cerrado en el DTO); se escapan antes de
+  // interpolarlos en innerHTML para evitar XSS almacenado si alguna vez
+  // contienen HTML/markup.
+  private escapeHtml(valor: any): string {
+    return String(valor ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   private onEventDidMount(info: any) {
 
   const isMobile = window.innerWidth < 768;
@@ -165,9 +178,9 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   const tooltip = document.createElement('div');
 
   tooltip.innerHTML = `
-    <strong>${estado}</strong><br>
-    Tipo: ${tipo}<br>
-    Duración: ${duracion} min
+    <strong>${this.escapeHtml(estado)}</strong><br>
+    Tipo: ${this.escapeHtml(tipo)}<br>
+    Duración: ${this.escapeHtml(duracion)} min
   `;
 
   Object.assign(tooltip.style, {
@@ -244,9 +257,9 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       const tooltip = document.createElement('div');
 
       tooltip.innerHTML = `
-        <strong>${estado}</strong><br>
-        Tipo: ${tipo}<br>
-        Duración: ${duracion} min
+        <strong>${this.escapeHtml(estado)}</strong><br>
+        Tipo: ${this.escapeHtml(tipo)}<br>
+        Duración: ${this.escapeHtml(duracion)} min
       `;
 
       tooltip.style.position = 'absolute';
