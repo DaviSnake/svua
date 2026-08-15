@@ -9,7 +9,7 @@
   </div>
 
     <div
-    *ngFor="let n of notificaciones"
+    *ngFor="let n of notificaciones; trackBy: trackByNotificacionId"
     class="notificacion-card"
     [class.no-leida]="!n.leida">
 

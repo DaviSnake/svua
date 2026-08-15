@@ -12,7 +12,7 @@
 
     <div
       class="sesion-card"
-      *ngFor="let sesion of sesiones">
+      *ngFor="let sesion of sesiones; trackBy: trackBySesionId">
 
       <div class="card-header">
 

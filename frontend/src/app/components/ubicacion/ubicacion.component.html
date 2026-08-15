@@ -74,7 +74,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ubicacion of ubicaciones">
+        <tr *ngFor="let ubicacion of ubicaciones; trackBy: trackByUbicacionId">
           <td>{{ ubicacion.id }}</td>
           <td>{{ ubicacion.nombre }}</td>
           <td>{{ ubicacion.descripcion }}</td>

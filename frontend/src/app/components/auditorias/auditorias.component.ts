@@ -254,4 +254,9 @@ export class AuditoriasComponent implements OnInit {
     );
   }
 
+  // 🔥 trackBy para la lista principal de activos con historial.
+  trackByActivoId(index: number, activo: any): any {
+    return activo?.activoId ?? index;
+  }
+
 }

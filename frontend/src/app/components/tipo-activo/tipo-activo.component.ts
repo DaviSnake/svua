@@ -324,9 +324,14 @@ export class TipoActivoComponent implements OnInit {
                 text: 'No se pudo dar de baja al activo'
               });
             }
-          });       
+          });
       }
     });
+  }
+
+  // 🔥 trackBy para la tabla principal de tipos de activo.
+  trackByTipoActivoId(index: number, tipoActivo: any): any {
+    return tipoActivo?.id ?? index;
   }
 
 }

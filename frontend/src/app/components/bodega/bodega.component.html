@@ -70,7 +70,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let bodega of bodegas">
+        <tr *ngFor="let bodega of bodegas; trackBy: trackByBodegaId">
           <td>{{ bodega.id }}</td>
           <td>{{ bodega.nombre }}</td>
           <td>{{ bodega.ubicacionFisica }}</td>

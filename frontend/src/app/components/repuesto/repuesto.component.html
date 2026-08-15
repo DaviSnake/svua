@@ -101,7 +101,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let repuesto of repuestos">
+        <tr *ngFor="let repuesto of repuestos; trackBy: trackByRepuestoId">
           <td>{{ repuesto.codigo }}</td>
           <td>{{ repuesto.nombre }}</td>
           <td>{{ repuesto.descripcion }}</td>

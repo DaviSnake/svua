@@ -32,4 +32,9 @@ export class SesionUsuarioComponent implements OnInit {
 
   }
 
+  // 🔥 trackBy para la grilla de sesiones activas.
+  trackBySesionId(index: number, sesion: any): any {
+    return sesion?.id ?? index;
+  }
+
 }

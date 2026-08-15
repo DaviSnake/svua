@@ -127,4 +127,9 @@ export class InformeConexionesComponent implements OnInit {
     return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
+  // 🔥 trackBy para la tabla de historial de conexiones.
+  trackByConexionId(index: number, conexion: any): any {
+    return conexion?.id ?? index;
+  }
+
 }

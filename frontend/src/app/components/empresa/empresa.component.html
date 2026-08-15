@@ -98,7 +98,7 @@
       </thead>
 
       <tbody>
-        <tr *ngFor="let e of empresasFiltradas">
+        <tr *ngFor="let e of empresasFiltradas; trackBy: trackByEmpresaId">
           <td>{{ e.nombre }}</td>
           <td>{{ e.rut }}</td>
           <td>{{ e.emailContacto }}</td>

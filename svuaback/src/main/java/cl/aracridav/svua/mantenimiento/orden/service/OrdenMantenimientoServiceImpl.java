@@ -1009,6 +1009,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 root.fetch("empresa", JoinType.INNER);
                 root.fetch("usuarioEjecucion", JoinType.LEFT);
                 root.fetch("usuario", JoinType.INNER);
+                // Se agrega fetch de proveedor: se accede a
+                // proveedor.getNombre() en mapearInformeMantencion y
+                // antes quedaba como lazy load (N+1 por fila con
+                // proveedor asignado).
+                root.fetch("proveedor", JoinType.LEFT);
             }
 
             List<Predicate> predicates = new ArrayList<>();

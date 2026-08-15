@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 @Getter
 @Setter
@@ -13,6 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@BatchSize(size = 20)
 public class Repuesto extends BaseEntity {
     
     @Id

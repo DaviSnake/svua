@@ -75,7 +75,7 @@
     </thead>
 
     <tbody>
-      <ng-container *ngFor="let orden of ordenes">
+      <ng-container *ngFor="let orden of ordenes; trackBy: trackByOrdenId">
 
         <tr>
           <td>Orden #{{ orden.id }} - {{ orden.titulo }}</td>
@@ -117,7 +117,7 @@
                 <strong>Repuestos utilizados:</strong>
 
                 <ul *ngIf="orden.repuestos?.length; else sinRepuestos">
-                  <li *ngFor="let repuesto of orden.repuestos">
+                  <li *ngFor="let repuesto of orden.repuestos; trackBy: trackByRepuestoId">
                     {{ repuesto.repuestoNombre }} x{{ repuesto.cantidad }}
                     ({{ repuesto.costoTotal | currency:'CLP':'symbol':'1.0-0' }})
                   </li>

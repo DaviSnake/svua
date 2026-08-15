@@ -8,6 +8,7 @@ import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.shared.enums.RolUsuario;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 @Getter
 @Setter
@@ -21,6 +22,7 @@ import lombok.*;
         @UniqueConstraint(columnNames = "email")
     }
 )
+@BatchSize(size = 20)
 public class Usuario extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -61,7 +61,7 @@
     </thead>
 
     <tbody>
-      <tr *ngFor="let conexion of conexiones">
+      <tr *ngFor="let conexion of conexiones; trackBy: trackByConexionId">
         <td>{{ conexion.usuario }}</td>
         <td>{{ conexion.fechaLogin | date:'dd/MM/yyyy HH:mm:ss' }}</td>
         <td>{{ conexion.empresa }}</td>

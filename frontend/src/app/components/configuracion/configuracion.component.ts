@@ -66,6 +66,13 @@ export class ConfiguracionComponent implements OnInit {
     this.visibles[clave] = !this.visibles[clave];
   }
 
+  // 🔥 trackBy para la tabla de variables de configuración: la clave
+  // (nombre de la variable) es un identificador estable, a diferencia
+  // del índice del array.
+  trackByClave(index: number, entrada: ConfiguracionEntry): string {
+    return entrada?.clave ?? String(index);
+  }
+
   hayCambios(): boolean {
     return this.entradas.some(
       e => e.valor !== this.valoresOriginales[e.clave]

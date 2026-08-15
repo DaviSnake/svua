@@ -58,7 +58,7 @@
 
   <div
     class="activo-card"
-    *ngFor="let activo of historialesPaginados">
+    *ngFor="let activo of historialesPaginados; trackBy: trackByActivoId">
 
     <div
       class="activo-header clickable"

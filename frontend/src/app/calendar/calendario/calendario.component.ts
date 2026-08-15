@@ -1,4 +1,5 @@
-import { Component, HostListener, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CalendarOptions } from '@fullcalendar/core';
 
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
@@ -33,7 +34,12 @@ import { Empresa } from '../../model/empresa';
   templateUrl: './calendario.component.html',
   styleUrls: ['./calendario.component.css']
 })
-export class CalendarioComponent implements OnInit {
+export class CalendarioComponent implements OnInit, OnDestroy {
+
+  // 🔥 user$ es un BehaviorSubject de por-vida-de-la-app (AuthService);
+  // guardamos la suscripción para liberarla en ngOnDestroy y que no
+  // quede activa después de salir del calendario.
+  private usuarioSub?: Subscription;
 
   private ordenMantencionService = inject(OrdenMantencionService);
   private activoService = inject(ActivoService);
@@ -341,7 +347,7 @@ export class CalendarioComponent implements OnInit {
 
   ngOnInit(): void {
     // usuario
-    this.authService.user$.subscribe(user => {
+    this.usuarioSub = this.authService.user$.subscribe(user => {
       this.usuario = user;
     });
 
@@ -1523,5 +1529,9 @@ export class CalendarioComponent implements OnInit {
     const pad = (n: number) => n.toString().padStart(2, '0');
 
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  ngOnDestroy(): void {
+    this.usuarioSub?.unsubscribe();
   }
 }

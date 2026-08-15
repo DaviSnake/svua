@@ -444,5 +444,9 @@ export class UsuarioComponent implements OnInit {
     return this.passwordForm.value.password === this.passwordForm.value.confirmPassword;
   }
 
+  // 🔥 trackBy para la tabla principal de usuarios.
+  trackByUsuarioId(index: number, usuario: any): any {
+    return usuario?.id ?? index;
+  }
 
 }

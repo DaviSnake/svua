@@ -102,7 +102,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let proveedor of proveedores">
+        <tr *ngFor="let proveedor of proveedores; trackBy: trackByProveedorId">
           <td>{{ proveedor.id }}</td>
           <td>{{ proveedor.nombre }}</td>
           <td>{{ formatearRut(proveedor.rut) }}</td>

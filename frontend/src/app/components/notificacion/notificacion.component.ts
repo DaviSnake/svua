@@ -1,10 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Notificacion } from '../../model/notificacion';
 import { CommonModule } from '@angular/common';
 import { NotificacionService } from '../../services/notificacion.service';
 import { Router } from '@angular/router';
 import { NotificacionStateService } from '../../services/notificacion-state.service';
 import { WebSocketService } from '../../services/web-socket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-notificacion',
@@ -13,7 +14,7 @@ import { WebSocketService } from '../../services/web-socket.service';
   templateUrl: './notificacion.component.html',
   styleUrl: './notificacion.component.css'
 })
-export class NotificacionComponent implements OnInit {
+export class NotificacionComponent implements OnInit, OnDestroy {
 
   notificacionService = inject(NotificacionService);
   notificacionStateService = inject(NotificacionStateService);
@@ -22,13 +23,25 @@ export class NotificacionComponent implements OnInit {
 
   notificaciones: Notificacion[] = [];
 
+  // 🔥 notificaciones$ es un Subject/BehaviorSubject compartido: guardamos
+  // la suscripción para no acumular una nueva cada vez que se llama
+  // cargarNotificaciones() (antes cada refresco dejaba una suscripción
+  // activa adicional, sin liberarla nunca).
+  private notificacionesSub?: Subscription;
+
   ngOnInit(): void {
     this.cargarNotificaciones();
   }
 
+  ngOnDestroy(): void {
+    this.notificacionesSub?.unsubscribe();
+  }
+
   cargarNotificaciones(): void {
 
-    this.notificacionService.notificaciones$.subscribe(data => {
+    this.notificacionesSub?.unsubscribe();
+
+    this.notificacionesSub = this.notificacionService.notificaciones$.subscribe(data => {
     this.notificaciones = data.map(n => ({
       ...n,
       expandida: false
@@ -69,6 +82,11 @@ export class NotificacionComponent implements OnInit {
           .notificarActualizacion();
 
       });
+  }
+
+  // 🔥 trackBy para la lista de notificaciones.
+  trackByNotificacionId(index: number, n: any): any {
+    return n?.id ?? index;
   }
 
   toggleMensaje(n: any): void {

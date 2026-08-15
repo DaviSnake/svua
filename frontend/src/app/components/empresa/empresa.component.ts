@@ -222,4 +222,9 @@ export class EmpresaComponent implements OnInit {
 
   }
 
+  // 🔥 trackBy para la tabla principal de empresas.
+  trackByEmpresaId(index: number, empresa: any): any {
+    return empresa?.id ?? index;
+  }
+
 }

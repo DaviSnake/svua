@@ -79,7 +79,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let tipoActivo of tipoActivos">
+        <tr *ngFor="let tipoActivo of tipoActivos; trackBy: trackByTipoActivoId">
           <td>{{ tipoActivo.id }}</td>
           <td>{{ tipoActivo.nombre }}</td>
           <td>{{ tipoActivo.descripcion }}</td>

@@ -388,4 +388,9 @@ export class ProveedorComponent implements OnInit {
     return `${Number(cuerpo).toLocaleString('es-CL')}-${dv.toUpperCase()}`;
   }
 
+  // 🔥 trackBy para la tabla principal de proveedores.
+  trackByProveedorId(index: number, proveedor: any): any {
+    return proveedor?.id ?? index;
+  }
+
 }

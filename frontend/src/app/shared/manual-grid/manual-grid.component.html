@@ -57,7 +57,7 @@
           <tr><th>Fila</th><th>{{ etiquetaReferencia }}</th><th>Estado</th><th>Detalle</th></tr>
         </thead>
         <tbody>
-          <tr *ngFor="let r of resultados" [class.fila-error]="!r.exito" [class.fila-ok]="r.exito">
+          <tr *ngFor="let r of resultados; trackBy: trackByResultadoIndex" [class.fila-error]="!r.exito" [class.fila-ok]="r.exito">
             <td data-label="Fila">{{ r.fila }}</td>
             <td [attr.data-label]="etiquetaReferencia">{{ r.referencia }}</td>
             <td data-label="Estado">{{ r.exito ? '✔ Guardado' : '✘ Error' }}</td>

@@ -315,9 +315,14 @@ export class BodegaComponent implements OnInit {
                 text: 'No se pudo eliminar la bodega'
               });
             }
-          });       
+          });
       }
     });
+  }
+
+  // 🔥 trackBy para la tabla principal de bodegas.
+  trackByBodegaId(index: number, bodega: any): any {
+    return bodega?.id ?? index;
   }
 
 }

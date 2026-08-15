@@ -153,7 +153,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let activo of activos">
+        <tr *ngFor="let activo of activos; trackBy: trackByActivoId">
           <td>{{ activo.codigoInterno }}</td>
           <td>{{ activo.nombre }}</td>
           <td>{{ activo.descripcion }}</td>

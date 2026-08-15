@@ -13,6 +13,7 @@ import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 @Getter
 @Setter
@@ -133,6 +134,7 @@ public class OrdenMantenimiento extends BaseEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private Set<OrdenRepuesto> repuestosUtilizados = new HashSet<>();
 
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)

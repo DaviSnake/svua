@@ -183,4 +183,14 @@ export class InformeMantencionesComponent implements OnInit {
     return `${horas} h`;
   }
 
+  // 🔥 trackBy para la tabla de órdenes del informe y el detalle de
+  // repuestos utilizados de cada orden expandida.
+  trackByOrdenId(index: number, orden: any): any {
+    return orden?.id ?? index;
+  }
+
+  trackByRepuestoId(index: number, repuesto: any): any {
+    return repuesto?.id ?? repuesto?.repuestoId ?? index;
+  }
+
 }

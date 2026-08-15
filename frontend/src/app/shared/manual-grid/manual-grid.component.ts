@@ -93,6 +93,13 @@ export class ManualGridComponent implements OnInit {
     return col.key;
   }
 
+  // 🔥 trackBy para la tabla de resultados del envío (se reemplaza por
+  // completo en cada "Guardar", así que sin esto Angular recrea todas
+  // las filas del DOM en cada intento).
+  trackByResultadoIndex(index: number, _r: ManualGridRowResult) {
+    return index;
+  }
+
   eliminarFila(index: number) {
     this.filas.splice(index, 1);
 

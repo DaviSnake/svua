@@ -318,10 +318,14 @@ export class UbicacionComponent implements OnInit {
                 text: 'No se pudo eliminar la ubicación'
               });
             }
-          });       
+          });
       }
     });
   }
 
+  // 🔥 trackBy para la tabla principal de ubicaciones.
+  trackByUbicacionId(index: number, ubicacion: any): any {
+    return ubicacion?.id ?? index;
+  }
 
 }

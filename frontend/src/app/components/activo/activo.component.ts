@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Activo } from '../../model/activo';
 import { ActivoService } from '../../services/activo.service';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TipoActivo } from '../../model/tipoActivo';
@@ -20,7 +20,7 @@ import { calcularPaginasVisibles } from '../../shared/pagination.util';
 @Component({
   selector: 'app-activo',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, CommonModule, MatAutocompleteModule],
+  imports: [ReactiveFormsModule, CommonModule, MatAutocompleteModule],
   templateUrl: './activo.component.html',
   styleUrl: './activo.component.css'
 })
@@ -626,6 +626,13 @@ export class ActivoComponent implements OnInit {
     this.activoForm.get('cuentaContable')?.enable(); // 🔥 aquí
     this.mostrarModalActivo = false;
     this.activoForm.reset();
+  }
+
+  // 🔥 trackBy para la tabla principal de activos: evita que Angular
+  // destruya/recree todas las filas del DOM cuando se reasigna el
+  // array (paginación/filtro), solo actualiza lo que cambió.
+  trackByActivoId(index: number, activo: any): any {
+    return activo?.id ?? index;
   }
 
 }

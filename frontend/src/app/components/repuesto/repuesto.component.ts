@@ -356,9 +356,14 @@ export class RepuestoComponent implements OnInit {
                 text: 'No se pudo eliminar el repuesto'
               });
             }
-          });       
+          });
       }
     });
+  }
+
+  // 🔥 trackBy para la tabla principal de repuestos.
+  trackByRepuestoId(index: number, repuesto: any): any {
+    return repuesto?.id ?? index;
   }
 
 }
