@@ -6,3 +6,4 @@
 declare module 'qrcode';
 declare module 'jsbarcode';
 declare module '@zxing/library';
+declare module 'jspdf';

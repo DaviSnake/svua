@@ -127,8 +127,17 @@
           </td>
 
           <td>
-            <button (click)="editar(e)">Editar</button>
-            <button (click)="eliminar(e.id!)">Eliminar</button>
+            <button class="btn-editar" (click)="editar(e)">Editar</button>
+            <button class="btn-eliminar" (click)="eliminar(e.id!)">Eliminar</button>
+            <!-- 🖨️ Solo si la empresa tiene QR y/o EAN13 habilitado -->
+            <button
+              *ngIf="e.codigoQrHabilitado || e.codigoEan13Habilitado"
+              class="btn-pdf"
+              [disabled]="generandoPdfId === e.id"
+              (click)="generarPdfCodigos(e)"
+            >
+              {{ generandoPdfId === e.id ? 'Generando...' : '🖨️ Códigos' }}
+            </button>
           </td>
         </tr>
       </tbody>

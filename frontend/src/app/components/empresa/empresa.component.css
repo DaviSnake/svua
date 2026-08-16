@@ -185,23 +185,43 @@ td button:hover {
 }
 
 /* EDITAR */
-td button:first-child {
+/* 🐛 FIX: antes usaba :first-child/:last-child, que se rompe apenas se
+   agrega un tercer boton condicional (🖨️ Códigos) - "Eliminar" dejaba de
+   ser el last-child y perdia su color rojo. Con clases explicitas el
+   orden/cantidad de botones ya no importa. */
+td button.btn-editar {
   background: #2ecc71;
   color: white;
 }
 
-td button:first-child:hover {
+td button.btn-editar:hover {
   background: #27ae60;
 }
 
 /* ELIMINAR */
-td button:last-child {
+td button.btn-eliminar {
   background: #e74c3c;
   color: white;
 }
 
-td button:last-child:hover {
+td button.btn-eliminar:hover {
   background: #c0392b;
+}
+
+/* IMPRIMIR CÓDIGOS QR/EAN13 */
+td button.btn-pdf {
+  background: #34495e;
+  color: white;
+}
+
+td button.btn-pdf:hover {
+  background: #2c3e50;
+}
+
+td button.btn-pdf:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ===================================
