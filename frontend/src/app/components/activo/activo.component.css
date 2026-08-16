@@ -291,7 +291,9 @@ td button:hover {
 
   display: grid; /* 🔥 cambio clave */
   grid-template-columns: repeat(2, 1fr); /* 👈 2 columnas */
-  gap: 15px;
+  align-items: start; /* 🔥 alinea los inputs de cada fila por arriba */
+  row-gap: 16px; /* espacio entre filas */
+  column-gap: 24px; /* 🔥 espacio entre los 2 inputs de una misma linea */
 
   animation: fadeIn 0.2s ease;
 }

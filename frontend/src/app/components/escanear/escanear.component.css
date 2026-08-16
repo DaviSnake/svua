@@ -13,7 +13,7 @@
 .form-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 40px; /* 🔥 espacio entre el input de busqueda y los botones (Buscar, etc.) */
   align-items: center;
 }
 
