@@ -74,6 +74,14 @@ public class Activo extends BaseEntity {
     @Column(name = "cuenta_contable")
     private String cuentaContable;
 
+    // 🔳 Generados automaticamente al crear el activo (o al renombrar su
+    // codigo interno), no los ingresa el usuario. Ver ActivoCodigoGenerador.
+    @Column(name = "codigo_qr", length = 150)
+    private String codigoQr;
+
+    @Column(name = "codigo_ean13", length = 13)
+    private String codigoEan13;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ubicacion_id", nullable = false, updatable = false)
     private Ubicacion ubicacion;

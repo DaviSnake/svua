@@ -6,6 +6,8 @@ import { Ubicacion } from "./ubicacion";
 export interface Activo {
   id?: number;
   codigoInterno?: string;
+  codigoQr?: string;
+  codigoEan13?: string;
   nombre: string;
   descripcion: string;
   estadoActual: string;

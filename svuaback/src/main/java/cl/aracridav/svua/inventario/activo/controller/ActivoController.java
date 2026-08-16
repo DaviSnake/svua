@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoCreateRequest;
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoUpdateRequest;
 import cl.aracridav.svua.inventario.activo.dto.request.DarDeBajaActivoRequest;
+import cl.aracridav.svua.inventario.activo.dto.response.ActivoEscaneoResponse;
 import cl.aracridav.svua.inventario.activo.dto.response.ActivoResponse;
 import cl.aracridav.svua.inventario.activo.service.ActivoService;
 import jakarta.validation.Valid;
@@ -110,6 +111,20 @@ public class ActivoController {
         response.put("nivel", activoService.nivelRiesgo(riesgo));
 
         return response;
+    }
+
+    // 🔳 Escaneo de QR/EAN13: recibe el texto leido por la camara o por un
+    // lector fisico y devuelve el activo + todo su historial de
+    // mantenciones.
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ACTIVO_VIEW')) "
+    )
+    @GetMapping("/escanear")
+    public ResponseEntity<ActivoEscaneoResponse> buscarPorCodigoEscaneado(
+            @RequestParam String codigo) {
+
+        return ResponseEntity.ok(activoService.buscarPorCodigoEscaneado(codigo));
     }
 
 }

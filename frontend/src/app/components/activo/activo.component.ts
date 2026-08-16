@@ -1,4 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import * as QRCode from 'qrcode';
+import JsBarcode from 'jsbarcode';
 import { Activo } from '../../model/activo';
 import { ActivoService } from '../../services/activo.service';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -36,6 +38,11 @@ export class ActivoComponent implements OnInit {
 
   activoForm!: FormGroup;
 
+  // 🔳 Referencias al canvas/svg del modal "Ver", donde se dibujan el QR
+  // y el codigo de barras EAN13 (tooltip visual al pasar el mouse).
+  @ViewChild('qrCanvas') qrCanvasRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('barcodeSvg') barcodeSvgRef?: ElementRef<SVGElement>;
+
   // 🔥 Autocompletado tipo "escribir para buscar" (mismo patrón que Calendario.activoControl),
   // igual que la carga masiva manual, pero manteniendo el envío por ID hacia el backend
   // (ActivoCreateRequest/ActivoUpdateRequest siguen esperando tipoActivoId/ubicacionId/proveedorId).
@@ -72,6 +79,7 @@ export class ActivoComponent implements OnInit {
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
+  esDemo = false; // 🔒 QR/EAN13 solo visibles para SUPER_ADMIN y empresa demo
   bloquearCampo = true;
 
   page = 0;
@@ -84,6 +92,7 @@ export class ActivoComponent implements OnInit {
   ngOnInit() {
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
+    this.esDemo = this.authService.getDemo() ?? false;
     this.initForm();
     this.initAutocompletes();
     this.cargarActivos();
@@ -97,6 +106,8 @@ export class ActivoComponent implements OnInit {
     this.activoForm = this.fb.group({
       id: [''],
       codigoInterno: ['', Validators.required],
+      codigoQr: [''], // 🔳 generado automaticamente por el backend, solo lectura
+      codigoEan13: [''], // 🔳 generado automaticamente por el backend, solo lectura
       nombre: ['',  Validators.required],
       descripcion: ['', Validators.required],
       tipoActivoId: [null, Validators.required],
@@ -574,6 +585,8 @@ export class ActivoComponent implements OnInit {
 
     this.activoForm.patchValue({
       codigoInterno: activo.codigoInterno,
+      codigoQr: activo.codigoQr,
+      codigoEan13: activo.codigoEan13,
       nombre: activo.nombre,
       descripcion: activo.descripcion,
       tipoActivoNombre: activo.tipoActivo.nombre,
@@ -590,6 +603,8 @@ export class ActivoComponent implements OnInit {
       cuentaContable: activo.cuentaContable,
     });
     this.activoForm.get('codigoInterno')?.disable(); // 🔥 aquí
+    this.activoForm.get('codigoQr')?.disable(); // 🔥 aquí
+    this.activoForm.get('codigoEan13')?.disable(); // 🔥 aquí
     this.activoForm.get('nombre')?.disable(); // 🔥 aquí
     this.activoForm.get('descripcion')?.disable(); // 🔥 aquí
     this.activoForm.get('tipoActivoNombre')?.disable(); // 🔥 aquí
@@ -604,12 +619,44 @@ export class ActivoComponent implements OnInit {
     this.activoForm.get('proveedorNombre')?.disable(); // 🔥 aquí
     this.activoForm.get('estadoActual')?.disable(); // 🔥 aquí
     this.activoForm.get('cuentaContable')?.disable(); // 🔥 aquí
+
+    // 🔳 El canvas/svg recien se crean en el DOM porque el modal esta
+    // detras de un *ngIf: se espera un tick para que Angular los renderice
+    // antes de intentar dibujar el QR y el codigo de barras sobre ellos.
+    setTimeout(() => this.dibujarCodigosVisuales(activo), 0);
   }
 
+  private dibujarCodigosVisuales(activo: any) {
+    this.dibujarQr(activo.codigoQr);
+    this.dibujarBarcodeEan13(activo.codigoEan13);
+  }
 
+  private dibujarQr(valor: string) {
+    if (!valor || !this.qrCanvasRef) return;
+    QRCode.toCanvas(this.qrCanvasRef.nativeElement, valor, { width: 160, margin: 1 }, (error: any) => {
+      if (error) console.error('No se pudo dibujar el QR', error);
+    });
+  }
+
+  private dibujarBarcodeEan13(valor: string) {
+    if (!valor || !this.barcodeSvgRef) return;
+    try {
+      JsBarcode(this.barcodeSvgRef.nativeElement, valor, {
+        format: 'EAN13',
+        width: 2,
+        height: 60,
+        displayValue: true,
+        fontSize: 12
+      });
+    } catch (error) {
+      console.error('No se pudo dibujar el codigo EAN13', error);
+    }
+  }
 
   cerrarModal() {
     this.activoForm.get('codigoInterno')?.enable(); // 🔥 aquí
+    this.activoForm.get('codigoQr')?.enable(); // 🔥 aquí
+    this.activoForm.get('codigoEan13')?.enable(); // 🔥 aquí
     this.activoForm.get('nombre')?.enable(); // 🔥 aquí
     this.activoForm.get('descripcion')?.enable(); // 🔥 aquí
     this.activoForm.get('tipoActivoNombre')?.enable(); // 🔥 aquí

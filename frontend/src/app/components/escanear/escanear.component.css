@@ -1,0 +1,194 @@
+.container {
+  padding: 24px;
+}
+
+.card-section {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 240px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #3498db;
+  color: white;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.btn-detener {
+  background: #e74c3c;
+}
+
+.btn-detener:hover {
+  background: #c0392b;
+}
+
+.btn-limpiar {
+  background: #95a5a6;
+}
+
+.btn-limpiar:hover {
+  background: #7f8c8d;
+}
+
+.ayuda {
+  margin-top: 12px;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.video-wrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 🔥 [hidden] compite en especificidad con ".video-wrapper { display: flex }";
+   sin esto, el atributo hidden queda pisado y el bloque del video se ve
+   siempre, incluso con la camara apagada. */
+.video-wrapper[hidden] {
+  display: none;
+}
+
+.video-wrapper video {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 10px;
+  border: 2px solid #3498db;
+}
+
+.cargando {
+  text-align: center;
+  color: #3498db;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.etiqueta {
+  font-weight: bold;
+  color: #34495e;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #34495e;
+  color: white;
+}
+
+th, td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+tbody tr:not(.fila-detalle):nth-child(even) {
+  background: #f5f7fa;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+/* Mismo estilo que el boton "Ver detalle" de Informe de Mantenciones */
+.btn-repuestos {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.btn-repuestos:hover {
+  background: #f3f4f6;
+}
+
+/* 🔥 Fila expandida con el detalle de repuestos, mismo patron visual que
+   el comprobante de Informe de Mantenciones (fila-detalle + tabla anidada
+   en vez de un modal aparte). */
+.fila-detalle td {
+  padding: 0 12px 16px 12px;
+  background: #f8fafc;
+}
+
+.comprobante-repuestos {
+  padding: 16px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  color: #374151;
+}
+
+.tabla-repuestos {
+  margin-top: 10px;
+  box-shadow: none;
+}
+
+.tabla-repuestos thead {
+  background: #eef1f4;
+  color: #34495e;
+}
+
+.tabla-repuestos th, .tabla-repuestos td {
+  padding: 8px 10px;
+}
+
+@media (max-width: 768px) {
+  .detalle-grid {
+    grid-template-columns: 1fr;
+  }
+}

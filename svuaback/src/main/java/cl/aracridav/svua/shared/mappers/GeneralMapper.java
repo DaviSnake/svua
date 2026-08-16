@@ -186,6 +186,8 @@ public class GeneralMapper {
       .vidaUtilMeses(activo.getVidaUtilMeses())
       .estadoActual(activo.getEstadoActual())
       .cuentaContable(activo.getCuentaContable())
+      .codigoQr(activo.getCodigoQr())
+      .codigoEan13(activo.getCodigoEan13())
       .tipoActivo(tipoActivoDTO)
       .ubicacion(ubicacionDTO)
       .proveedor(proveedorDTO)

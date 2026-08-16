@@ -81,6 +81,15 @@
       <span class="tooltip">Calendario Mantenciones</span>
     </li>
 
+    <!-- ESCANEAR ACTIVO (solo SUPER_ADMIN y empresa demo) -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin || esDemo">
+      <a routerLink="/inicio/escanear" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class="bx bx-scan"></i>
+        <span *ngIf="!isCollapsed">Escanear Activo</span>
+      </a>
+      <span class="tooltip">Escanear Activo</span>
+    </li>
+
     <!-- CARGA MASIVA -->
     <li class="menu-item" routerLinkActive="active" *ngIf="!esTecnico">
       <a routerLink="/inicio/cargaMasiva" (click)="closeAllMenus(); $event.stopPropagation()">

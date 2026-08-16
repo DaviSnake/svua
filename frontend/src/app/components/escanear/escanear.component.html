@@ -1,0 +1,124 @@
+<div class="container">
+  <h2>Escanear Activo</h2>
+
+  <div class="card-section busqueda">
+    <div class="form-grid">
+      <div class="form-group">
+        <input
+          type="text"
+          placeholder="Código interno o EAN13"
+          [(ngModel)]="codigoInput"
+          (keydown.enter)="buscar()"
+          autofocus
+        />
+      </div>
+      <div class="acciones">
+        <button type="button" (click)="buscar()">Buscar</button>
+        <button type="button" *ngIf="!camaraActiva" (click)="activarCamara()">Activar Cámara</button>
+        <button type="button" class="btn-detener" *ngIf="camaraActiva" (click)="detenerCamara()">Detener Cámara</button>
+        <button type="button" class="btn-limpiar" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+
+    <p class="ayuda">
+      Escribe o pega el código, usa un lector físico de código de barras (apunta y gatilla, se completa solo), o activa la cámara para leer el QR o el EAN13 directo del activo.
+    </p>
+
+    <!-- 🔥 Ojo: el <video> NO puede ir detras de un *ngIf="camaraActiva",
+         porque entonces no existe en el DOM (ni en @ViewChild) hasta que
+         camaraActiva ya sea true - pero activarCamara() necesita el
+         elemento ANTES de poner camaraActiva en true. Por eso se oculta
+         con [hidden], no con *ngIf. -->
+    <div class="video-wrapper" [hidden]="!camaraActiva">
+      <video #video></video>
+    </div>
+  </div>
+
+  <div class="cargando" *ngIf="cargando">Buscando activo...</div>
+
+  <div class="resultado" *ngIf="resultado">
+
+    <div class="card-section">
+      <h3>{{ resultado.activo.nombre }}</h3>
+      <div class="detalle-grid">
+        <div><span class="etiqueta">Código:</span> {{ resultado.activo.codigoInterno }}</div>
+        <div><span class="etiqueta">Estado:</span> {{ resultado.activo.estadoActual }}</div>
+        <div><span class="etiqueta">Tipo:</span> {{ resultado.activo.tipoActivo.nombre }}</div>
+        <div><span class="etiqueta">Marca / Modelo:</span> {{ resultado.activo.marca }} {{ resultado.activo.modelo }}</div>
+        <div><span class="etiqueta">Ubicación:</span> {{ resultado.activo.ubicacion.nombre }}</div>
+        <div><span class="etiqueta">Proveedor:</span> {{ resultado.activo.proveedor.nombre }}</div>
+      </div>
+    </div>
+
+    <h3>Historial de Mantenciones</h3>
+    <div class="table-wrapper" *ngIf="resultado.mantenciones.length; else sinMantenciones">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Fecha Programada</th>
+            <th>Fecha Ejecución</th>
+            <th class="text-right">Costo Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let orden of resultado.mantenciones; trackBy: trackByOrdenId">
+            <tr>
+              <td>{{ orden.titulo }}</td>
+              <td>{{ orden.tipoMantenimiento }}</td>
+              <td>{{ orden.estado }}</td>
+              <td>{{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ orden.fechaTermino | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td class="text-right">{{ orden.costoTotal | currency:'CLP':'symbol':'1.0-0' }}</td>
+              <td class="text-right">
+                <button
+                  type="button"
+                  class="btn-repuestos"
+                  *ngIf="orden.repuestos && orden.repuestos.length; else sinRepuestos"
+                  (click)="toggleRepuestos(orden.id)"
+                >
+                  {{ estaExpandida(orden.id) ? 'Ocultar' : 'Repuestos (' + orden.repuestos!.length + ')' }}
+                </button>
+                <ng-template #sinRepuestos>—</ng-template>
+              </td>
+            </tr>
+
+            <tr *ngIf="estaExpandida(orden.id)" class="fila-detalle">
+              <td colspan="7">
+                <div class="comprobante-repuestos">
+                  <strong>Repuestos utilizados:</strong>
+                  <table class="tabla-repuestos">
+                    <thead>
+                      <tr>
+                        <th>Repuesto</th>
+                        <th>Cantidad</th>
+                        <th class="text-right">Costo Unitario</th>
+                        <th class="text-right">Costo Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let r of orden.repuestos; trackBy: trackByRepuestoId">
+                        <td>{{ r.repuestoNombre }}</td>
+                        <td>{{ r.cantidad }}</td>
+                        <td class="text-right">{{ r.costoUnitario | currency:'CLP':'symbol':'1.0-0' }}</td>
+                        <td class="text-right">{{ r.costoTotal | currency:'CLP':'symbol':'1.0-0' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #sinMantenciones>
+      <p class="ayuda">Este activo todavía no tiene mantenciones registradas.</p>
+    </ng-template>
+
+  </div>
+
+</div>

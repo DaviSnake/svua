@@ -212,6 +212,21 @@
       <input type="text" formControlName="valorResidual" />
       <input type="text" formControlName="vidaUtilMeses" />
       <input type="text" formControlName="cuentaContable" />
+      <!-- 🔒 QR/EAN13 visibles solo para SUPER_ADMIN y la empresa demo -->
+      <ng-container *ngIf="esSuperAdmin || esDemo">
+        <div class="codigo-visual-wrapper">
+          <input type="text" formControlName="codigoQr" />
+          <div class="codigo-visual-tooltip">
+            <canvas #qrCanvas></canvas>
+          </div>
+        </div>
+        <div class="codigo-visual-wrapper">
+          <input type="text" formControlName="codigoEan13" />
+          <div class="codigo-visual-tooltip">
+            <svg #barcodeSvg></svg>
+          </div>
+        </div>
+      </ng-container>
       <input type="text" formControlName="ubicacionNombre" />
       <input type="text" formControlName="proveedorNombre" />
       <input type="text" formControlName="estadoActual" />

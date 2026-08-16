@@ -17,6 +17,13 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
 
     boolean existsByCodigoInterno(String codigoInterno);
 
+    // 🔳 Usados para el escaneo de QR/EAN13 (buscar el activo por cualquiera
+    // de los dos codigos, filtrando por empresa salvo para SUPER_ADMIN).
+    Optional<Activo> findByCodigoInterno(String codigoInterno);
+    Optional<Activo> findByCodigoEan13(String codigoEan13);
+    Optional<Activo> findByCodigoInternoAndEmpresaId(String codigoInterno, Long empresaId);
+    Optional<Activo> findByCodigoEan13AndEmpresaId(String codigoEan13, Long empresaId);
+
     @Query("""
         SELECT a FROM Activo a
         WHERE a.estadoActual = :estado

@@ -350,6 +350,36 @@ td button:hover {
   width: 100%;
 }
 
+/* TOOLTIP VISUAL QR / EAN13 (modal "Ver") */
+.codigo-visual-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.codigo-visual-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+}
+
+.codigo-visual-wrapper:hover .codigo-visual-tooltip {
+  display: block;
+}
+
+.codigo-visual-tooltip canvas,
+.codigo-visual-tooltip svg {
+  display: block;
+  max-width: 220px;
+}
+
 /* ===================================
    RESPONSIVE TABLET
 =================================== */

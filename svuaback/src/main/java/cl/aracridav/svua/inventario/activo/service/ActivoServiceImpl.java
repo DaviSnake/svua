@@ -16,14 +16,17 @@ import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoCreateRequest;
 import cl.aracridav.svua.inventario.activo.dto.request.ActivoUpdateRequest;
 import cl.aracridav.svua.inventario.activo.dto.request.DarDeBajaActivoRequest;
+import cl.aracridav.svua.inventario.activo.dto.response.ActivoEscaneoResponse;
 import cl.aracridav.svua.inventario.activo.dto.response.ActivoResponse;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
+import cl.aracridav.svua.inventario.activo.util.ActivoCodigoGenerador;
 import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.inventario.tipoactivo.entity.TipoActivo;
 import cl.aracridav.svua.inventario.tipoactivo.repository.TipoActivoRepository;
 import cl.aracridav.svua.inventario.ubicacion.entity.Ubicacion;
 import cl.aracridav.svua.inventario.ubicacion.repository.UbicacionRepository;
+import cl.aracridav.svua.mantenimiento.orden.dto.response.OrdenMantenimientoResponse;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
 import cl.aracridav.svua.proveedor.entity.Proveedor;
@@ -73,7 +76,7 @@ public class ActivoServiceImpl implements ActivoService {
                 activo.getId(), EstadoActivo.OPERATIVO, null, "Creación de Activo", null
             );
 
-        return mapper.mapActivoResponse(guardado);
+        return ocultarCodigosSiNoCorresponde(mapper.mapActivoResponse(guardado));
     }
 
     /*
@@ -105,6 +108,12 @@ public class ActivoServiceImpl implements ActivoService {
 
         // 🔄 Actualización parcial
         if (request.getCodigoInterno() != null) {
+            // 🔳 Si el codigo interno cambia, el QR y el EAN13 (generados a
+            // partir de el) se regeneran para seguir siendo consistentes.
+            if (!request.getCodigoInterno().equals(activo.getCodigoInterno())) {
+                activo.setCodigoQr(ActivoCodigoGenerador.generarCodigoQr(request.getCodigoInterno()));
+                activo.setCodigoEan13(ActivoCodigoGenerador.generarCodigoEan13(request.getCodigoInterno()));
+            }
             activo.setCodigoInterno(request.getCodigoInterno());
         }
 
@@ -188,7 +197,7 @@ public class ActivoServiceImpl implements ActivoService {
 
         Activo actualizado = activoRepository.save(activo);
 
-        return mapper.mapActivoResponse(actualizado);
+        return ocultarCodigosSiNoCorresponde(mapper.mapActivoResponse(actualizado));
     }
 
     /*
@@ -204,18 +213,21 @@ public class ActivoServiceImpl implements ActivoService {
             // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
             if (empresaId != null) {
                 return activoRepository.findByEmpresaId(empresaId, pageable)
-                        .map(mapper::mapActivoResponse);
+                        .map(mapper::mapActivoResponse)
+                        .map(this::ocultarCodigosSiNoCorresponde);
             }
 
             return activoRepository.findAll(pageable)
-                    .map(mapper::mapActivoResponse);
+                    .map(mapper::mapActivoResponse)
+                    .map(this::ocultarCodigosSiNoCorresponde);
         }
 
         // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
         // sin importar lo que llegue en empresaId (mismo criterio que
         // Repuesto/Proveedor/Bodega/Tipo de Activo).
         return activoRepository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable)
-                .map(mapper::mapActivoResponse);
+                .map(mapper::mapActivoResponse)
+                .map(this::ocultarCodigosSiNoCorresponde);
     }
 
     /*
@@ -334,6 +346,12 @@ public class ActivoServiceImpl implements ActivoService {
         activo.setUbicacion(obtenerUbicacion(req.getUbicacionId()));
         activo.setProveedor(obtenerProveedor(req.getProveedorId()));
         activo.setCuentaContable(req.getCuentaContable() != null ? req.getCuentaContable() : "0");
+
+        // 🔳 Codigo QR y EAN13: se generan automaticamente a partir del
+        // codigo interno, no los ingresa el usuario.
+        activo.setCodigoQr(ActivoCodigoGenerador.generarCodigoQr(req.getCodigoInterno()));
+        activo.setCodigoEan13(ActivoCodigoGenerador.generarCodigoEan13(req.getCodigoInterno()));
+
         activo.setFechaCreacion(LocalDateTime.now());
         activo.setEmpresa(empresa);
 
@@ -389,7 +407,7 @@ public class ActivoServiceImpl implements ActivoService {
     // en el caso de "crear" incluso después de haber guardado el activo.
     private void validarVidaUtilMeses(Integer vidaUtilMeses) {
         if (vidaUtilMeses == null || vidaUtilMeses <= 0) {
-            throw new BusinessException("La vida útil (meses) debe ser un número mayor a 0");
+            vidaUtilMeses = 1;
         }
     }
 
@@ -423,9 +441,75 @@ public class ActivoServiceImpl implements ActivoService {
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }
 
+    /*
+     * =========================================
+     * ESCANEO QR / EAN13
+     * =========================================
+     */
+    @Override
+    public ActivoEscaneoResponse buscarPorCodigoEscaneado(String codigo) {
+
+        // 🔒 Escaneo de QR/EAN13 disponible solo para SUPER_ADMIN y para la
+        // empresa demo (Empresa.demo = true), sin importar el rol dentro de
+        // esa empresa.
+        if (!esSuperAdmin() && !SecurityUtils.esEmpresaDemo()) {
+            throw new BusinessException("El escaneo de activos no está disponible para tu empresa");
+        }
+
+        if (codigo == null || codigo.isBlank()) {
+            throw new BusinessException("El código escaneado no puede estar vacío");
+        }
+
+        String codigoLimpio = codigo.trim();
+
+        // 🔒 SUPER_ADMIN puede escanear activos de cualquier empresa; el
+        // resto de los roles solo activos de su propia empresa (mismo
+        // criterio que mostrarActivos).
+        Activo activo = esSuperAdmin()
+                ? buscarActivoPorCodigoGlobal(codigoLimpio)
+                : buscarActivoPorCodigoEnEmpresa(codigoLimpio, SecurityUtils.getEmpresaId());
+
+        List<OrdenMantenimientoResponse> mantenciones = ordenRepository
+                .findByActivoIdOrderByFechaProgramadaDesc(activo.getId())
+                .stream()
+                .map(mapper::mapOrdenMantenimientoResponse)
+                .toList();
+
+        return ActivoEscaneoResponse.builder()
+                .activo(mapper.mapActivoResponse(activo))
+                .mantenciones(mantenciones)
+                .build();
+    }
+
+    // 🔳 El QR guarda el codigoInterno tal cual y el EAN13 se deriva de el
+    // (ver ActivoCodigoGenerador): probamos ambos, sin saber de antemano
+    // cual de los dos se leyo.
+    private Activo buscarActivoPorCodigoEnEmpresa(String codigo, Long empresaId) {
+        return activoRepository.findByCodigoInternoAndEmpresaId(codigo, empresaId)
+                .or(() -> activoRepository.findByCodigoEan13AndEmpresaId(codigo, empresaId))
+                .orElseThrow(() -> new BusinessException("No se encontró ningún activo con ese código"));
+    }
+
+    private Activo buscarActivoPorCodigoGlobal(String codigo) {
+        return activoRepository.findByCodigoInterno(codigo)
+                .or(() -> activoRepository.findByCodigoEan13(codigo))
+                .orElseThrow(() -> new BusinessException("No se encontró ningún activo con ese código"));
+    }
+
     private boolean esSuperAdmin() {
         return SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    // 🔒 El QR/EAN13 solo se muestra a SUPER_ADMIN y a la empresa demo; el
+    // resto de las empresas los recibe en null (el activo los sigue
+    // generando y guardando igual, simplemente no se exponen todavía).
+    private ActivoResponse ocultarCodigosSiNoCorresponde(ActivoResponse response) {
+        if (!esSuperAdmin() && !SecurityUtils.esEmpresaDemo()) {
+            response.setCodigoQr(null);
+            response.setCodigoEan13(null);
+        }
+        return response;
     }
 }

@@ -34,6 +34,7 @@ import cl.aracridav.svua.inventario.activo.dto.request.ActivoImportRowDTO;
 import cl.aracridav.svua.inventario.activo.dto.response.ActivoImportResultDTO;
 import cl.aracridav.svua.inventario.activo.dto.response.ActivoImportRowResultDTO;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
+import cl.aracridav.svua.inventario.activo.util.ActivoCodigoGenerador;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.inventario.tipoactivo.dto.request.TipoActivoImportRowDTO;
@@ -973,6 +974,12 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         Activo activo = new Activo();
 
         activo.setCodigoInterno(codigo);
+
+        // 🔳 Igual que en la creación manual: se generan automaticamente,
+        // no vienen en el Excel/carga.
+        activo.setCodigoQr(ActivoCodigoGenerador.generarCodigoQr(codigo));
+        activo.setCodigoEan13(ActivoCodigoGenerador.generarCodigoEan13(codigo));
+
         activo.setNombre(nombre);
         activo.setDescripcion(descripcion);
         activo.setTipoActivo(tipoActivo);

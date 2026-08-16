@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Activo } from '../model/activo';
+import { ActivoEscaneoResponse } from '../model/activoEscaneo';
 import { Observable } from 'rxjs';
 import { Page } from '../shared/page';
 import { environment } from '../../environments/environment';
@@ -50,5 +51,12 @@ export class ActivoService {
       motivo: motivo
     };
     return this.http.patch(`${this.apiUrl}/activos/${id}/baja`, body);
+  }
+
+  // 🔳 Escaneo de QR/EAN13: busca el activo por el codigo leido (con la
+  // camara o con un lector fisico) y trae su historial de mantenciones.
+  buscarPorCodigo(codigo: string): Observable<ActivoEscaneoResponse> {
+    const params = new HttpParams().set('codigo', codigo);
+    return this.http.get<ActivoEscaneoResponse>(`${this.apiUrl}/activos/escanear`, { params });
   }
 }

@@ -491,7 +491,12 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
      */
 
     private Usuario obtenerUsuarioActual(Long usuarioId) {
-        return usuarioRepository.findById(usuarioId)
+        // 🔧 La mayoria de los llamados a registrarCambioEstado no traen un
+        // usuarioId explicito (pasan null): en ese caso se usa el usuario
+        // autenticado actual. Antes de este fix, findById(null) reventaba
+        // con IllegalArgumentException al crear/editar/dar de baja un activo.
+        Long id = usuarioId != null ? usuarioId : SecurityUtils.getUsuarioId();
+        return usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
     }
 

@@ -21,6 +21,14 @@ public class SecurityUtils {
         return getPrincipal().getId();
     }
 
+    // 🔳 Empresa "demo" (Empresa.demo = true en la BD, ya viaja en el JWT
+    // como claim "demo"): usado para funcionalidades habilitadas solo para
+    // esa empresa + SUPER_ADMIN (ej. escaneo de QR/EAN13 de activos).
+    public static boolean esEmpresaDemo() {
+        Boolean demo = getPrincipal().getDemo();
+        return Boolean.TRUE.equals(demo);
+    }
+
     private static UsuarioPrincipal getPrincipal() {
 
         Authentication auth = SecurityContextHolder

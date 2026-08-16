@@ -14,6 +14,8 @@ import lombok.*;
 @JsonPropertyOrder({
     "id",
     "codigoInterno",
+    "codigoQr",
+    "codigoEan13",
     "nombre",
     "descripcion",
     "marca",
@@ -43,6 +45,9 @@ public class ActivoResponse {
     private Integer vidaUtilMeses;
     private EstadoActivo estadoActual;
     private String cuentaContable;
+
+    private String codigoQr;
+    private String codigoEan13;
     
     private TipoActivoDTO tipoActivo;
 

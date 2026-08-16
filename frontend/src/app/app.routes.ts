@@ -24,6 +24,7 @@ import { SoporteComponent } from './components/soporte/soporte.component';
 import { SesionUsuarioComponent } from './components/sesion-usuario/sesion-usuario.component';
 import { InformeConexionesComponent } from './components/informe-conexiones/informe-conexiones.component';
 import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
+import { EscanearComponent } from './components/escanear/escanear.component';
 
 export const routes: Routes = [
     {
@@ -255,6 +256,17 @@ export const routes: Routes = [
             {
                 path: 'informeMantenciones',
                 component: InformeMantencionesComponent
+            }
+        ]
+    },
+    {
+        path: 'inicio',
+        component: LayoutComponent,
+        canActivate: [authGuard], // 🔥 aquí
+        children: [
+            {
+                path: 'escanear',
+                component: EscanearComponent
             }
         ]
     },
