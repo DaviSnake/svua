@@ -114,6 +114,8 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
 
     long countByEmpresaIdAndEstado(Long empresaId, EstadoOrden estado);
 
+    long countByEmpresaIdAndEstadoNot(Long empresaId, EstadoOrden estado);
+
     @Query("""
         SELECT COUNT(o)
         FROM OrdenMantenimiento o

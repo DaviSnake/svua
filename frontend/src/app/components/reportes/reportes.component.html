@@ -34,37 +34,37 @@
 
 <div class="dashboard-grid">
 
-  <div class="dashboard-card cumplimiento">
+  <div class="dashboard-card cumplimiento" matTooltip="Porcentaje de ordenes completadas sobre el total de ordenes, sin contar las canceladas.">
     <span class="titulo">Cumplimiento</span>
     <span class="valor">{{ data?.cumplimiento }}%</span>
   </div>
 
-  <div class="dashboard-card">
+  <div class="dashboard-card" matTooltip="Tiempo medio de reparacion: promedio de duracion de las ordenes correctivas ya completadas.">
     <span class="titulo">MTTR</span>
     <span class="valor">{{ data?.mttrHoras }} h</span>
   </div>
 
-  <div class="dashboard-card">
+  <div class="dashboard-card" matTooltip="Tiempo medio entre fallas: promedio del intervalo entre fallas correctivas consecutivas.">
     <span class="titulo">MTBF</span>
     <span class="valor">{{ data?.mtbfHoras }} h</span>
   </div>
 
-  <div class="dashboard-card">
+  <div class="dashboard-card" matTooltip="Cantidad total de ordenes de la empresa, sin contar las canceladas.">
     <span class="titulo">Total Órdenes</span>
     <span class="valor">{{ data?.programadas }}</span>
   </div>
 
-  <div class="dashboard-card">
+  <div class="dashboard-card" matTooltip="Ordenes que ya fueron finalizadas.">
     <span class="titulo">Completadas</span>
     <span class="valor">{{ data?.completadas }}</span>
   </div>
 
-  <div class="dashboard-card pendientes">
+  <div class="dashboard-card pendientes" matTooltip="Ordenes creadas que todavia no han sido programadas ni iniciadas.">
     <span class="titulo">Pendientes</span>
     <span class="valor">{{ data?.pendientes }}</span>
   </div>
 
-  <div class="dashboard-card canceladas">
+  <div class="dashboard-card canceladas" matTooltip="Ordenes canceladas. No se incluyen ni en el Total de Ordenes ni en el calculo de Cumplimiento.">
     <span class="titulo">Canceladas</span>
     <span class="valor">{{ data?.canceladas }}</span>
   </div>

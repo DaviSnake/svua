@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DashboardResponse } from './models/reportes.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { ActivoService } from '../../services/activo.service';
@@ -15,7 +16,7 @@ import { ChartConfiguration, ChartType } from 'chart.js';
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, NgChartsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatTooltipModule, NgChartsModule],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })

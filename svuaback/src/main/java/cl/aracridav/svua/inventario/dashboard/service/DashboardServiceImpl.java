@@ -120,7 +120,12 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public DashboardIndicadoresResponse obtenerDashboard(Long empresaId) {
 
-        long programadas = ordenRepository.countByEmpresaId(empresaId);
+        // "Total Ordenes" y el denominador de Cumplimiento excluyen
+        // ambos las canceladas: una orden cancelada no es parte del
+        // universo de ordenes de trabajo real, asi que no debe afectar
+        // (ni sumar ni restar) ninguno de los dos calculos.
+        long totalOrdenes = ordenRepository.countByEmpresaIdAndEstadoNot(
+                empresaId, EstadoOrden.CANCELADA);
 
         long completadas = ordenRepository.countByEmpresaIdAndEstado(
                 empresaId, EstadoOrden.COMPLETADA);
@@ -135,8 +140,8 @@ public class DashboardServiceImpl implements DashboardService {
                 empresaId, EstadoOrden.CANCELADA);
 
         double cumplimiento =
-                programadas == 0 ? 0 :
-                ((double) completadas / programadas) * 100;
+                totalOrdenes == 0 ? 0 :
+                ((double) completadas / totalOrdenes) * 100;
 
         // MTTR
         Double mttrSeg =
@@ -148,7 +153,7 @@ public class DashboardServiceImpl implements DashboardService {
         double mtbf = calcularMTBF(empresaId);
 
         return DashboardIndicadoresResponse.builder()
-                .programadas(programadas)
+                .programadas(totalOrdenes)
                 .completadas(completadas)
                 .pendientes(pendientes)
                 .atrasadas(atrasadas)
