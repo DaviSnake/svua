@@ -126,8 +126,20 @@ export class AuthService {
     return payload.demo;
   }
 
+  // 🐛 FIX: init() se llama en CADA carga de la app (AppComponent.ngOnInit,
+  // incluido un simple refresh/F5 de la pagina), pero antes solo restauraba
+  // el usuario desde el token y NUNCA volvia a armar el timer de refresco
+  // proactivo (startRefreshTimer solo se llamaba en el login y despues de
+  // un refresh exitoso). Resultado: apenas el usuario hacia F5, el access
+  // token quedaba "huerfano" -> vencia en silencio sin nadie renovandolo a
+  // tiempo, y la sesion terminaba dependiendo por completo del refresh
+  // REACTIVO (el que dispara el interceptor ante un 401), aumentando el
+  // riesgo de terminar usando un refresh token viejo/ya rotado y recibir
+  // 401 en /auth/refresh (token de un solo uso que el backend ya no
+  // encuentra).
   init() {
     this.setUserFromToken();
+    this.startRefreshTimer();
   }
 
   startRefreshTimer() {
