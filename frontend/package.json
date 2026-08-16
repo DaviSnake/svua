@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "set API_URL=http://localhost:8080/api/v1/svua&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL | Set-Content src/assets/env.js\" && ng serve",
+    "start": "set API_URL=http://localhost:8080/api/v1/svua&& set WS_URL=ws://localhost:8080/ws&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL -replace '\\$\\{WS_URL\\}', $env:WS_URL | Set-Content src/assets/env.js\" && ng serve",
+    "start:remoto": "set API_URL=http://localhost:4200/api/v1/svua&& set WS_URL=ws://localhost:4200/ws&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL -replace '\\$\\{WS_URL\\}', $env:WS_URL | Set-Content src/assets/env.js\" && ng serve --configuration=remoto",
+    "env:local": "set API_URL=http://localhost:8080/api/v1/svua&& set WS_URL=ws://localhost:8080/ws&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL -replace '\\$\\{WS_URL\\}', $env:WS_URL | Set-Content src/assets/env.js\"",
+    "env:remoto": "set API_URL=http://localhost:4200/api/v1/svua&& set WS_URL=ws://localhost:4200/ws&& powershell -Command \"(Get-Content src/assets/env.template.js) -replace '\\$\\{API_URL\\}', $env:API_URL -replace '\\$\\{WS_URL\\}', $env:WS_URL | Set-Content src/assets/env.js\"",
     "build": "ng build",
     "postbuild": "node scripts/generar-version.js",
     "watch": "ng build --watch --configuration development",

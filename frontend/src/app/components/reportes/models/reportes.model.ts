@@ -3,6 +3,7 @@ export interface DashboardResponse {
   completadas: number;
   pendientes: number;
   atrasadas: number;
+  canceladas: number;
 
   cumplimiento: number;
   mttrHoras: number;

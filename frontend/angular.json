@@ -74,6 +74,10 @@
             },
             "development": {
               "buildTarget": "frontend-svua:build:development"
+            },
+            "remoto": {
+              "buildTarget": "frontend-svua:build:development",
+              "proxyConfig": "proxy.conf.js"
             }
           },
           "defaultConfiguration": "development"

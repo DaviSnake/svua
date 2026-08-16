@@ -131,6 +131,9 @@ public class DashboardServiceImpl implements DashboardService {
         long atrasadas = ordenRepository.countByEmpresaIdAndEstado(
                 empresaId, EstadoOrden.ATRASADA);
 
+        long canceladas = ordenRepository.countByEmpresaIdAndEstado(
+                empresaId, EstadoOrden.CANCELADA);
+
         double cumplimiento =
                 programadas == 0 ? 0 :
                 ((double) completadas / programadas) * 100;
@@ -149,6 +152,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .completadas(completadas)
                 .pendientes(pendientes)
                 .atrasadas(atrasadas)
+                .canceladas(canceladas)
                 .cumplimiento(Math.round(cumplimiento * 100.0) / 100.0)
                 .mttrHoras(Math.round(mttr * 100.0) / 100.0)
                 .mtbfHoras(mtbf)

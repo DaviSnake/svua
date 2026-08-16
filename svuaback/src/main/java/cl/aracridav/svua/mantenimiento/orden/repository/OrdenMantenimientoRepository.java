@@ -79,12 +79,17 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
 
     Long countByEmpresaIdAndEstadoIn(Long empresaId, List<EstadoOrden> estados);
 
+    // Solo cuentan como vencidas las ordenes en estado PROGRAMADA cuya
+    // fecha programada ya paso. Una orden EN_EJECUCION (o en cualquier
+    // otro estado distinto de PROGRAMADA) no debe sumar aqui, aunque su
+    // fecha programada original haya quedado atras: ya esta en curso, no
+    // esta "atrasada sin iniciar".
     @Query("""
         SELECT COUNT(o)
         FROM OrdenMantenimiento o
         WHERE o.empresa.id = :empresaId
         AND o.fechaProgramada < CURRENT_DATE
-        AND o.estado <> 'COMPLETADA'
+        AND o.estado = 'PROGRAMADA'
     """)
     Long countMantenimientosVencidos(Long empresaId);
 

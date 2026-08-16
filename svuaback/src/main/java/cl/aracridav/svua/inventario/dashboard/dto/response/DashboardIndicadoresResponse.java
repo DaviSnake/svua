@@ -14,6 +14,7 @@ public class DashboardIndicadoresResponse {
     private long completadas;
     private long pendientes;
     private long atrasadas;
+    private long canceladas;
 
     private double cumplimiento;
 

@@ -88,5 +88,10 @@
     "name": "app.init-data.admin-password",
     "type": "java.lang.String",
     "description": "A description for 'app.init-data.admin-password'"
+  },
+  {
+    "name": "app.config.env-file",
+    "type": "java.lang.String",
+    "description": "A description for 'app.config.env-file'"
   }
 ]}
