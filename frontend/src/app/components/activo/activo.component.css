@@ -289,6 +289,12 @@ td button:hover {
   border-radius: 10px;
   width: 500px; /* 👈 un poco más ancho */
 
+  /* 🐛 FIX: con todos los campos (+ QR/EAN13) el modal es mas alto que
+     el viewport de un iPhone, y al no tener scroll propio los botones
+     de abajo (Cancelar) quedaban fuera de pantalla e inalcanzables. */
+  max-height: 85vh;
+  overflow-y: auto;
+
   display: grid; /* 🔥 cambio clave */
   grid-template-columns: repeat(2, 1fr); /* 👈 2 columnas */
   align-items: start; /* 🔥 alinea los inputs de cada fila por arriba */

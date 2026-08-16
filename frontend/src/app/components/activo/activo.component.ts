@@ -53,7 +53,24 @@ export class ActivoComponent implements OnInit {
 
   toggleCodigoTooltip(tipo: 'qr' | 'ean', event: Event): void {
     event.stopPropagation();
-    this.codigoTooltipAbierto = this.codigoTooltipAbierto === tipo ? null : tipo;
+
+    const abrir = this.codigoTooltipAbierto !== tipo;
+    this.codigoTooltipAbierto = abrir ? tipo : null;
+
+    // 🐛 FIX Safari/iOS: WebKit puede no pintar un <canvas> que se dibujo
+    // mientras su contenedor todavia tenia display:none (el QR se
+    // dibujaba una sola vez al abrir el modal, con el tooltip todavia
+    // oculto) - queda un "cuadro en blanco" al mostrarlo. Se redibuja
+    // aca, justo al abrir el tooltip, ya con el elemento visible.
+    if (abrir && this.activoSeleccionado) {
+      setTimeout(() => {
+        if (tipo === 'qr') {
+          this.dibujarQr(this.activoSeleccionado.codigoQr);
+        } else {
+          this.dibujarBarcodeEan13(this.activoSeleccionado.codigoEan13);
+        }
+      }, 0);
+    }
   }
 
   @HostListener('document:click')
