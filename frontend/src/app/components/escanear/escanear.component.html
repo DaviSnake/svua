@@ -71,7 +71,7 @@
               <td>{{ orden.tipoMantenimiento }}</td>
               <td>{{ orden.estado }}</td>
               <td>{{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td>{{ orden.fechaTermino | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</td>
               <td class="text-right">{{ orden.costoTotal | currency:'CLP':'symbol':'1.0-0' }}</td>
               <td class="text-right">
                 <button

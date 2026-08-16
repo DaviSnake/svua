@@ -6,6 +6,7 @@ export interface OrdenMantencion {
   observaciones?: string;
   fechaProgramada?: string;
   fechaTermino?: string;
+  fechaEjecucion?: string;
   duracionMinutos?: string;
   end?: string;
   estado?: string;
