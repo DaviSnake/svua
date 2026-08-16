@@ -49,6 +49,9 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   codigoQrHabilitado = false; // 🔒 controla el link "Escanear Activo"
   codigoEan13Habilitado = false;
 
+  // © footer del sidebar
+  anioActual = new Date().getFullYear();
+
   rutaActual = '';
 
   notificaciones: Notificacion[] = [];
