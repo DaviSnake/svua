@@ -30,4 +30,6 @@ public class EmpresaResponse {
     private LocalDateTime fechaActualizacion;
 
     private Boolean demo;
+    private Boolean codigoQrHabilitado;
+    private Boolean codigoEan13Habilitado;
 }

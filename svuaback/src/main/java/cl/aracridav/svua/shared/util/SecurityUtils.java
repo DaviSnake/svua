@@ -29,6 +29,18 @@ public class SecurityUtils {
         return Boolean.TRUE.equals(demo);
     }
 
+    // 🔳 Flags de configuracion por empresa (Empresa.codigoQrHabilitado /
+    // codigoEan13Habilitado, tambien viajan en el JWT): reemplazan a
+    // esEmpresaDemo() como criterio para exponer el QR/EAN13 de un activo
+    // y para habilitar el escaneo (ver ActivoServiceImpl).
+    public static boolean tieneCodigoQrHabilitado() {
+        return Boolean.TRUE.equals(getPrincipal().getCodigoQrHabilitado());
+    }
+
+    public static boolean tieneCodigoEan13Habilitado() {
+        return Boolean.TRUE.equals(getPrincipal().getCodigoEan13Habilitado());
+    }
+
     private static UsuarioPrincipal getPrincipal() {
 
         Authentication auth = SecurityContextHolder

@@ -60,6 +60,11 @@ export class EmpresaComponent implements OnInit {
       direccion: ['', Validators.required],
       tipoPlan: ['FREE', Validators.required],
 
+      // 🔹 Configuracion (demo + codigos QR/EAN13 de activos)
+      demo: [false],
+      codigoQrHabilitado: [false],
+      codigoEan13Habilitado: [false],
+
       // ADMIN
       adminNombre: [''],
       adminEmail: [''],
@@ -167,6 +172,7 @@ export class EmpresaComponent implements OnInit {
     this.editando = true;
     this.empresaId = emp.id!;
     this.empresaEditandoId = emp.id!
+    this.desactivarSeccionAdmin(); // 🐛 FIX: ver comentario en el metodo
     this.empresaForm.patchValue(emp);
   }
 
@@ -187,16 +193,48 @@ export class EmpresaComponent implements OnInit {
   }
 
   resetForm() {
-    this.empresaForm.reset({ tipoPlan: 'FREE' });
+    this.empresaForm.reset({
+      tipoPlan: 'FREE',
+      demo: false,
+      codigoQrHabilitado: false,
+      codigoEan13Habilitado: false
+    });
     this.editando = false;
     this.loading = false;
     this.empresaEditandoId = null;
     this.flag = 0;
-    this.onAdminClick();
+    this.desactivarSeccionAdmin(); // 🐛 FIX: ver comentario en el metodo
   }
 
   togglePassword() {
     this.showPassword = !this.showPassword;
+  }
+
+  // 🐛 FIX: apaga la seccion "Administrador" y limpia sus validators de
+  // forma DETERMINISTICA (a diferencia de onAdminClick(), que es un
+  // toggle). Antes, resetForm() llamaba a onAdminClick() para "cerrar"
+  // la seccion admin, pero como es un toggle podia terminar dejandola
+  // ABIERTA (mostrarAdmin = true) y con adminNombre/adminEmail/
+  // adminPassword marcados como required - validators que sobrevivian a
+  // pesar de que esa seccion esta oculta al editar (*ngIf="!editando"),
+  // haciendo fallar la validacion del formulario de EDITAR con "Revisa
+  // el campo: adminNombre" aunque el usuario nunca haya tocado esos
+  // campos.
+  private desactivarSeccionAdmin(): void {
+
+    this.mostrarAdmin = false;
+
+    const adminNombre = this.empresaForm.get('adminNombre');
+    const adminEmail = this.empresaForm.get('adminEmail');
+    const adminPassword = this.empresaForm.get('adminPassword');
+
+    adminNombre?.clearValidators();
+    adminEmail?.clearValidators();
+    adminPassword?.clearValidators();
+
+    adminNombre?.updateValueAndValidity();
+    adminEmail?.updateValueAndValidity();
+    adminPassword?.updateValueAndValidity();
   }
 
   onAdminClick() {

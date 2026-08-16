@@ -75,6 +75,8 @@ public class GeneralMapper {
       .fechaCreacion(empresa.getFechaCreacion())
       .fechaActualizacion(empresa.getFechaActualizacion())
       .demo(empresa.getDemo())
+      .codigoQrHabilitado(empresa.getCodigoQrHabilitado())
+      .codigoEan13Habilitado(empresa.getCodigoEan13Habilitado())
       .build();
   }
 

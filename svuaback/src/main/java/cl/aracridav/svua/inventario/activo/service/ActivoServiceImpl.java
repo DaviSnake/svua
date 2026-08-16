@@ -449,10 +449,14 @@ public class ActivoServiceImpl implements ActivoService {
     @Override
     public ActivoEscaneoResponse buscarPorCodigoEscaneado(String codigo) {
 
-        // 🔒 Escaneo de QR/EAN13 disponible solo para SUPER_ADMIN y para la
-        // empresa demo (Empresa.demo = true), sin importar el rol dentro de
-        // esa empresa.
-        if (!esSuperAdmin() && !SecurityUtils.esEmpresaDemo()) {
+        // 🔒 Escaneo de QR/EAN13 disponible para SUPER_ADMIN y para toda
+        // empresa que tenga habilitado al menos uno de los dos codigos
+        // (Empresa.codigoQrHabilitado / codigoEan13Habilitado), sin importar
+        // el rol dentro de esa empresa.
+        boolean tieneAlgunCodigoHabilitado =
+                SecurityUtils.tieneCodigoQrHabilitado() || SecurityUtils.tieneCodigoEan13Habilitado();
+
+        if (!esSuperAdmin() && !tieneAlgunCodigoHabilitado) {
             throw new BusinessException("El escaneo de activos no está disponible para tu empresa");
         }
 
@@ -476,7 +480,7 @@ public class ActivoServiceImpl implements ActivoService {
                 .toList();
 
         return ActivoEscaneoResponse.builder()
-                .activo(mapper.mapActivoResponse(activo))
+                .activo(ocultarCodigosSiNoCorresponde(mapper.mapActivoResponse(activo)))
                 .mantenciones(mantenciones)
                 .build();
     }
@@ -502,14 +506,25 @@ public class ActivoServiceImpl implements ActivoService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 
-    // 🔒 El QR/EAN13 solo se muestra a SUPER_ADMIN y a la empresa demo; el
-    // resto de las empresas los recibe en null (el activo los sigue
-    // generando y guardando igual, simplemente no se exponen todavía).
+    // 🔒 Cada codigo se muestra de forma independiente segun lo que la
+    // empresa tenga habilitado (Empresa.codigoQrHabilitado /
+    // codigoEan13Habilitado); SUPER_ADMIN siempre ve ambos. El activo los
+    // sigue generando y guardando igual sin importar la configuracion de
+    // su empresa, simplemente no se exponen si corresponde.
     private ActivoResponse ocultarCodigosSiNoCorresponde(ActivoResponse response) {
-        if (!esSuperAdmin() && !SecurityUtils.esEmpresaDemo()) {
+
+        if (esSuperAdmin()) {
+            return response;
+        }
+
+        if (!SecurityUtils.tieneCodigoQrHabilitado()) {
             response.setCodigoQr(null);
+        }
+
+        if (!SecurityUtils.tieneCodigoEan13Habilitado()) {
             response.setCodigoEan13(null);
         }
+
         return response;
     }
 }

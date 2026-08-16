@@ -82,7 +82,7 @@
     </li>
 
     <!-- ESCANEAR ACTIVO (solo SUPER_ADMIN y empresa demo) -->
-    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin || esDemo">
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin || codigoQrHabilitado || codigoEan13Habilitado">
       <a routerLink="/inicio/escanear" (click)="closeAllMenus(); $event.stopPropagation()">
         <i class="bx bx-scan"></i>
         <span *ngIf="!isCollapsed">Escanear Activo</span>

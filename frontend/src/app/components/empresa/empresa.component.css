@@ -54,6 +54,30 @@ input:focus, select:focus {
   grid-column: 1 / -1;
 }
 
+/* CONFIGURACION: demo + codigos QR/EAN13 */
+.config-flags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #34495e;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
 .span-2 {
   grid-column: span 2;
 }

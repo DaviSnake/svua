@@ -14,4 +14,9 @@ public class CreateEmpresaRequest {
 
     // Configuración inicial SaaS
     private TipoPlan tipoPlan;
+
+    // 🔹 Configuracion de empresa (demo + codigos QR/EAN13 de activos)
+    private Boolean demo;
+    private Boolean codigoQrHabilitado;
+    private Boolean codigoEan13Habilitado;
 }

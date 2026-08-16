@@ -114,7 +114,11 @@ export class ActivoComponent implements OnInit {
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
-  esDemo = false; // 🔒 QR/EAN13 solo visibles para SUPER_ADMIN y empresa demo
+  // 🔒 Cada codigo se muestra en el modal "Ver" de forma independiente
+  // segun lo que la empresa del usuario tenga habilitado (o siempre, si
+  // es SUPER_ADMIN).
+  codigoQrHabilitado = false;
+  codigoEan13Habilitado = false;
   bloquearCampo = true;
 
   page = 0;
@@ -127,7 +131,8 @@ export class ActivoComponent implements OnInit {
   ngOnInit() {
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
-    this.esDemo = this.authService.getDemo() ?? false;
+    this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
+    this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;
     this.initForm();
     this.initAutocompletes();
     this.cargarActivos();

@@ -46,6 +46,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   esAdminEmpresa = false;
   esTecnico = false;
   esDemo = false;
+  codigoQrHabilitado = false; // 🔒 controla el link "Escanear Activo"
+  codigoEan13Habilitado = false;
 
   rutaActual = '';
 
@@ -68,6 +70,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.esTecnico = this.authService.isTecnico()!;
       this.esAdminEmpresa = this.authService.isAdminEmpresa();
       this.esDemo = this.authService.getDemo()!;
+      this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
+      this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;
     });
 
     // 🔥 abrir menú según ruta

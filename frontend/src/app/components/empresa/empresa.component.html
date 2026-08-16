@@ -28,6 +28,24 @@
         <option value="PROFESIONAL">PROFESIONAL</option>
         <option value="ENTERPRISE">ENTERPRISE</option>
       </select>
+
+      <!-- 🔹 Configuracion: empresa demo + codigos QR/EAN13 de activos
+           (controla si Escanear Activo y el QR/EAN13 del modal "Ver" de
+           Activo estan disponibles para esta empresa). -->
+      <div class="config-flags">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="demo">
+          Empresa Demo
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="codigoQrHabilitado">
+          Código QR habilitado
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="codigoEan13Habilitado">
+          Código EAN13 habilitado
+        </label>
+      </div>
     </div>
 
     <!-- ========================= -->

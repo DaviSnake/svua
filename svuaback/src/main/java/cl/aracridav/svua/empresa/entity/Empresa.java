@@ -72,4 +72,13 @@ public class Empresa {
 
     @Column(nullable = false)
     private Boolean demo;
+
+    // 🔹 Habilitan, por empresa, la generacion/uso de codigo QR y codigo
+    // EAN13 para sus activos (ver ActivoServiceImpl.ocultarCodigosSiNoCorresponde
+    // y buscarPorCodigoEscaneado).
+    @Column(name = "codigo_qr_habilitado", nullable = false)
+    private Boolean codigoQrHabilitado;
+
+    @Column(name = "codigo_ean13_habilitado", nullable = false)
+    private Boolean codigoEan13Habilitado;
 }

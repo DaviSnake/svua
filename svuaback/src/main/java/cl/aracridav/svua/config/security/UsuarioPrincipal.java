@@ -16,6 +16,8 @@ public class UsuarioPrincipal implements UserDetails {
     private Long id;
     private Long empresaId;
     private Boolean demo;
+    private Boolean codigoQrHabilitado;
+    private Boolean codigoEan13Habilitado;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
@@ -24,6 +26,8 @@ public class UsuarioPrincipal implements UserDetails {
         this.id = usuario.getId();
         this.empresaId = usuario.getEmpresa().getId();
         this.demo = usuario.getEmpresa().getDemo();
+        this.codigoQrHabilitado = usuario.getEmpresa().getCodigoQrHabilitado();
+        this.codigoEan13Habilitado = usuario.getEmpresa().getCodigoEan13Habilitado();
         this.email = usuario.getEmail();
         this.password = usuario.getPassword();
         
@@ -53,6 +57,14 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Boolean getDemo() {
         return demo;
+    }
+
+    public Boolean getCodigoQrHabilitado() {
+        return codigoQrHabilitado;
+    }
+
+    public Boolean getCodigoEan13Habilitado() {
+        return codigoEan13Habilitado;
     }
 
     @Override

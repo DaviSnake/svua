@@ -7,4 +7,8 @@ export interface Empresa {
   telefono: string;
   direccion: string;
   tipoPlan: Plan | null;
+  activa?: boolean;
+  demo?: boolean;
+  codigoQrHabilitado?: boolean;
+  codigoEan13Habilitado?: boolean;
 }
