@@ -1,0 +1,136 @@
+name: Deploy SaaS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+
+          script: |
+
+            set -e
+
+            APP_DIR=/home/davisnake/svua
+            TAG="${{ github.ref_name }}"
+
+            echo "=========================================="
+            echo "🚀 Deploy SaaS"
+            echo "🏷️ Tag: $TAG"
+            echo "=========================================="
+
+            echo "📁 Verificando proyecto..."
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+
+              echo "🚀 Primera instalación"
+
+              git clone git@github.com:DaviSnake/svua.git "$APP_DIR"
+
+              cd "$APP_DIR"
+
+              git fetch --tags
+              git checkout "$TAG"
+
+              mkdir -p certbot/www certbot/conf
+
+            else
+
+              echo "🔄 Actualizando proyecto"
+
+              cd "$APP_DIR"
+
+              git fetch origin
+              git fetch --tags
+
+              echo "🏷️ Cambiando a tag $TAG"
+
+              git checkout "$TAG"
+
+            fi
+
+            cd "$APP_DIR"
+
+            echo "📌 Commit desplegado:"
+            git rev-parse HEAD
+
+            echo "📌 Tag desplegado:"
+            git describe --tags --exact-match
+
+            echo "🔐 Verificando .env..."
+
+            if [ ! -f ".env" ]; then
+
+              echo "⚠️ .env no existe. Creando..."
+
+              cat > .env <<EOF
+            POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            API_URL=${{ secrets.API_URL }}
+            EOF
+
+            else
+
+              echo "✅ .env ya existe"
+
+            fi
+
+            echo "🐳 Levantando Docker..."
+
+            docker compose down
+
+            docker compose up -d --build
+
+            echo "⏳ Esperando aplicación..."
+
+            sleep 15
+
+            echo "📦 Estado de Docker:"
+
+            docker compose ps
+
+            echo "📋 Logs del backend:"
+
+            docker compose logs --tail=50 backend
+
+            echo "🔐 Validando certificado SSL..."
+
+            if [ ! -f "certbot/conf/renewal/www.svua.cl.conf" ]; then
+
+              echo "🔐 Generando SSL..."
+
+              docker compose run --rm --entrypoint certbot certbot certonly \
+                --webroot \
+                --webroot-path=/var/www/certbot \
+                -d www.svua.cl \
+                -d svua.cl \
+                -d api.svua.cl \
+                --email dmedina.c@hotmail.com \
+                --agree-tos \
+                --no-eff-email
+
+            else
+
+              echo "✅ SSL ya existe"
+
+            fi
+
+            echo "=========================================="
+            echo "✅ Deploy $TAG completado"
+            echo "=========================================="
