@@ -165,6 +165,13 @@ button:hover {
   padding: 6px; /* área de toque más cómoda en móvil */
 }
 
+/* © NEXO VECTORIA */
+/* 🔥 mismo estilo visual que "Entrar como invitado" (clase .extra span) -
+   .copyright solo ajusta el cursor, ya que el texto no es clickeable. */
+.copyright span {
+  cursor: default;
+}
+
 /* ANIMACIÓN */
 @keyframes fadeIn {
   from {

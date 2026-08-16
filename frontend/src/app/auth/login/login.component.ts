@@ -17,6 +17,9 @@ export class LoginComponent {
   showPassword = false;
   esTecnico = false;
 
+  // © footer del login
+  anioActual = new Date().getFullYear();
+
   // 🔒 Evita doble submit (doble clic / Enter + clic) mientras el login
   // está en curso: sin esto, cada clic dispara su propio POST /auth/login
   // y cada uno crea su propia fila en Sesiones Activas para el mismo
