@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnInit, ViewChild } from '@angular/core';
 import * as QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import { Activo } from '../../model/activo';
@@ -39,9 +39,27 @@ export class ActivoComponent implements OnInit {
   activoForm!: FormGroup;
 
   // 🔳 Referencias al canvas/svg del modal "Ver", donde se dibujan el QR
-  // y el codigo de barras EAN13 (tooltip visual al pasar el mouse).
+  // y el codigo de barras EAN13 (tooltip visual al pasar el mouse en
+  // desktop, o al tocar en mobile: ver codigoTooltipAbierto mas abajo).
   @ViewChild('qrCanvas') qrCanvasRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('barcodeSvg') barcodeSvgRef?: ElementRef<SVGElement>;
+
+  // 🐛 FIX: en mobile no existe el mouse, asi que ":hover" (unica forma
+  // en que se mostraba el tooltip con el QR/EAN13) nunca se activa: el
+  // codigo quedaba invisible para tecnicos usando el celular. Con esto
+  // se abre/cierra el tooltip al tocar (funciona igual con click en
+  // desktop), sin perder el hover que ya funcionaba con mouse.
+  codigoTooltipAbierto: 'qr' | 'ean' | null = null;
+
+  toggleCodigoTooltip(tipo: 'qr' | 'ean', event: Event): void {
+    event.stopPropagation();
+    this.codigoTooltipAbierto = this.codigoTooltipAbierto === tipo ? null : tipo;
+  }
+
+  @HostListener('document:click')
+  cerrarCodigoTooltip(): void {
+    this.codigoTooltipAbierto = null;
+  }
 
   // 🔥 Autocompletado tipo "escribir para buscar" (mismo patrón que Calendario.activoControl),
   // igual que la carga masiva manual, pero manteniendo el envío por ID hacia el backend
@@ -582,6 +600,7 @@ export class ActivoComponent implements OnInit {
   abrirModalActivo(activo: any) {
     this.activoSeleccionado = activo;
     this.mostrarModalActivo = true;
+    this.codigoTooltipAbierto = null; // 🔥 aquí
 
     this.activoForm.patchValue({
       codigoInterno: activo.codigoInterno,
@@ -654,6 +673,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cerrarModal() {
+    this.codigoTooltipAbierto = null; // 🔥 aquí
     this.activoForm.get('codigoInterno')?.enable(); // 🔥 aquí
     this.activoForm.get('codigoQr')?.enable(); // 🔥 aquí
     this.activoForm.get('codigoEan13')?.enable(); // 🔥 aquí

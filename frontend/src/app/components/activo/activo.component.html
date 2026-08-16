@@ -214,13 +214,22 @@
       <input type="text" formControlName="cuentaContable" />
       <!-- 🔒 QR/EAN13 visibles solo para SUPER_ADMIN y la empresa demo -->
       <ng-container *ngIf="esSuperAdmin || esDemo">
-        <div class="codigo-visual-wrapper">
+        <!-- 🔥 (click) abre/cierra el tooltip: en desktop sigue funcionando
+             con el hover de CSS, y en mobile (sin mouse) el tap ahora
+             tambien lo muestra. stopPropagation evita que el mismo click
+             que abre el tooltip sea capturado por el listener del
+             document que lo cierra. -->
+        <div class="codigo-visual-wrapper"
+             [class.abierto]="codigoTooltipAbierto === 'qr'"
+             (click)="toggleCodigoTooltip('qr', $event)">
           <input type="text" formControlName="codigoQr" />
           <div class="codigo-visual-tooltip">
             <canvas #qrCanvas></canvas>
           </div>
         </div>
-        <div class="codigo-visual-wrapper">
+        <div class="codigo-visual-wrapper"
+             [class.abierto]="codigoTooltipAbierto === 'ean'"
+             (click)="toggleCodigoTooltip('ean', $event)">
           <input type="text" formControlName="codigoEan13" />
           <div class="codigo-visual-tooltip">
             <svg #barcodeSvg></svg>

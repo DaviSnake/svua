@@ -356,6 +356,16 @@ td button:hover {
 .codigo-visual-wrapper {
   position: relative;
   width: 100%;
+  cursor: pointer; /* 🔥 da la pista de que se puede tocar/hacer click */
+}
+
+/* 🐛 FIX mobile: el input queda "transparente" al mouse/tap para que el
+   click llegue al wrapper (que es quien abre el tooltip). El input ya
+   esta disabled en el modal "Ver", asi que no se pierde ninguna
+   interaccion real (no se puede escribir ni seleccionar de todos
+   modos). */
+.codigo-visual-wrapper input {
+  pointer-events: none;
 }
 
 .codigo-visual-tooltip {
@@ -372,7 +382,10 @@ td button:hover {
   z-index: 20;
 }
 
-.codigo-visual-wrapper:hover .codigo-visual-tooltip {
+/* Hover para mouse (desktop) + clase .abierto que se togglea con el tap
+   (mobile) o con click (desktop). */
+.codigo-visual-wrapper:hover .codigo-visual-tooltip,
+.codigo-visual-wrapper.abierto .codigo-visual-tooltip {
   display: block;
 }
 
