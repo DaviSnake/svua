@@ -136,6 +136,17 @@
 
   <!-- TABLA -->
   <h2>Activos</h2>
+
+  <!-- BUSQUEDA POR CODIGO O NOMBRE (todos los roles) -->
+  <div class="filtro-grilla">
+    <label>Buscar</label>
+    <div class="form-group">
+      <input type="text"
+             placeholder="Codigo o nombre del activo"
+             [formControl]="busquedaControl">
+    </div>
+  </div>
+
   <div class="table-wrapper">
     <table>
       <thead>

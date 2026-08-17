@@ -94,4 +94,20 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
     // 🔥 Paginado, usado por el listado de la grilla (mostrarActivos) para
     // restringir por empresa cuando corresponde.
     Page<Activo> findByEmpresaId(Long empresaId, Pageable pageable);
+
+    // 🔍 Busqueda por codigo interno o nombre (mantenedor de Activo), con
+    // filtro opcional por empresa (empresaId null = todas, usado por
+    // SUPER_ADMIN sin filtro seleccionado).
+    @Query("""
+        SELECT a FROM Activo a
+        WHERE (:empresaId IS NULL OR a.empresa.id = :empresaId)
+        AND (:busqueda IS NULL OR :busqueda = '' OR
+             LOWER(a.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR
+             LOWER(a.codigoInterno) LIKE LOWER(CONCAT('%', :busqueda, '%')))
+    """)
+    Page<Activo> buscarActivos(
+        @Param("empresaId") Long empresaId,
+        @Param("busqueda") String busqueda,
+        Pageable pageable
+    );
 }

@@ -10,7 +10,9 @@ import cl.aracridav.svua.shared.enums.EstadoActivo;
 @Data
 public class ActivoUpdateRequest {
 
-    private String codigoInterno;
+    // 🔒 El codigo interno ya no se puede modificar desde el mantenedor
+    // (queda fijo desde la creacion, junto con el QR/EAN13 que se
+    // generan a partir de el). Por eso no existe aqui.
     private String nombre;
     private String descripcion;
 
