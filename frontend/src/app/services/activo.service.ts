@@ -14,13 +14,18 @@ export class ActivoService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  getAll(page = 0, size = 10, empresaId?: number | null): Observable<Page<Activo>> {
+  getAll(page = 0, size = 10, empresaId?: number | null, busqueda?: string | null): Observable<Page<Activo>> {
     let url = `${this.apiUrl}/activos?page=${page}&size=${size}&sort=nombre,asc`;
 
     // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
     // backend lo ignora para el resto de los roles).
     if (empresaId) {
       url += `&empresaId=${empresaId}`;
+    }
+
+    // 🔍 Busqueda por codigo interno o nombre (mantenedor de Activo).
+    if (busqueda) {
+      url += `&busqueda=${encodeURIComponent(busqueda)}`;
     }
 
     return this.http.get<Page<Activo>>(url);

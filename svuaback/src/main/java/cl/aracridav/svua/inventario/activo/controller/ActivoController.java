@@ -86,11 +86,13 @@ public class ActivoController {
     @GetMapping
     public ResponseEntity<Page<ActivoResponse>> mostrarActivos(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver ActivoServiceImpl).
-        Page<ActivoResponse> response = activoService.mostrarActivos(pageable, empresaId);
+        // 🔍 busqueda es opcional: filtra por codigo interno o nombre.
+        Page<ActivoResponse> response = activoService.mostrarActivos(pageable, empresaId, busqueda);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

@@ -4,6 +4,7 @@ import JsBarcode from 'jsbarcode';
 import { Activo } from '../../model/activo';
 import { ActivoService } from '../../services/activo.service';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TipoActivo } from '../../model/tipoActivo';
@@ -104,13 +105,17 @@ export class ActivoComponent implements OnInit {
   empresasFiltroFiltradas: Empresa[] = [];
   filtroEmpresaId: number | null = null;
 
+  // 🔍 Busqueda de la grilla por codigo interno o nombre del activo.
+  // Con debounce para no pegarle al backend en cada tecla.
+  busquedaControl = new FormControl('');
+  busqueda: string = '';
+
   drawerOpen = false;
   editando: boolean = false;
   mostrarNuevo = false;
   mostrarModalActivo = false;
   activoEditandoId: number | null = null;
   activoSeleccionado: any = null;
-  filtro: string = '';
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
@@ -230,12 +235,24 @@ export class ActivoComponent implements OnInit {
         this.filtroEmpresaId = value.id;
         this.page = 0;
         this.cargarActivos();
+        this.refrescarCombosPorEmpresa();
       } else if (!search && this.filtroEmpresaId !== null) {
         this.filtroEmpresaId = null;
         this.page = 0;
         this.cargarActivos();
+        this.refrescarCombosPorEmpresa();
       }
     });
+
+    // 🔍 Busqueda de la grilla por codigo o nombre: espera 400ms sin
+    // escribir antes de consultar al backend (evita una request por tecla).
+    this.busquedaControl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(value => {
+        this.busqueda = (value || '').trim();
+        this.page = 0;
+        this.cargarActivos();
+      });
   }
 
   displayTipoActivo = (tipoActivo: any): string => tipoActivo?.nombre ?? '';
@@ -264,8 +281,18 @@ export class ActivoComponent implements OnInit {
     this.empresasFiltroFiltradas = this.empresas;
   }
 
+  // 🔥 Cuando SUPER_ADMIN filtra la grilla por una empresa (o vuelve a
+  // "todas"), los autocompletados de Tipo de Activo/Ubicacion/Proveedor
+  // del formulario deben mostrar solo lo que corresponde a esa empresa
+  // (o volver a mostrar todo si se limpia el filtro).
+  refrescarCombosPorEmpresa(): void {
+    this.cargarTipoActivos();
+    this.cargarUbicaciones();
+    this.cargarProveedores();
+  }
+
   cargarActivos() {
-    this.activoService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
+    this.activoService.getAll(this.page, this.size, this.filtroEmpresaId, this.busqueda).subscribe({
       next: (data) => {
 
         this.activos = data.content;
@@ -281,7 +308,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarTipoActivos() {
-    this.tipoActivoService.getTipoActivoCombo(this.page, this.sizeCombo).subscribe({
+    this.tipoActivoService.getTipoActivoCombo(this.page, this.sizeCombo, this.filtroEmpresaId).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
         this.tipoActivosFiltrados = data.content;
@@ -293,7 +320,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarUbicaciones() {
-    this.ubicacionService.getUbicacionCombo(this.page, this.sizeCombo).subscribe({
+    this.ubicacionService.getUbicacionCombo(this.page, this.sizeCombo, this.filtroEmpresaId).subscribe({
       next: (data) => {
         this.ubicaciones = data.content;
         this.ubicacionesFiltrados = data.content;
@@ -305,7 +332,7 @@ export class ActivoComponent implements OnInit {
   }
 
   cargarProveedores() {
-    this.proveedorService.getProveedorCombo(this.page, this.sizeCombo).subscribe({
+    this.proveedorService.getProveedorCombo(this.page, this.sizeCombo, this.filtroEmpresaId).subscribe({
       next: (data) => {
         this.proveedores = data.content;
         this.proveedoresFiltrados = data.content;
@@ -334,18 +361,6 @@ export class ActivoComponent implements OnInit {
     return calcularPaginasVisibles(this.page, this.totalPages);
   }
 
-  get activosFiltrados() {
-    const f = this.filtro.toLowerCase();
-
-    return this.activos.filter(a =>
-      (a.nombre?.toLowerCase().includes(f) ||
-      a.codigoInterno?.toLowerCase().includes(f) ||
-      a.marca?.toLowerCase().includes(f) ||
-      a.numeroSerie?.toLowerCase().includes(f) ||
-      a.modelo?.toLowerCase().includes(f))
-    );
-  }
-
   nuevo(){
     this.resetForm();
     this.mostrarNuevo = false;
@@ -353,6 +368,10 @@ export class ActivoComponent implements OnInit {
 
   resetForm() {
     this.activoForm.reset();
+    // 🔒 El codigo interno solo se puede escribir al CREAR; en edicion
+    // queda bloqueado (ver editar()). Al resetear (nuevo/cancelar) se
+    // vuelve a habilitar, ya que reset() no cambia el estado disabled.
+    this.activoForm.get('codigoInterno')?.enable();
     this.tipoActivoControl.reset();
     this.ubicacionControl.reset();
     this.proveedorControl.reset();
@@ -444,6 +463,10 @@ export class ActivoComponent implements OnInit {
     this.setUbicacionSeleccionada(activo.ubicacion.id!);
     this.setProveedorSeleccionado(activo.proveedor.id!);
     this.setEmpresaSeleccionada(activo.empresa.id!);
+
+    // 🔒 El codigo interno no se puede modificar una vez creado el
+    // activo (el backend tampoco lo acepta en la actualizacion).
+    this.activoForm.get('codigoInterno')?.disable();
 
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;

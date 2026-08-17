@@ -98,24 +98,10 @@ public class ActivoServiceImpl implements ActivoService {
             throw new BusinessException("No pertenece a esta empresa");
         }
 
-        // 🔁 Validar código único si cambia
-        if (request.getCodigoInterno() != null &&
-            !request.getCodigoInterno().equals(activo.getCodigoInterno()) &&
-            activoRepository.existsByCodigoInterno(request.getCodigoInterno())) {
-
-            throw new BusinessException("El código interno ya existe");
-        }
-
-        // 🔄 Actualización parcial
-        if (request.getCodigoInterno() != null) {
-            // 🔳 Si el codigo interno cambia, el QR y el EAN13 (generados a
-            // partir de el) se regeneran para seguir siendo consistentes.
-            if (!request.getCodigoInterno().equals(activo.getCodigoInterno())) {
-                activo.setCodigoQr(ActivoCodigoGenerador.generarCodigoQr(request.getCodigoInterno()));
-                activo.setCodigoEan13(ActivoCodigoGenerador.generarCodigoEan13(request.getCodigoInterno()));
-            }
-            activo.setCodigoInterno(request.getCodigoInterno());
-        }
+        // 🔒 El codigo interno ya no se puede modificar desde el
+        // mantenedor (queda fijo desde la creacion, junto con el QR/EAN13
+        // generados a partir de el) - ActivoUpdateRequest ni siquiera trae
+        // ese campo, asi que no hay nada que aplicar aqui.
 
         if (request.getNombre() != null) {
             activo.setNombre(request.getNombre());
@@ -206,26 +192,16 @@ public class ActivoServiceImpl implements ActivoService {
      * =========================================
      */
     @Override
-    public Page<ActivoResponse> mostrarActivos(Pageable pageable, Long empresaId) {
+    public Page<ActivoResponse> mostrarActivos(Pageable pageable, Long empresaId, String busqueda) {
 
-        if (esSuperAdmin()) {
+        // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa, sin
+        // importar lo que llegue en empresaId (mismo criterio que antes).
+        // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una.
+        // 🔍 busqueda (codigo interno o nombre) es opcional y aplica en
+        // ambos casos.
+        Long empresaIdEfectivo = esSuperAdmin() ? empresaId : SecurityUtils.getEmpresaId();
 
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            if (empresaId != null) {
-                return activoRepository.findByEmpresaId(empresaId, pageable)
-                        .map(mapper::mapActivoResponse)
-                        .map(this::ocultarCodigosSiNoCorresponde);
-            }
-
-            return activoRepository.findAll(pageable)
-                    .map(mapper::mapActivoResponse)
-                    .map(this::ocultarCodigosSiNoCorresponde);
-        }
-
-        // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
-        // sin importar lo que llegue en empresaId (mismo criterio que
-        // Repuesto/Proveedor/Bodega/Tipo de Activo).
-        return activoRepository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable)
+        return activoRepository.buscarActivos(empresaIdEfectivo, busqueda, pageable)
                 .map(mapper::mapActivoResponse)
                 .map(this::ocultarCodigosSiNoCorresponde);
     }

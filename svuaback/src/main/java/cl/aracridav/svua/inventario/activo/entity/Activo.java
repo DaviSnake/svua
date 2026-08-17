@@ -82,12 +82,15 @@ public class Activo extends BaseEntity {
     @Column(name = "codigo_ean13", length = 13)
     private String codigoEan13;
 
+    // 🔓 Editables desde el mantenedor de Activo (antes tenian
+    // updatable = false por error: el formulario permitia cambiarlos
+    // pero Hibernate ignoraba el cambio silenciosamente al guardar).
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ubicacion_id", nullable = false, updatable = false)
+    @JoinColumn(name = "ubicacion_id", nullable = false)
     private Ubicacion ubicacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "proveedor_id", nullable = false, updatable = false)
+    @JoinColumn(name = "proveedor_id", nullable = false)
     private Proveedor proveedor;
 
     @Column(name = "fecha_baja")

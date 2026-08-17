@@ -25,8 +25,16 @@ export class TipoActivoService {
     return this.http.get<Page<TipoActivo>>(url);
   }
 
-  getTipoActivoCombo(page = 0, size = 50): Observable<Page<TipoActivo>> {
-    return this.http.get<Page<TipoActivo>>(`${this.apiUrl}/tipos-activo?page=${page}&size=${size}&sort=nombre,asc`);
+  getTipoActivoCombo(page = 0, size = 50, empresaId?: number | null): Observable<Page<TipoActivo>> {
+    let url = `${this.apiUrl}/tipos-activo?page=${page}&size=${size}&sort=nombre,asc`;
+
+    // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
+    // backend lo ignora para el resto de los roles).
+    if (empresaId) {
+      url += `&empresaId=${empresaId}`;
+    }
+
+    return this.http.get<Page<TipoActivo>>(url);
   }
 
   create(tipoActivo: TipoActivo): Observable<TipoActivo> {
