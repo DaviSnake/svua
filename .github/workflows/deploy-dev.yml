@@ -1,0 +1,74 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches:
+      - desarrollo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS (dev)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+
+          script: |
+
+            APP_DIR=/home/davisnake/svua-dev
+
+            echo "📁 Verificando proyecto..."
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "🚀 Primera instalación"
+
+              git clone -b desarrollo git@github.com:DaviSnake/svua.git $APP_DIR
+            else
+              echo "🔄 Actualizando proyecto"
+
+              cd $APP_DIR
+              git fetch origin
+              git reset --hard origin/desarrollo
+            fi
+
+            cd $APP_DIR
+
+            if [ ! -f ".env" ]; then
+
+              echo "Creando .env"
+            cat > .env <<ENVEOF
+            COMPOSE_PROJECT_NAME=svua_dev
+            PROJECT_NAME=svua_dev
+            NGINX_CONF_FILE=nginx.dev.conf
+            HTTP_PORT=8081
+            HTTPS_PORT=8444
+            POSTGRES_HOST_PORT=127.0.0.1:5433
+            POSTGRES_HOST=${{ secrets.DEV_POSTGRES_HOST }}
+            POSTGRES_PORT=${{ secrets.DEV_POSTGRES_PORT }}
+            POSTGRES_DB=${{ secrets.DEV_POSTGRES_DB }}
+            POSTGRES_USER=${{ secrets.DEV_POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.DEV_POSTGRES_PASSWORD }}
+            JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}
+            FRONTEND_URL=${{ secrets.DEV_FRONTEND_URL }}
+            API_URL=${{ secrets.DEV_API_URL }}
+            ENVEOF
+
+            else
+              echo ".env ya existe"
+
+            fi
+
+            echo "🐳 Levantando Docker"
+
+            # 🔥 Dev no define certbot en su despliegue (sin --profile):
+            # el certificado de dev.svua.cl / api-dev.svua.cl lo maneja
+            # el certbot de PROD (ver frontend/nginx.conf en svua-prod).
+            docker compose down
+            docker compose up -d --build
+
+            echo "✅ Deploy completado (dev)"

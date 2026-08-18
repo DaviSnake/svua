@@ -3,6 +3,8 @@
 # Variables de entorno
 .env
 .env.*
+# 🔥 excepcion: .env.example SI se commitea (es una plantilla sin secretos reales)
+!.env.example
 certbot/conf
 certbot/www
 # Archivos temporales de parcheo (scripts de patch, verificaciones, locks)
