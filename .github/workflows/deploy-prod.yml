@@ -1,11 +1,19 @@
 name: Deploy Prod
 
 on:
-  # Deshabilitar WorkFlow
-  #workflow_dispatch:
+  # 🔥 Ya no se deploya en cada push a master: mergear a master ya no
+  # tumba el sitio solo. El deploy real a produccion pasa unicamente
+  # al pushear un tag "vX.Y.Z", o manualmente eligiendo un tag
+  # existente (sirve para reintentar un deploy o hacer rollback a una
+  # version anterior sin tocar la rama).
   push:
-    branches:
-      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag a desplegar (ej: v1.2.3). Puede ser uno anterior para rollback.'
+        required: true
 
 jobs:
   deploy:
@@ -14,22 +22,30 @@ jobs:
     steps:
       - name: Deploy to VPS (prod)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          # 🔥 Si se disparo manualmente (workflow_dispatch) usa el tag
+          # que se escribio a mano; si se disparo por push de un tag,
+          # usa ese mismo tag (github.ref_name).
+          TAG_NAME: ${{ github.event.inputs.tag || github.ref_name }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: TAG_NAME
 
           script: |
 
             APP_DIR=/home/davisnake/svua-prod
+
+            echo "🏷️  Desplegando tag: $TAG_NAME"
 
             echo "📁 Verificando proyecto..."
 
             if [ ! -d "$APP_DIR/.git" ]; then
               echo "🚀 Primera instalación"
 
-              git clone -b master git@github.com:DaviSnake/svua.git $APP_DIR
+              git clone git@github.com:DaviSnake/svua.git $APP_DIR
 
               cd $APP_DIR
               mkdir -p certbot/www certbot/conf
@@ -37,11 +53,15 @@ jobs:
               echo "🔄 Actualizando proyecto"
 
               cd $APP_DIR
-              git fetch origin
-              git reset --hard origin/master
+              git fetch origin --tags --force
             fi
 
             cd $APP_DIR
+
+            # 🏷️ Deja el checkout apuntando exactamente al tag pedido
+            # (detached HEAD: aca nunca se commitea nada, solo se
+            # despliega codigo ya existente en el repo).
+            git checkout "$TAG_NAME"
 
             if [ ! -f ".env" ]; then
 
@@ -95,4 +115,4 @@ jobs:
               echo "✅ SSL ya existe"
             fi
 
-            echo "✅ Deploy completado (prod)"
+            echo "✅ Deploy completado (prod) - tag: $TAG_NAME"
