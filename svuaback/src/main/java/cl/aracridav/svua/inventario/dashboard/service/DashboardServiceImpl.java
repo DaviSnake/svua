@@ -7,8 +7,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.data.domain.PageRequest;
@@ -149,7 +152,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         double mttr = mttrSeg == null ? 0 : mttrSeg / 3600.0;
 
-        // MTBF (simplificado)
+        // MTBF: promedio del MTBF de cada activo (ver calcularMTBF)
         double mtbf = calcularMTBF(empresaId);
 
         return DashboardIndicadoresResponse.builder()
@@ -307,46 +310,86 @@ public class DashboardServiceImpl implements DashboardService {
                 .atTime(23,59,59);
     }
 
+    // 🔧 MTBF calculado POR ACTIVO y luego promediado entre activos.
+    // Antes se mezclaban las fallas de TODOS los activos de la empresa
+    // en una sola linea de tiempo ordenada por fecha: eso no solo media
+    // algo distinto a un MTBF real ("cada cuanto falla algo en toda la
+    // flota" en vez de "cada cuanto falla un equipo"), sino que ademas
+    // podia dar intervalos NEGATIVOS si dos activos distintos tenian
+    // fallas superpuestas en el tiempo (el fin de la reparacion de uno
+    // quedaba despues del inicio de la falla de otro). Al agrupar por
+    // activo, las ordenes de un mismo equipo no se solapan entre si, asi
+    // que el problema desaparece de raiz.
     private double calcularMTBF(Long empresaId) {
 
         List<OrdenMantenimiento> fallas =
                 ordenRepository.findFallasMTBF(empresaId);
 
-        if (fallas == null || fallas.size() < 2) {
+        if (fallas == null || fallas.isEmpty()) {
             return 0;
         }
 
-        long totalSegundos = 0;
-        int intervalos = 0;
+        Map<Long, List<OrdenMantenimiento>> fallasPorActivo = fallas.stream()
+                .collect(Collectors.groupingBy(o -> o.getActivo().getId()));
 
-        for (int i = 1; i < fallas.size(); i++) {
+        List<Double> mtbfPorActivo = new ArrayList<>();
 
-            LocalDateTime finAnterior =
-                    fallas.get(i - 1).getFechaFinEjecucion();
+        for (List<OrdenMantenimiento> fallasActivo : fallasPorActivo.values()) {
 
-            LocalDateTime inicioActual =
-                    fallas.get(i).getFechaEjecucion();
-
-            if (finAnterior == null || inicioActual == null) {
+            if (fallasActivo.size() < 2) {
                 continue;
             }
 
-            long diff = Duration.between(
-                    finAnterior,
-                    inicioActual
-            ).getSeconds();
+            // 🔥 La query ya trae todo ordenado por activo + fecha, pero
+            // se re-ordena por las dudas al agrupar (el orden relativo
+            // entre grupos no garantiza el orden dentro de cada uno).
+            fallasActivo.sort(Comparator.comparing(OrdenMantenimiento::getFechaEjecucion));
 
-            totalSegundos += diff;
-            intervalos++;
+            long totalSegundos = 0;
+            int intervalos = 0;
+
+            for (int i = 1; i < fallasActivo.size(); i++) {
+
+                LocalDateTime finAnterior =
+                        fallasActivo.get(i - 1).getFechaFinEjecucion();
+
+                LocalDateTime inicioActual =
+                        fallasActivo.get(i).getFechaEjecucion();
+
+                if (finAnterior == null || inicioActual == null) {
+                    continue;
+                }
+
+                long diff = Duration.between(
+                        finAnterior,
+                        inicioActual
+                ).getSeconds();
+
+                // 🔒 Defensivo: dentro de un mismo activo esto ya no
+                // deberia pasar, pero si algun dato quedara inconsistente
+                // se descarta el intervalo en vez de sumarlo negativo.
+                if (diff < 0) {
+                    continue;
+                }
+
+                totalSegundos += diff;
+                intervalos++;
+            }
+
+            if (intervalos > 0) {
+                mtbfPorActivo.add((totalSegundos / 3600.0) / intervalos);
+            }
         }
 
-        if (intervalos == 0) {
+        if (mtbfPorActivo.isEmpty()) {
             return 0;
         }
 
-        double mtbfHoras =
-                (totalSegundos / 3600.0) / intervalos;
+        double promedio = mtbfPorActivo.stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0);
 
-        return Math.round(mtbfHoras * 100.0) / 100.0;
+        return Math.round(promedio * 100.0) / 100.0;
     }
 }

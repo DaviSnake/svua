@@ -102,21 +102,32 @@ public class DepreciacionServiceImpl implements DepreciacionService {
 
         int vida = vidaUtilMeses;
 
-        BigDecimal depMensual = calcularDepreciacionMensual(costo, residual, vida);
+        BigDecimal totalDepreciable = costo.subtract(residual);
+        BigDecimal depMensual = calcularDepreciacionMensual(totalDepreciable, vida);
 
         BigDecimal acumulada = BigDecimal.ZERO;
-        BigDecimal valorContable = costo;
 
         LocalDate fechaBase = obtenerFechaBase(activo);
 
         for (int mes = 1; mes <= vida; mes++) {
 
-            acumulada = acumulada.add(depMensual);
-            valorContable = calcularValorContable(valorContable, depMensual, residual);
+            // 🔒 El último mes no usa la cuota fija: cierra con lo que
+            // falte por depreciar (totalDepreciable - acumulada previa). Sin
+            // esto, el redondeo HALF_UP de la cuota mensual (aplicado `vida`
+            // veces) dejaba activos que nunca llegaban exacto a su valor
+            // residual (si el redondeo fue hacia abajo), o un
+            // depreciacionAcumulada que superaba el total depreciable (si
+            // fue hacia arriba), inconsistente con el valor contable.
+            BigDecimal cuota = (mes == vida)
+                    ? totalDepreciable.subtract(acumulada)
+                    : depMensual;
+
+            acumulada = acumulada.add(cuota);
+            BigDecimal valorContable = costo.subtract(acumulada);
 
             lista.add(construirDepreciacionMensual(
                     activo, empresa, mes, fechaBase.plusMonths(mes - 1),
-                    depMensual, acumulada, valorContable
+                    cuota, acumulada, valorContable
             ));
         }
 
@@ -129,18 +140,8 @@ public class DepreciacionServiceImpl implements DepreciacionService {
      * =========================================
      */
 
-    private BigDecimal calcularDepreciacionMensual(BigDecimal costo, BigDecimal residual, int vida) {
-        return costo.subtract(residual)
-                .divide(BigDecimal.valueOf(vida), RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calcularValorContable(BigDecimal actual, BigDecimal depMensual, BigDecimal residual) {
-
-        BigDecimal nuevo = actual.subtract(depMensual);
-
-        return (nuevo.compareTo(residual) < 0)
-                ? residual
-                : nuevo;
+    private BigDecimal calcularDepreciacionMensual(BigDecimal totalDepreciable, int vida) {
+        return totalDepreciable.divide(BigDecimal.valueOf(vida), RoundingMode.HALF_UP);
     }
 
     private LocalDate obtenerFechaBase(Activo activo) {

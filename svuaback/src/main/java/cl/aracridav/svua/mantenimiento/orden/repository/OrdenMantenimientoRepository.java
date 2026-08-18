@@ -181,13 +181,19 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
     """)
     Double avgDuracionByEmpresa(@Param("empresaId") Long empresaId);
     
+    // 🔧 JOIN FETCH o.activo: el MTBF se calcula agrupando por activo
+    // (ver DashboardServiceImpl.calcularMTBF), asi que se necesita el
+    // activo de cada orden ya cargado - open-in-view esta deshabilitado,
+    // sin este fetch tiraria LazyInitializationException al leer
+    // o.getActivo() fuera de la transaccion del repositorio.
     @Query("""
         SELECT o
         FROM OrdenMantenimiento o
+        JOIN FETCH o.activo
         WHERE o.empresa.id = :empresaId
         AND o.tipoMantenimiento = 'CORRECTIVO'
         AND o.estado = 'COMPLETADA'
-        ORDER BY o.fechaEjecucion ASC
+        ORDER BY o.activo.id ASC, o.fechaEjecucion ASC
     """)
     List<OrdenMantenimiento> findFallasMTBF(@Param("empresaId") Long empresaId);
 

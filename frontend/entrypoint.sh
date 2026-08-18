@@ -4,7 +4,8 @@ echo "Generando env.js..."
 
 cat <<EOF > /usr/share/nginx/html/assets/env.js
 window.__env = {
-  apiUrl: "${API_URL}"
+  apiUrl: "${API_URL}",
+  wsUrl: "${WS_URL}"
 };
 EOF
 
