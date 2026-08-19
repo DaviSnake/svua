@@ -33,6 +33,11 @@ public interface OrdenMantenimientoService {
 
     public OrdenEjecucionResponse preDetenerOrden(Long idOrden, MultipartFile archivo);
 
+    // 🔥 permite adjuntar (o reemplazar) el checklist DESPUÉS de que la
+    // orden ya quedó PRE_COMPLETADA sin él — cubre el plazo de 24h que
+    // se le avisa al usuario en el frontend.
+    public OrdenEjecucionResponse subirChecklist(Long idOrden, MultipartFile archivo);
+
     public void cancelarOrden(Long id, String motivo, Long usuarioId);
 
     public List<OrdenMantenimiento> obtenerOrdenesVencidas();

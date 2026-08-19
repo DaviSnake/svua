@@ -96,7 +96,15 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     @Override
     public OrdenEjecucionResponse ejecutarOrden(Long idOrden) {
 
-        return cambiarEstado(obtenerOrden(idOrden), EstadoOrden.EN_EJECUCION);
+        OrdenMantenimiento orden = obtenerOrden(idOrden);
+
+        // 🔥 varias órdenes PROGRAMADA pueden coexistir para el mismo
+        // activo (se pueden agendar a futuro), pero al iniciar la
+        // ejecución de una de ellas hay que asegurarse de que no haya
+        // otra ya EN_EJECUCION o PRE_COMPLETADA para ese activo.
+        validarNoExisteOrdenEnCurso(orden.getActivo().getId());
+
+        return cambiarEstado(orden, EstadoOrden.EN_EJECUCION);
 
     }
 
@@ -132,17 +140,54 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     @Transactional
     public OrdenEjecucionResponse preDetenerOrden(Long id, MultipartFile archivo) {
 
-        validarArchivo(archivo);
-
         OrdenMantenimiento orden = obtenerOrden(id);
 
-        // 🔥 guardamos el archivo ANTES del cambio de estado
-        String ruta = guardarArchivoSeguro(archivo, orden);
-
-        orden.setRutaArchivo(ruta);
+        // 🔥 el checklist/archivo ahora es OPCIONAL: se puede terminar la
+        // ejecución (pasar a PRE_COMPLETADA) sin haberlo ingresado. El
+        // frontend avisa que hay 24h para ingresar el checklist o un
+        // repuesto/fungible antes de completar la orden definitivamente,
+        // pero no hay ningún bloqueo automático de por medio. Si sí viene
+        // un archivo, se valida y se guarda igual que antes.
+        if (archivo != null && !archivo.isEmpty()) {
+            validarArchivo(archivo);
+            String ruta = guardarArchivoSeguro(archivo, orden);
+            orden.setRutaArchivo(ruta);
+        }
 
         // 🔥 reutilizamos CORE
         return cambiarEstado(orden, EstadoOrden.PRE_COMPLETADA);
+    }
+
+    /*
+     * =========================================
+     * SUBIR CHECKLIST (POSTERIOR A PRE DETENER)
+     * =========================================
+     */
+    @Override
+    @Transactional
+    public OrdenEjecucionResponse subirChecklist(Long id, MultipartFile archivo) {
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BusinessException("Debe adjuntar un archivo");
+        }
+
+        OrdenMantenimiento orden = obtenerOrden(id);
+
+        // 🔒 solo se puede adjuntar mientras la orden sigue PRE_COMPLETADA:
+        // antes de eso no tiene sentido (aún no terminó la ejecución) y
+        // después (COMPLETADA) ya no se puede modificar nada de la orden.
+        if (orden.getEstado() != EstadoOrden.PRE_COMPLETADA) {
+            throw new BusinessException("Solo se puede adjuntar el checklist mientras la orden está pre finalizada");
+        }
+
+        validarArchivo(archivo);
+
+        String ruta = guardarArchivoSeguro(archivo, orden);
+        orden.setRutaArchivo(ruta);
+
+        OrdenMantenimiento ordenGuardada = ordenRepository.save(orden);
+
+        return mapper.mapOrdenEjecucionResponse(ordenGuardada);
     }
 
 
@@ -191,7 +236,11 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         Empresa empresa = obtenerEmpresaActual();
         Usuario usuario = obtenerUsuario(req.getUsuarioId());
         Proveedor proveedor = obtenerProveedor(req.getProveedorId());
-        validarNoExisteOrdenPendiente(activo.getId());
+        // 🔥 agendar (crear en PROGRAMADA) NUNCA se bloquea: un activo
+        // puede tener varias órdenes futuras programadas aunque ya
+        // tenga una EN_EJECUCION o PRE_COMPLETADA. El único momento en
+        // que se valida que no haya otra orden activa es al INICIAR la
+        // ejecución (ver ejecutarOrden()).
 
         OrdenMantenimiento orden = construirOrden(
                 req,
@@ -413,6 +462,13 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             OrdenMantenimiento orden = ordenRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Orden no encontrada"));
 
+            // 🔒 el checklist ahora es opcional al pre finalizar la orden,
+            // así que puede no existir todavía (dentro de las 24h de
+            // gracia que se le avisan al usuario).
+            if (!StringUtils.hasText(orden.getRutaArchivo())) {
+                throw new BusinessException("Esta orden aún no tiene un checklist adjunto");
+            }
+
             Path path = Paths.get(orden.getRutaArchivo());
 
             if (!Files.exists(path)) {
@@ -572,11 +628,21 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         EstadoActivo nuevoActivo = estadoActivoParaOrden(nuevoEstado);
 
-        String comentario = ordenGuardada.getEstado() == EstadoOrden.COMPLETADA
-            ? "Término mantención orden # " + orden.getId()
-            : "Inicio mantención orden # " + orden.getId();
+        String comentario = switch (nuevoEstado) {
+            case EN_EJECUCION -> "Inicio mantención orden # " + orden.getId();
+            case PRE_COMPLETADA -> "Término mantención orden # " + orden.getId() + " (pendiente aprobación final)";
+            case COMPLETADA -> "Aprobación final orden # " + orden.getId();
+            default -> "Cambio de estado por orden # " + orden.getId();
+        };
 
-        if (nuevoEstado != EstadoOrden.PRE_COMPLETADA) {
+        // 🔥 se registra el historial solo cuando el estado del activo
+        // REALMENTE cambió (comparando contra el estado anterior), en vez
+        // de hardcodear qué EstadoOrden "cuenta". Antes esto se saltaba
+        // explícitamente en PRE_COMPLETADA porque ese paso no cambiaba el
+        // activo — ahora sí lo cambia (vuelve a OPERATIVO), así que debe
+        // quedar registrado; y de paso evita un registro redundante
+        // "operativo → operativo" al llegar a COMPLETADA.
+        if (viejoEstado != nuevoActivo) {
             historialEstadoActivoService.registrarCambioEstado(
                 ordenGuardada.getActivo().getId(), nuevoActivo, viejoEstado, comentario, usuario.getId()
             );
@@ -629,7 +695,20 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     }
 
     private EstadoActivo estadoActivoParaOrden(EstadoOrden estado) {
-        return (estado == EstadoOrden.COMPLETADA)
+        // 🔥 el activo vuelve a OPERATIVO desde PRE_COMPLETADA (cuando el
+        // técnico ya terminó el trabajo físico), no recién en COMPLETADA
+        // (que puede demorar horas/días a la espera de que un supervisor
+        // la apruebe con el checklist/repuestos dentro del plazo de 24h).
+        // Antes quedaba "fuera de servicio" todo ese período de espera
+        // aunque el activo ya estuviera operativo en la realidad.
+        // 🔥 CANCELADA también vuelve el activo a OPERATIVO: hoy no hay
+        // ningún camino vivo que llame a cambiarEstado(orden, CANCELADA)
+        // (cancelarOrden() no pasa por aquí), pero si algún día se conecta
+        // (p.ej. cancelar una orden EN_EJECUCION), no debe dejar el activo
+        // atascado en FUERA_SERVICIO.
+        return (estado == EstadoOrden.PRE_COMPLETADA
+                || estado == EstadoOrden.COMPLETADA
+                || estado == EstadoOrden.CANCELADA)
                 ? EstadoActivo.OPERATIVO
                 : EstadoActivo.FUERA_SERVICIO;
     }
@@ -758,10 +837,9 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     private void validarArchivo(MultipartFile archivo) {
 
-    if (archivo == null || archivo.isEmpty()) {
-        throw new BusinessException("Debe adjuntar un archivo");
-    }
-
+    // 🔥 la ausencia de archivo ya no es un error acá: quien llama
+    // (preDetenerOrden) solo invoca este método cuando SÍ viene un
+    // archivo, así que esta validación se limita al tamaño.
     if (archivo.getSize() > 5 * 1024 * 1024) {
         throw new BusinessException("Archivo supera 5MB");
     }
@@ -824,9 +902,15 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         }
     }
 
-    private void validarNoExisteOrdenPendiente(Long activoId) {
-        if (ordenRepository.existsByActivoIdAndEstado(activoId, EstadoOrden.PENDIENTE)) {
-            throw new BusinessException("Ya existe una orden pendiente para este activo");
+    private void validarNoExisteOrdenEnCurso(Long activoId) {
+        // 🔥 PROGRAMADA no bloquea: se pueden agendar varias órdenes
+        // futuras para el mismo activo. Solo se bloquea si ya hay una
+        // orden físicamente en curso (EN_EJECUCION) o pendiente de
+        // aprobación final (PRE_COMPLETADA).
+        if (ordenRepository.existsByActivoIdAndEstadoIn(
+                activoId,
+                List.of(EstadoOrden.EN_EJECUCION, EstadoOrden.PRE_COMPLETADA))) {
+            throw new BusinessException("Ya existe una orden activa para este activo");
         }
     }
 

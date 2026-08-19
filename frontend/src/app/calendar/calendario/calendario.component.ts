@@ -11,6 +11,7 @@ import esLocale from '@fullcalendar/core/locales/es';
 import listPlugin from '@fullcalendar/list';
 
 import { OrdenMantencionService } from '../../services/orden-mantencion.service';
+import { OrdenRepuestoService } from '../../services/orden-repuesto.service';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivoService } from '../../services/activo.service';
@@ -23,7 +24,7 @@ import Swal from 'sweetalert2';
 import { RepuestoService } from '../../services/repuesto.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { FormUtils } from '../../shared/form-utils';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
 
@@ -42,6 +43,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   private usuarioSub?: Subscription;
 
   private ordenMantencionService = inject(OrdenMantencionService);
+  private ordenRepuestoService = inject(OrdenRepuestoService);
   private activoService = inject(ActivoService);
   private repuestoService = inject(RepuestoService);
   private proveedorService = inject(ProveedorService);
@@ -84,6 +86,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   tipoMantenimientoControl = new FormControl();
 
   estadoOrden: string = 'PENDIENTE';
+
+  // 🔥 indica si la orden actualmente seleccionada ya tiene un
+  // checklist adjunto (independiente del archivo en sí).
+  tieneChecklist: boolean = false;
 
   riesgo!: number;
   nivel!: string;
@@ -355,6 +361,14 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   archivoUrl!: SafeResourceUrl;
   mostrarModalArchivo = false;
 
+  // 🔥 Chrome bloquea la navegación de un iframe a un blob: creado en
+  // otro documento (el componente padre) — pasa siempre, tenga o no
+  // sandbox, y no tiene relación con el tipo de archivo. Para imágenes
+  // se evita usando <img>, que solo carga el recurso (no navega); el
+  // iframe queda solo para archivos que no son imagen (ej. PDF).
+  esImagenChecklist = false;
+  archivoUrlImagen!: SafeUrl;
+
   page = 0;
   size = 100000;
 
@@ -518,7 +532,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: err.error?.message || 'Error desconocido'
+            text: err.error?.error || 'Error desconocido'
           });
 
           console.log("ERROR:", err);
@@ -592,7 +606,8 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           horasReal: ordenMantencion.horasReal,
           costoManoObraEstimada: ordenMantencion.costoManoObraEstimada,
           costoManoObra: ordenMantencion.costoManoObra,
-          repuestos: ordenMantencion.repuestos
+          repuestos: ordenMantencion.repuestos,
+          tieneChecklist: ordenMantencion.tieneChecklist
         }
       }));
 
@@ -813,6 +828,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
      const fechaLocal = this.formatFechaLocal(fecha);
 
     this.estadoOrden = info.event.extendedProps?.estado;
+    this.tieneChecklist = !!info.event.extendedProps?.tieneChecklist;
 
     this.fechaSeleccionada = fechaLocal;
     this.eventoSeleccionadoId = Number(info.event.id);
@@ -1002,6 +1018,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.mostrarModal = false;
     this.modoEdicion = false;
     this.estadoOrden = '';
+    this.tieneChecklist = false;
 
     setTimeout(() => {
       this.calendarComponent?.getApi()?.updateSize();
@@ -1084,7 +1101,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   }
 
   get isReadOnly(): boolean {
-    return ['PROGRAMADA', 'COMPLETADA', 'PRE_COMPLETADA', 'CANCELADA', 'EN_EJECUCION'].includes(this.estadoOrden);
+    // 🔥 al editar una orden ya creada, los campos generales (título,
+    // observaciones, proveedor, valor hora, etc.) quedan de solo
+    // lectura: ya no existe el botón "Actualizar" para guardarlos acá.
+    // Los repuestos se agregan/eliminan aparte y persisten al instante;
+    // el resto de acciones (iniciar/terminar/cancelar/checklist) tienen
+    // sus propios botones independientes de este formulario.
+    return this.modoEdicion;
   }
 
   ngOnChanges() {
@@ -1147,29 +1170,55 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     });
   }
 
-  detenerMantencionConArchivo(id: number, archivo: File) {
+  detenerMantencionConArchivo(id: number, archivo: File | null) {
 
     const formData = new FormData();
-    formData.append('archivo', archivo);
+    if (archivo) {
+      formData.append('archivo', archivo);
+    }
 
     this.ordenMantencionService.detenerConArchivo(id, formData)
       .subscribe({
         next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Mantención detenida',
-            timer: 1500,
-            showConfirmButton: false
-          });
+          this.estadoOrden = 'PRE_COMPLETADA';
+          this.tieneChecklist = !!archivo;
 
           console.log('Detenido OK');
           this.cargarEventos();
           this.cerrar();
+
+          if (archivo) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Mantención detenida',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          } else {
+            // 🔥 no se adjuntó checklist al terminar: se le avisa al
+            // usuario que tiene 24h para ingresarlo (o un repuesto/
+            // fungible) antes de que el supervisor complete la orden.
+            Swal.fire({
+              icon: 'info',
+              title: 'Orden pre finalizada',
+              html: `
+                <p>
+                  Tiene <b>24 horas</b> para ingresar el checklist de
+                  mantención, o algún repuesto o fungible utilizado.
+                </p>
+                <p>
+                  Puede hacerlo abriendo nuevamente esta orden, antes de
+                  que el supervisor la dé por completada.
+                </p>
+              `,
+              confirmButtonText: 'Entendido'
+            });
+          }
         },
-        error: (err: { error: { message: any; }; }) => {
+        error: (err: { error: { error: any; }; }) => {
           Swal.fire({
             icon: 'error',
-            title: err.error?.message || 'Error al detener'
+            title: err.error?.error || 'Error al detener'
           });
         }
       });
@@ -1186,12 +1235,14 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
           <ul style="margin-top:10px">
             <li>La orden quedará marcada como pre finalizada, hasta que el supervisor la dé por finalizada.</li>
-            <li>Se registrará el documento de chequeo como respaldo.</li>
+            <li>Se registrará el documento de chequeo como respaldo, si lo adjunta.</li>
             <li>La información quedará disponible para futuras auditorías y consultas.</li>
           </ul>
 
           <p style="margin-top:15px">
-            Para continuar, adjunte el documento de chequeo de mantención.
+            Puede adjuntar el documento de chequeo (checklist) ahora, o
+            hacerlo después: tiene <b>24 horas</b> para ingresarlo, junto
+            con los repuestos o fungibles utilizados.
           </p>
           <small style="color:#64748b">
             Formatos permitidos: PDF, JPG, JPEG y PNG.
@@ -1200,14 +1251,48 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           <input type="file" id="fileInput" class="swal2-file"  accept=".pdf,.jpg,.jpeg,.png" />
       </div>
       `,
-      confirmButtonText: 'Guardar',
+      confirmButtonText: 'Terminar',
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
         const input = document.getElementById('fileInput') as HTMLInputElement;
 
+        // 🔥 el checklist ya no es obligatorio para terminar la orden.
+        return input?.files?.length ? input.files[0] : null;
+      }
+    }).then(result => {
+
+      if (!result.isConfirmed) return;
+
+      this.detenerMantencionConArchivo(id, result.value);
+    });
+  }
+
+  // 🔥 permite adjuntar el checklist DESPUÉS de haber terminado la orden
+  // sin él (mientras siga PRE_COMPLETADA), dentro del plazo de 24h que
+  // se avisó en el modal anterior.
+  adjuntarChecklistPosterior(): void {
+    const id = this.eventoSeleccionadoId;
+
+    Swal.fire({
+      title: 'Adjuntar checklist',
+      html: `
+        <div style="text-align:left">
+          <p>Adjunte el documento de chequeo de mantención.</p>
+          <small style="color:#64748b">
+            Formatos permitidos: PDF, JPG, JPEG y PNG.
+          </small>
+          <input type="file" id="fileInputChecklist" class="swal2-file" accept=".pdf,.jpg,.jpeg,.png" />
+        </div>
+      `,
+      confirmButtonText: 'Guardar',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const input = document.getElementById('fileInputChecklist') as HTMLInputElement;
+
         if (!input?.files?.length) {
-          Swal.showValidationMessage('Debes subir un archivo');
+          Swal.showValidationMessage('Debes seleccionar un archivo');
           return false;
         }
 
@@ -1217,7 +1302,30 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
       if (!result.isConfirmed) return;
 
-      this.detenerMantencionConArchivo(id, result.value);
+      const formData = new FormData();
+      formData.append('archivo', result.value);
+
+      this.ordenMantencionService.subirChecklist(id, formData)
+        .subscribe({
+          next: () => {
+            this.tieneChecklist = true;
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Checklist adjuntado',
+              timer: 1500,
+              showConfirmButton: false
+            });
+
+            this.cargarEventos();
+          },
+          error: (err: { error: { error: any; }; }) => {
+            Swal.fire({
+              icon: 'error',
+              title: err.error?.error || 'Error al adjuntar el checklist'
+            });
+          }
+        });
     });
   }
 
@@ -1231,8 +1339,17 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
         const url = URL.createObjectURL(blob);
 
-        this.archivoUrl =
-          this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        // 🔥 imagen → <img> (evita el bloqueo de Chrome al "navegar" un
+        // iframe a un blob: creado en otro documento). El resto (ej. PDF)
+        // sigue por iframe.
+        this.esImagenChecklist = blob.type.startsWith('image/');
+
+        if (this.esImagenChecklist) {
+          // <img src> exige un SafeUrl, no un SafeResourceUrl.
+          this.archivoUrlImagen = this.sanitizer.bypassSecurityTrustUrl(url);
+        } else {
+          this.archivoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        }
 
         this.mostrarModalArchivo = true;
       },
@@ -1392,6 +1509,37 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   eliminarRepuesto(index: number): void {
 
+    const item = this.repuestosAsociados[index];
+
+    // 🔥 la orden YA EXISTE y este repuesto ya está guardado en la BD
+    // (tiene id real): hay que borrarlo ahí también, reponiendo el stock.
+    if (this.modoEdicion && item?.id) {
+      this.ordenRepuestoService.eliminar(item.id).subscribe({
+        next: () => {
+          this.repuestosAsociados.splice(index, 1);
+          this.cargarEventos();
+
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Repuesto eliminado',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+        error: (err: { error: { error: any; }; }) => {
+          Swal.fire({
+            icon: 'error',
+            title: err.error?.error || 'No se pudo eliminar el repuesto'
+          });
+        }
+      });
+      return;
+    }
+
+    // 🔥 orden AÚN NO existe (creación): solo se maneja localmente,
+    // se persiste recién al crear la orden.
     this.repuestosFormArray?.removeAt(index);
 
     // 🔥 mantener sincronizada la tabla "Repuestos o Fungibles"
@@ -1424,6 +1572,66 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     const cantidad =
       Number(this.repuestoForm.value.cantidad);
 
+    const repuesto = this.repuestos.find(r => Number(r.id) === repuestoId);
+
+    // 🔥 la orden YA EXISTE: se guarda de inmediato en la BD (descuenta
+    // stock al instante), sin esperar a ningún botón "Actualizar".
+    if (this.modoEdicion && this.eventoSeleccionadoId) {
+      this.ordenRepuestoService.agregar({
+        ordenId: this.eventoSeleccionadoId,
+        repuestoId,
+        cantidad,
+        costoUnitario: Number(repuesto?.costoUnitario) || 0
+      }).subscribe({
+        next: (creado: any) => {
+          // 🔥 el backend fusiona la cantidad en la misma fila si el
+          // repuesto ya estaba agregado a esta orden (mismo id): hay que
+          // reflejar esa actualización acá, no duplicar la fila.
+          const filaActualizada = {
+            id: creado.id,
+            repuestoId: creado.repuestoId,
+            repuestoNombre: creado.repuestoNombre || repuesto?.nombre || '',
+            cantidad: creado.cantidad,
+            costoUnitario: creado.costoUnitario,
+            costoTotal: creado.costoTotal
+          };
+
+          const idx = this.repuestosAsociados.findIndex(
+            (r: any) => Number(r.repuestoId) === Number(creado.repuestoId)
+          );
+
+          if (idx >= 0) {
+            this.repuestosAsociados[idx] = filaActualizada;
+          } else {
+            this.repuestosAsociados.push(filaActualizada);
+          }
+
+          this.repuestoForm.reset({ repuestoId: null, cantidad: 1 });
+          this.cerrarModalRepuesto();
+          this.cargarEventos();
+
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Repuesto agregado',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+        error: (err: { error: { error: any; }; }) => {
+          Swal.fire({
+            icon: 'error',
+            title: err.error?.error || 'No se pudo agregar el repuesto'
+          });
+        }
+      });
+      return;
+    }
+
+    // 🔥 orden AÚN NO existe (creación): se maneja localmente y se
+    // persiste recién al crear la orden.
+
     // 🔍 buscar si ya existe
     const existente =
       this.repuestosFormArray?.controls.find(control =>
@@ -1441,11 +1649,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     }
     // ✅ SI NO EXISTE → AGREGAR
     else {
-      const repuesto = this.fb.group({
+      const grupo = this.fb.group({
         repuestoId: [repuestoId],
         cantidad: [cantidad]
       });
-      this.repuestosFormArray?.push(repuesto);
+      this.repuestosFormArray?.push(grupo);
     }
 
     // 🔥 reflejar de inmediato en la tabla "Repuestos o Fungibles"

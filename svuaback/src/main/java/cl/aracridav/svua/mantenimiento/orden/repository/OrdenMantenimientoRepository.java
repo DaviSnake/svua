@@ -55,6 +55,12 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
             EstadoOrden estado
     );
 
+    // 🔎 Validar si existe orden activa (no finalizada) para activo
+    boolean existsByActivoIdAndEstadoIn(
+            Long activoId,
+            List<EstadoOrden> estados
+    );
+
     // 🔎 Buscar órdenes entre fechas programadas
     List<OrdenMantenimiento> 
         findByFechaProgramadaBetween(

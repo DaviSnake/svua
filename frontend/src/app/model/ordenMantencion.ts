@@ -22,4 +22,5 @@ export interface OrdenMantencion {
   costoManoObra?: string;
   // 🔥 NUEVO
   repuestos?: OrdenRepuesto[];
+  tieneChecklist?: boolean;
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,8 +25,10 @@ public class OrdenRepuestoController {
 
     private final OrdenRepuestoService service;
 
+    // 🔥 se agrega TECNICO explícitamente: es quien ejecuta la orden y
+    // agrega repuestos/fungibles al instante desde el calendario.
     @PreAuthorize(
-        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
         "(hasAuthority('ORDEN_REPUESTO_CREATE')) "
     )
     @PostMapping
@@ -46,6 +49,18 @@ public class OrdenRepuestoController {
             @PathVariable Long ordenId) {
 
         return ResponseEntity.ok(service.listarPorOrden(ordenId));
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_REPUESTO_CREATE')) "
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarRepuesto(@PathVariable Long id) {
+
+        service.eliminarRepuesto(id);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

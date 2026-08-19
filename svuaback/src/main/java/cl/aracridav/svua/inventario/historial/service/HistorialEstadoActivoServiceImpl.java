@@ -51,8 +51,6 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
         Usuario usuario = obtenerUsuarioActual(usuarioId);
         Activo activo = obtenerActivo(activoId);
 
-        validarCambioEstado(activoId, nuevoEstado);
-
         HistorialEstadoActivo historial = construirHistorial(
                 activo,
                 nuevoEstado,
@@ -440,22 +438,6 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
             )
             .eventos(eventos)
             .build();
-    }
-
-    /*
-     * =========================================
-     * VALIDACIONES
-     * =========================================
-     */
-
-    private void validarCambioEstado(Long activoId, EstadoActivo nuevoEstado) {
-
-        historialRepository
-                .findTopByActivoIdOrderByFechaDesc(activoId)
-                .filter(h -> h.getEstado() == nuevoEstado)
-                .ifPresent(h -> {
-                    throw new BusinessException("El activo ya se encuentra en ese estado" + " (" + nuevoEstado + ")");
-                });
     }
 
     /*

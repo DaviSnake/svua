@@ -166,12 +166,13 @@ public class ActivoServiceImpl implements ActivoService {
         if (request.getEstadoActual() != null &&
             request.getEstadoActual() != activo.getEstadoActual()) {
 
+            EstadoActivo viejoEstado = activo.getEstadoActual();
             activo.setEstadoActual(request.getEstadoActual());
 
             historialService.registrarCambioEstado(
                     activo.getId(),
                     request.getEstadoActual(),
-                    request.getEstadoActual(),
+                    viejoEstado,
                     "Actualización manual de estado",
                     null
             );

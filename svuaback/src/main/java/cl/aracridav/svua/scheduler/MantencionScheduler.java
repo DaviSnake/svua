@@ -52,6 +52,9 @@ public class MantencionScheduler {
     @Value("${app.demo.empresa-id}")
     private Long empresaId;
 
+    @Value("${svua.scheduler.limpiezademo.enabled:false}")
+    private boolean limpiezaDemoEnabled;
+
     @Transactional
     @Scheduled(cron = "${app.jobs.ordenes.cron}")
     public void generarNotificacionesMantenciones() {
@@ -88,6 +91,14 @@ public class MantencionScheduler {
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void eliminarOrdenesEmpresaDemo() {
+
+        // 🔥 Este job solo debe correr en producción (donde vive la empresa
+        // demo publica usada para mostrar el sistema a prospectos). En dev
+        // se deshabilita via svua.scheduler.limpiezademo.enabled=false.
+        if (!limpiezaDemoEnabled) {
+            log.info("Limpieza de órdenes demo deshabilitada en este ambiente");
+            return;
+        }
 
         log.info("Iniciando limpieza de órdenes de la empresa {}", empresaId);
 

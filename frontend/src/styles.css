@@ -33,3 +33,13 @@
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Los popups de SweetAlert2 se inyectan al final del <body>, fuera
+   del arbol del componente, asi que necesitan un override global.
+   El mini-modal de repuestos (.mini-modal-backdrop) usa z-index:
+   99999, muy por encima del z-index 1060 por defecto de Swal2, por
+   lo que los mensajes de error/exito quedaban tapados detras del
+   modal. */
+.swal2-container {
+  z-index: 100000 !important;
+}

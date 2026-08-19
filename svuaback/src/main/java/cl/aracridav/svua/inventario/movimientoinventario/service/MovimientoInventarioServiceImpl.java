@@ -129,6 +129,42 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
 
     /*
      * =========================================
+     * ENTRADA POR MANTENIMIENTO (REVERSO)
+     * =========================================
+     */
+    @Override
+    @Transactional
+    public void entradaPorMantenimiento(Long repuestoId, Integer cantidad, String referencia) {
+
+        Usuario usuario = obtenerUsuarioActual();
+        Empresa empresa = usuario.getEmpresa();
+
+        StockRepuesto stock = stockRepository
+                .findByRepuestoIdAndEmpresaId(repuestoId, empresa.getId())
+                .orElseThrow(() -> new BusinessException("No existe stock para el repuesto"));
+
+        int stockAnterior = stock.getCantidad();
+        int stockPosterior = calcularStock(stockAnterior, cantidad, TipoMovimiento.ENTRADA);
+
+        actualizarStock(stock, stockPosterior);
+
+        MovimientoInventario movimiento = construirMovimiento(
+                stock,
+                usuario,
+                empresa,
+                TipoMovimiento.ENTRADA,
+                cantidad,
+                stockAnterior,
+                stockPosterior,
+                referencia,
+                "Reverso por eliminación de repuesto de mantenimiento"
+        );
+
+        repository.save(movimiento);
+    }
+
+    /*
+     * =========================================
      * CORE
      * =========================================
      */

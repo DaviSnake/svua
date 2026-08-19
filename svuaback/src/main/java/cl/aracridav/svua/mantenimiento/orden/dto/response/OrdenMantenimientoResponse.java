@@ -32,4 +32,8 @@ public class OrdenMantenimientoResponse {
     private Long proveedorId;
     private List<OrdenRepuestoResponse> repuestos;
 
+    // 🔥 le permite al frontend saber si ya se adjuntó el checklist
+    // (sin exponer la ruta real del archivo en el servidor).
+    private boolean tieneChecklist;
+
 }

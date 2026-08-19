@@ -293,6 +293,12 @@ public class GeneralMapper {
     oMantenimientoResponse.setUsuarioId(oMantenimiento.getUsuario().getId());
     oMantenimientoResponse.setProveedorId(oMantenimiento.getProveedor().getId());
 
+    // 🔥 le indica al frontend si ya se adjuntó el checklist (sin
+    // exponer la ruta real del archivo en el servidor).
+    oMantenimientoResponse.setTieneChecklist(
+        oMantenimiento.getRutaArchivo() != null && !oMantenimiento.getRutaArchivo().isBlank()
+    );
+
     if (oMantenimiento.getRepuestosUtilizados() != null){
       // 🔥 REPUESTOS
       List<OrdenRepuestoResponse> repuestos = oMantenimiento.getRepuestosUtilizados()
@@ -331,6 +337,8 @@ public class GeneralMapper {
     ordenRepuestoResponse.setId(oRepuesto.getId());
     ordenRepuestoResponse.setOrdenId(oRepuesto.getOrden().getId());
     ordenRepuestoResponse.setRepuestoId(oRepuesto.getRepuesto().getId());
+    // 🔥 antes no se seteaba: el frontend siempre recibía el nombre vacío.
+    ordenRepuestoResponse.setRepuestoNombre(oRepuesto.getRepuesto().getNombre());
     ordenRepuestoResponse.setCantidad(oRepuesto.getCantidad());
     ordenRepuestoResponse.setCostoUnitario(oRepuesto.getCostoUnitario());
     ordenRepuestoResponse.setCostoTotal(oRepuesto.getCostoTotal());             

@@ -254,7 +254,7 @@
 
         <button type="button"
                 class="btn primary full"
-                *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
+                *ngIf="!['COMPLETADA','CANCELADA'].includes(estadoOrden)"
                 (click)="abrirModalRepuesto()">
           + Agregar repuesto o fungible
         </button>
@@ -280,10 +280,18 @@
         </button>
 
         <button
-        *ngIf="estadoOrden === 'PRE_COMPLETADA'"
+        *ngIf="estadoOrden === 'PRE_COMPLETADA' && tieneChecklist"
         class="btn success"
         (click)="validarChecklist()">
         ✓ Validar checklist
+      </button>
+
+        <button
+        *ngIf="estadoOrden === 'PRE_COMPLETADA' && !tieneChecklist"
+        type="button"
+        class="btn"
+        (click)="adjuntarChecklistPosterior()">
+        📎 Adjuntar checklist
       </button>
 
         <button *ngIf="!['COMPLETADA','CANCELADA'].includes(estadoOrden)
@@ -295,11 +303,15 @@
           {{ obtenerTextoBoton(estadoOrden) }}
         </button>
 
-        <button *ngIf="!['PRE_COMPLETADA','COMPLETADA','CANCELADA','EN_EJECUCION'].includes(estadoOrden)"
+        <!-- 🔥 al editar una orden existente ya no hay botón "Actualizar":
+             los campos generales quedan de solo lectura y los repuestos
+             se guardan al instante. Solo se muestra al CREAR una orden
+             nueva (modoEdicion === false). -->
+        <button *ngIf="!modoEdicion"
           type="button"
           class="btn primary"
           (click)="guardar()">
-          {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+          Guardar
         </button>
 
       </div>
@@ -359,23 +371,19 @@
 
       <!-- TABLA -->
       <div class="tabla-repuestos">
-        <div *ngIf="repuestosFormArray.controls.length === 0" class="sin-datos">
+        <div *ngIf="repuestosAsociados.length === 0" class="sin-datos">
           No hay repuestos agregados
         </div>
-        <div *ngFor="let item of repuestosFormArray.controls; let i = index" [formGroup]="getRepuestoGroup(i)" class="fila-repuesto">
+        <div *ngFor="let item of repuestosAsociados; let i = index" class="fila-repuesto">
 
           <!-- NOMBRE -->
           <div>
-            {{
-              obtenerNombreRepuesto(
-                item.value.repuestoId
-              )
-            }}
+            {{ item.repuestoNombre || obtenerNombreRepuesto(item.repuestoId) }}
           </div>
 
           <!-- CANTIDAD -->
           <div>
-            x{{ item.value.cantidad }}
+            x{{ item.cantidad }}
           </div>
 
           <!-- ELIMINAR -->
@@ -420,8 +428,18 @@
 
       <div class="modal-body">
 
+        <!-- 🔥 imagen: <img> directo. Un iframe con blob: creado en el
+             componente padre queda bloqueado por Chrome al intentar
+             "navegar" a él (pasa con y sin sandbox, no es un tema de
+             tipo de archivo permitido). -->
+        <img
+        *ngIf="archivoUrlImagen && esImagenChecklist"
+        [src]="archivoUrlImagen"
+        style="max-width:100%; max-height:700px; display:block; margin:0 auto;" />
+
+        <!-- otros tipos de archivo (ej. PDF) siguen por iframe -->
         <iframe
-        *ngIf="archivoUrl"
+        *ngIf="archivoUrl && !esImagenChecklist"
         [src]="archivoUrl"
         sandbox="allow-same-origin"
         width="100%"

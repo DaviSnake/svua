@@ -13,4 +13,8 @@ public interface MovimientoInventarioService {
 
     public void salidaPorMantenimiento(Long repuestoId, Integer cantidad, String referencia);
 
+    // 🔥 reverso de salidaPorMantenimiento: repone stock cuando se
+    // elimina un repuesto que ya se había descontado de una orden.
+    public void entradaPorMantenimiento(Long repuestoId, Integer cantidad, String referencia);
+
 }

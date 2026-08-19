@@ -10,4 +10,8 @@ public interface OrdenRepuestoService {
     public OrdenRepuestoResponse agregarRepuesto(OrdenRepuestoRequest request);
     public List<OrdenRepuestoResponse> listarPorOrden(Long ordenId);
 
+    // 🔥 elimina un repuesto ya asociado a una orden, reponiendo el
+    // stock descontado al agregarlo.
+    public void eliminarRepuesto(Long id);
+
 }

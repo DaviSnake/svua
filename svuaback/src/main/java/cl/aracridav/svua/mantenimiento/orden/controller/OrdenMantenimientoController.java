@@ -122,11 +122,29 @@ public class OrdenMantenimientoController {
     @PostMapping("/{id}/preDetenerConArchivo")
     public ResponseEntity<Void> detener(
             @PathVariable Long id,
-            @RequestParam("archivo") MultipartFile archivo) {
+            // 🔥 el checklist/archivo es opcional: se puede terminar la
+            // ejecución sin ingresarlo (queda pendiente durante las 24h
+            // siguientes en PRE_COMPLETADA).
+            @RequestParam(value = "archivo", required = false) MultipartFile archivo) {
 
         ordenMantenimientoService.preDetenerOrden(id, archivo);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','TECNICO') or " +
+        "(hasAuthority('ORDEN_MANT_UPDATE')) "
+    )
+    @PostMapping("/{id}/subirChecklist")
+    public ResponseEntity<OrdenEjecucionResponse> subirChecklist(
+            @PathVariable Long id,
+            @RequestParam("archivo") MultipartFile archivo) {
+
+        OrdenEjecucionResponse orden =
+                ordenMantenimientoService.subirChecklist(id, archivo);
+
+        return ResponseEntity.ok(orden);
     }
 
     @PreAuthorize(
