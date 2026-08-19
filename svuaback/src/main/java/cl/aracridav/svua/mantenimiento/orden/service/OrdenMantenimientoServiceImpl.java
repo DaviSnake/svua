@@ -904,12 +904,13 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
     private void validarNoExisteOrdenEnCurso(Long activoId) {
         // 🔥 PROGRAMADA no bloquea: se pueden agendar varias órdenes
-        // futuras para el mismo activo. Solo se bloquea si ya hay una
-        // orden físicamente en curso (EN_EJECUCION) o pendiente de
-        // aprobación final (PRE_COMPLETADA).
+        // futuras para el mismo activo. PRE_COMPLETADA tampoco bloquea:
+        // el activo ya vuelve a OPERATIVO en ese punto, solo está
+        // pendiente de aprobación/checklist. Solo se bloquea si ya hay
+        // otra orden físicamente en curso (EN_EJECUCION).
         if (ordenRepository.existsByActivoIdAndEstadoIn(
                 activoId,
-                List.of(EstadoOrden.EN_EJECUCION, EstadoOrden.PRE_COMPLETADA))) {
+                List.of(EstadoOrden.EN_EJECUCION))) {
             throw new BusinessException("Ya existe una orden activa para este activo");
         }
     }

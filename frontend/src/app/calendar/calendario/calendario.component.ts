@@ -135,6 +135,14 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     const api = this.calendarComponent?.getApi();
     if (!api) return;
 
+    // 🔥 si el usuario eligió manualmente la vista Mes (dayGridMonth)
+    // desde el header, no se la pisamos con el cambio automático de
+    // vista responsive por ancho de pantalla.
+    if (api.view.type === 'dayGridMonth') {
+      setTimeout(() => api.updateSize(), 100);
+      return;
+    }
+
     api.changeView(this.getCalendarView());
 
     setTimeout(() => api.updateSize(), 100);
@@ -226,6 +234,14 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
     initialView: this.getCalendarView(),
     initialDate: new Date(), // ✅ semana actual
+    // 🔥 botones para elegir Mes / Semana / Día manualmente (antes
+    // solo se podía ver semana o día, cambiando automático según el
+    // ancho de pantalla, sin opción de ver el mes completo).
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
     editable: true,
     selectable: true,   // 🔥 CLAVE
     navLinks: true,
