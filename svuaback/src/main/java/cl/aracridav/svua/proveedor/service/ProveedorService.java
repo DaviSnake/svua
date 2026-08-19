@@ -13,6 +13,6 @@ public interface ProveedorService {
     public ProveedorResponse actualizar(Long id, ProveedorUpdateRequest request);
     public void eliminar(Long id);
     public ProveedorResponse obtener(Long id);
-    public Page<ProveedorResponse> listarProveedores(Pageable pageable, Long empresaId);
+    public Page<ProveedorResponse> listarProveedores(Pageable pageable, Long empresaId, String busqueda);
 
 }

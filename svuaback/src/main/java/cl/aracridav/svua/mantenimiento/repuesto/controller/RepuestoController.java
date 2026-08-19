@@ -43,11 +43,13 @@ public class RepuestoController {
     @GetMapping
     public ResponseEntity<Page<RepuestoResponse>> listarRepuestos(
             Pageable pegable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver RepuestoServiceImpl).
-        Page<RepuestoResponse> response = repuestoService.listarRepuestos(pegable, empresaId);
+        // 🔥 busqueda es opcional: filtra por codigo o nombre.
+        Page<RepuestoResponse> response = repuestoService.listarRepuestos(pegable, empresaId, busqueda);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

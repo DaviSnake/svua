@@ -58,11 +58,13 @@ public class BodegaController {
     @GetMapping
     public ResponseEntity<Page<BodegaResponse>> listar(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver BodegaServiceImpl).
-        Page<BodegaResponse> response = bodegaService.listar(pageable, empresaId);
+        // 🔥 busqueda es opcional: filtra por nombre.
+        Page<BodegaResponse> response = bodegaService.listar(pageable, empresaId, busqueda);
 
         return ResponseEntity.ok(response);
     }

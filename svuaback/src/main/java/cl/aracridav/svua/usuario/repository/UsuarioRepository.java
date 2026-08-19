@@ -39,5 +39,21 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Page<Usuario> findByEmpresaId(Long empresaId, Pageable pageable);
 
+    // 🔥 Busqueda unificada para la grilla: empresaId es opcional (NULL =
+    // todas las empresas, solo aplica para SUPER_ADMIN) y busqueda es
+    // opcional (NULL o vacio = sin filtro de texto). Mismo patron que
+    // ActivoRepository.buscarActivos.
+    @Query("""
+        SELECT u FROM Usuario u
+        WHERE (:empresaId IS NULL OR u.empresa.id = :empresaId)
+        AND (:busqueda IS NULL OR :busqueda = '' OR
+             LOWER(u.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR
+             LOWER(u.email) LIKE LOWER(CONCAT('%', :busqueda, '%')))
+    """)
+    Page<Usuario> buscarUsuarios(
+        @Param("empresaId") Long empresaId,
+        @Param("busqueda") String busqueda,
+        Pageable pageable
+    );
 
 }

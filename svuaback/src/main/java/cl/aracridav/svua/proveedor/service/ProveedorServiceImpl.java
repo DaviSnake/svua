@@ -62,24 +62,20 @@ public class ProveedorServiceImpl implements ProveedorService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<ProveedorResponse> listarProveedores(Pageable pageable, Long empresaId){
+    public Page<ProveedorResponse> listarProveedores(Pageable pageable, Long empresaId, String busqueda){
 
         if (esSuperAdmin()) {
 
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            if (empresaId != null) {
-                return proveedorRepository.findByEmpresaId(empresaId, pageable)
-                        .map(mapper::mapProeedorResponse);
-            }
-
-            return proveedorRepository.findAll(pageable)
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            return proveedorRepository.buscarProveedores(empresaId, busqueda, pageable)
                     .map(mapper::mapProeedorResponse);
         }
 
         // 🔒 Usuarios no SUPER_ADMIN siempre ven solo su propia empresa,
         // sin importar lo que llegue en empresaId.
         return proveedorRepository
-                .findByEmpresaId(SecurityUtils.getEmpresaId(), pageable)
+                .buscarProveedores(SecurityUtils.getEmpresaId(), busqueda, pageable)
                 .map(mapper::mapProeedorResponse);
     }
 

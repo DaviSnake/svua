@@ -91,11 +91,13 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<Page<UsuarioResponse>> listarUsuarios(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver UsuarioServiceImpl).
-        return ResponseEntity.ok(usuarioService.listarUsuarios(pageable, empresaId));
+        // 🔥 busqueda es opcional: filtra por nombre o email.
+        return ResponseEntity.ok(usuarioService.listarUsuarios(pageable, empresaId, busqueda));
     }
 
     @PreAuthorize(

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { AuthService } from '../../services/auth.service';
 import { TipoActivoService } from '../../services/tipo-activo.service';
@@ -41,6 +42,10 @@ export class TipoActivoComponent implements OnInit {
   filtroEmpresaControl = new FormControl();
   empresasFiltroFiltradas: Empresa[] = [];
   filtroEmpresaId: number | null = null;
+
+  // 🔍 Busqueda de la grilla (todos los roles).
+  busquedaControl = new FormControl('');
+  busqueda: string = '';
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
@@ -111,6 +116,17 @@ export class TipoActivoComponent implements OnInit {
         this.cargarTipoActivos();
       }
     });
+
+    // 🔍 Busqueda de la grilla por nombre: espera 400ms
+    // sin escribir antes de consultar al backend (evita una request por
+    // tecla).
+    this.busquedaControl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(value => {
+        this.busqueda = (value || '').trim();
+        this.page = 0;
+        this.cargarTipoActivos();
+      });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
@@ -138,7 +154,7 @@ export class TipoActivoComponent implements OnInit {
   }
 
   cargarTipoActivos() {
-    this.tipoActivoService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
+    this.tipoActivoService.getAll(this.page, this.size, this.filtroEmpresaId, this.busqueda).subscribe({
       next: (data) => {
         this.tipoActivos = data.content;
         this.totalPages = data.page.totalPages;

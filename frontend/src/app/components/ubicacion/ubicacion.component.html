@@ -42,25 +42,37 @@
 
   <hr />
 
-  <!-- FILTRO POR EMPRESA (solo SUPER_ADMIN ve varias empresas a la vez) -->
-  <div class="filtro-grilla" *ngIf="esSuperAdmin">
-    <label>Filtrar por empresa</label>
-    <div class="form-group form-group--combo">
-      <input type="text"
-             placeholder="Todas las empresas"
-             [matAutocomplete]="autoFiltroEmpresa"
-             [formControl]="filtroEmpresaControl"
-             (focus)="onFocusFiltroEmpresa()">
-      <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
-        <mat-option *ngFor="let empresa of empresasFiltroFiltradas" [value]="empresa">
-          {{ empresa.nombre }}
-        </mat-option>
-      </mat-autocomplete>
-    </div>
-  </div>
-
   <!-- TABLA -->
   <h2>Ubicaciones</h2>
+
+  <!-- TOOLBAR: FILTRO EMPRESA (solo SUPER_ADMIN) + BUSQUEDA (todos los
+       roles), en extremos opuestos de la misma fila -->
+  <div class="toolbar-grilla">
+    <div class="filtro-grilla" *ngIf="esSuperAdmin">
+      <label>Filtrar por empresa</label>
+      <div class="form-group form-group--combo">
+        <input type="text"
+               placeholder="Todas las empresas"
+               [matAutocomplete]="autoFiltroEmpresa"
+               [formControl]="filtroEmpresaControl"
+               (focus)="onFocusFiltroEmpresa()">
+        <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+          <mat-option *ngFor="let empresa of empresasFiltroFiltradas" [value]="empresa">
+            {{ empresa.nombre }}
+          </mat-option>
+        </mat-autocomplete>
+      </div>
+    </div>
+
+    <div class="filtro-grilla">
+      <label>Buscar</label>
+      <div class="form-group">
+        <input type="text"
+               placeholder="Nombre de la ubicación"
+               [formControl]="busquedaControl">
+      </div>
+    </div>
+  </div>
   <div class="table-wrapper">
     <table>
       <thead>

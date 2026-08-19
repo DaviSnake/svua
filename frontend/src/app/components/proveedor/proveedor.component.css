@@ -72,6 +72,21 @@
   max-width: 320px;
 }
 
+/* TOOLBAR: agrupa "Filtrar por empresa" y "Buscar" en una misma fila,
+   uno en cada extremo (mismo patron para todos los mantenedores) */
+.toolbar-grilla {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.toolbar-grilla .filtro-grilla {
+  margin-bottom: 0;
+}
+
 /* TÍTULO */
 h2 {
   text-align: center;
@@ -314,6 +329,11 @@ td button:hover {
 
   .filtro-grilla .form-group {
     max-width: 100%;
+  }
+
+  .toolbar-grilla {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   /* FORM */

@@ -59,17 +59,13 @@ public class RepuestoServiceImpl implements RepuestoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<RepuestoResponse> listarRepuestos(Pageable pageable, Long empresaId) {
+    public Page<RepuestoResponse> listarRepuestos(Pageable pageable, Long empresaId, String busqueda) {
 
         if (esSuperAdmin()) {
 
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            if (empresaId != null) {
-                return repository.findByEmpresaId(empresaId, pageable)
-                    .map(mapper::mapRepuestoResponse);
-            }
-
-            return repository.findAll(pageable)
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            return repository.buscarRepuestos(empresaId, busqueda, pageable)
                 .map(mapper::mapRepuestoResponse);
         }
 
@@ -77,7 +73,7 @@ public class RepuestoServiceImpl implements RepuestoService {
         // sin importar lo que llegue en empresaId.
         Long propiaEmpresaId = resolveEmpresaId(null);
 
-        return repository.findByEmpresaId(propiaEmpresaId, pageable)
+        return repository.buscarRepuestos(propiaEmpresaId, busqueda, pageable)
             .map(mapper::mapRepuestoResponse);
     }
 

@@ -58,12 +58,14 @@ public class UbicacionController {
     @GetMapping
     public ResponseEntity<Page<UbicacionResponse>> listarUbicaciones(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver UbicacionServiceImpl).
+        // 🔥 busqueda es opcional: filtra por nombre.
         Page<UbicacionResponse> response =
-                ubicacionService.listarUbicaciones(pageable, empresaId);
+                ubicacionService.listarUbicaciones(pageable, empresaId, busqueda);
 
         return ResponseEntity.ok(response); // ✅ FIX
     }

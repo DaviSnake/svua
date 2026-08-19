@@ -60,11 +60,13 @@ public class ProveedorController {
     @GetMapping
     public ResponseEntity<Page<ProveedorResponse>> listarProveedores(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver ProveedorServiceImpl).
-        Page<ProveedorResponse> response = proveedorService.listarProveedores(pageable, empresaId);
+        // 🔥 busqueda es opcional: filtra por nombre o rut.
+        Page<ProveedorResponse> response = proveedorService.listarProveedores(pageable, empresaId, busqueda);
 
         return ResponseEntity.ok(response);
     }

@@ -55,7 +55,7 @@ public class BodegaServiceImpl implements BodegaService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<BodegaResponse> listar(Pageable pageable, Long empresaId) {
+    public Page<BodegaResponse> listar(Pageable pageable, Long empresaId, String busqueda) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -63,16 +63,15 @@ public class BodegaServiceImpl implements BodegaService {
 
         if (tieneRol(auth, "ROLE_SUPER_ADMIN")) {
 
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            bodegas = (empresaId != null)
-                    ? repository.findByEmpresaId(empresaId, pageable)
-                    : repository.findAll(pageable);
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            bodegas = repository.buscarBodegas(empresaId, busqueda, pageable);
 
         } else if (tieneRol(auth, "ROLE_ADMIN_EMPRESA")) {
 
             // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
             // importar lo que llegue en empresaId.
-            bodegas = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
+            bodegas = repository.buscarBodegas(SecurityUtils.getEmpresaId(), busqueda, pageable);
 
         } else {
             throw new BusinessException("No tienes permisos para ver bodegas");

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { AuthService } from '../../services/auth.service';
 import { RepuestoService } from '../../services/repuesto.service';
@@ -48,6 +49,10 @@ export class RepuestoComponent implements OnInit {
   filtroEmpresaControl = new FormControl();
   empresasFiltroFiltradas: Empresa[] = [];
   filtroEmpresaId: number | null = null;
+
+  // 🔍 Busqueda de la grilla (todos los roles).
+  busquedaControl = new FormControl('');
+  busqueda: string = '';
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
@@ -134,6 +139,17 @@ export class RepuestoComponent implements OnInit {
         this.cargarRepuestos();
       }
     });
+
+    // 🔍 Busqueda de la grilla por codigo o nombre: espera 400ms
+    // sin escribir antes de consultar al backend (evita una request por
+    // tecla).
+    this.busquedaControl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(value => {
+        this.busqueda = (value || '').trim();
+        this.page = 0;
+        this.cargarRepuestos();
+      });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
@@ -165,7 +181,7 @@ export class RepuestoComponent implements OnInit {
   }
 
   cargarRepuestos() {
-    this.repuestoService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
+    this.repuestoService.getAll(this.page, this.size, this.filtroEmpresaId, this.busqueda).subscribe({
       next: (data) => {
         this.repuestos = data.content;
         this.totalPages = data.page.totalPages;

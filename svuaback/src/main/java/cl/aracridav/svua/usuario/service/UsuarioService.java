@@ -21,7 +21,7 @@ public interface UsuarioService {
 
     public void cambiarPassword(Long usuarioId, ChangePasswordRequest request);
 
-    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId);
+    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId, String busqueda);
 
     public PerfilUsuarioDTO perfilUsuario();
 

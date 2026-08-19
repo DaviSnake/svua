@@ -117,25 +117,24 @@ public class UbicacionServiceImpl implements UbicacionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable, Long empresaId) {
+    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable, Long empresaId, String busqueda) {
 
         Page<Ubicacion> ubicaciones = null;
 
         boolean esAdmin = false;
 
         if (esSuperAdmin()) {
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            ubicaciones = (empresaId != null)
-                    ? repository.findByEmpresaId(empresaId, pageable)
-                    : repository.findAll(pageable);
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            ubicaciones = repository.buscarUbicaciones(empresaId, busqueda, pageable);
             esAdmin = true;
         }
 
         if (esAdminEmpresa()) {
             // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
             // importar lo que llegue en empresaId.
-            ubicaciones = repository.findByEmpresaId(
-                SecurityUtils.getEmpresaId(), pageable);
+            ubicaciones = repository.buscarUbicaciones(
+                SecurityUtils.getEmpresaId(), busqueda, pageable);
             esAdmin = true;
         }
 

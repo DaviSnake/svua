@@ -58,12 +58,14 @@ public class TipoActivoController {
     @GetMapping
     public ResponseEntity<Page<TipoActivoResponse>> listarTipoActivos(
             Pageable pageable,
-            @RequestParam(required = false) Long empresaId) {
+            @RequestParam(required = false) Long empresaId,
+            @RequestParam(required = false) String busqueda) {
 
         // 🔥 empresaId es opcional: permite filtrar la grilla por empresa
         // (solo tiene efecto para SUPER_ADMIN, ver TipoActivoServiceImpl).
+        // 🔥 busqueda es opcional: filtra por nombre.
         Page<TipoActivoResponse> response =
-                tipoActivoService.listarTipoActivos(pageable, empresaId);
+                tipoActivoService.listarTipoActivos(pageable, empresaId, busqueda);
 
         return ResponseEntity.ok(response); // ✅ FIX
     }

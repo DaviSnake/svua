@@ -126,7 +126,7 @@ public class TipoActivoServiceImpl implements TipoActivoService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable, Long empresaId) {
+    public Page<TipoActivoResponse> listarTipoActivos(Pageable pageable, Long empresaId, String busqueda) {
 
         Page<TipoActivo> tipos = null;
 
@@ -134,10 +134,9 @@ public class TipoActivoServiceImpl implements TipoActivoService {
 
         if (esSuperAdmin()) {
 
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            tipos = (empresaId != null)
-                    ? repository.findByEmpresaId(empresaId, pageable)
-                    : repository.findAll(pageable);
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            tipos = repository.buscarTiposActivo(empresaId, busqueda, pageable);
             esAdmin = true;
         }
 
@@ -145,7 +144,7 @@ public class TipoActivoServiceImpl implements TipoActivoService {
 
             // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
             // importar lo que llegue en empresaId.
-            tipos = repository.findByEmpresaId(SecurityUtils.getEmpresaId(), pageable);
+            tipos = repository.buscarTiposActivo(SecurityUtils.getEmpresaId(), busqueda, pageable);
             esAdmin = true;
         }
 

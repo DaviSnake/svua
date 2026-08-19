@@ -181,27 +181,27 @@ public class UsuarioServiceImpl implements UsuarioService {
     // LIST
     // ===============================
     @Override
-    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId) {
+    public Page<UsuarioResponse> listarUsuarios(Pageable pageable, Long empresaId, String busqueda) {
 
         Long empresaPropia = SecurityUtils.getEmpresaId();
 
         if (esSuperAdmin()) {
-            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una
-            if (empresaId != null) {
-                return usuarioRepository.findByEmpresaId(empresaId, pageable)
-                        .map(generalMapper::mapUsuarioToResponse);
-            }
-            return usuarioRepository.findAll(pageable)
+            // 🔥 SUPER_ADMIN puede ver todas las empresas o filtrar por una;
+            // empresaId == null equivale a "todas" en la query unificada.
+            return usuarioRepository.buscarUsuarios(empresaId, busqueda, pageable)
                     .map(generalMapper::mapUsuarioToResponse);
         }
 
         if (esAdminEmpresa()) {
             // 🔒 ADMIN_EMPRESA siempre ve solo su propia empresa, sin
             // importar lo que llegue en empresaId.
-            return usuarioRepository.findByEmpresaId(empresaPropia, pageable)
+            return usuarioRepository.buscarUsuarios(empresaPropia, busqueda, pageable)
                     .map(generalMapper::mapUsuarioToResponse);
         }
 
+        // 🔒 Resto de roles (TECNICO, BODEGUERO, USUARIO, JEFE_MANTENIMIENTO):
+        // solo ven su propio registro; busqueda no aplica aca (no tiene
+        // sentido "buscar" dentro de un unico resultado).
         return new PageImpl<>(List.of(securityService.obtenerUsuarioAutenticado()))
                 .map(generalMapper::mapUsuarioToResponse);
     }

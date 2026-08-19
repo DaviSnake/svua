@@ -12,6 +12,6 @@ public interface UbicacionService {
     public UbicacionResponse actualizar(Long id, UbicacionCreateRequest request);
     public void eliminar(Long id);
     public UbicacionResponse obtener(Long id);
-    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable, Long empresaId);
+    public Page<UbicacionResponse> listarUbicaciones(Pageable pageable, Long empresaId, String busqueda);
 
 }

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { AuthService } from '../../services/auth.service';
 import { BodegaService } from '../../services/bodega.service';
@@ -41,6 +42,10 @@ export class BodegaComponent implements OnInit {
   filtroEmpresaControl = new FormControl();
   empresasFiltroFiltradas: Empresa[] = [];
   filtroEmpresaId: number | null = null;
+
+  // 🔍 Busqueda de la grilla (todos los roles).
+  busquedaControl = new FormControl('');
+  busqueda: string = '';
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
@@ -110,6 +115,17 @@ export class BodegaComponent implements OnInit {
         this.cargarBodegas();
       }
     });
+
+    // 🔍 Busqueda de la grilla por nombre: espera 400ms
+    // sin escribir antes de consultar al backend (evita una request por
+    // tecla).
+    this.busquedaControl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(value => {
+        this.busqueda = (value || '').trim();
+        this.page = 0;
+        this.cargarBodegas();
+      });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
@@ -137,7 +153,7 @@ export class BodegaComponent implements OnInit {
   }
 
   cargarBodegas() {
-    this.bodegaService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe({
+    this.bodegaService.getAll(this.page, this.size, this.filtroEmpresaId, this.busqueda).subscribe({
       next: (data) => {
         this.bodegas = data.content;
         this.totalPages = data.page.totalPages;

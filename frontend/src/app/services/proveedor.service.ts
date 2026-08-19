@@ -13,13 +13,18 @@ export class ProveedorService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
-  getAll(page = 0, size = 10, empresaId?: number | null): Observable<Page<Proveedor>> {
+  getAll(page = 0, size = 10, empresaId?: number | null, busqueda?: string | null): Observable<Page<Proveedor>> {
     let url = `${this.apiUrl}/proveedores?page=${page}&size=${size}&sort=nombre,asc`;
 
     // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
     // backend lo ignora para el resto de los roles).
     if (empresaId) {
       url += `&empresaId=${empresaId}`;
+    }
+
+    // 🔥 Búsqueda por nombre o rut (todos los roles).
+    if (busqueda) {
+      url += `&busqueda=${encodeURIComponent(busqueda)}`;
     }
 
     return this.http.get<Page<Proveedor>>(url);

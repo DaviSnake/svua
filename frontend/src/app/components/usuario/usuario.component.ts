@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Usuario } from '../../model/usuario';
 import { CommonModule } from '@angular/common';
@@ -44,6 +45,10 @@ export class UsuarioComponent implements OnInit {
   filtroEmpresaControl = new FormControl();
   empresasFiltroFiltradas: Empresa[] = [];
   filtroEmpresaId: number | null = null;
+
+  // 🔍 Busqueda de la grilla (todos los roles).
+  busquedaControl = new FormControl('');
+  busqueda: string = '';
 
   esSuperAdmin = false;
   esAdminEmpresa = false;
@@ -136,6 +141,17 @@ export class UsuarioComponent implements OnInit {
         this.cargarUsuarios();
       }
     });
+
+    // 🔍 Busqueda de la grilla por nombre o email: espera 400ms
+    // sin escribir antes de consultar al backend (evita una request por
+    // tecla).
+    this.busquedaControl.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(value => {
+        this.busqueda = (value || '').trim();
+        this.page = 0;
+        this.cargarUsuarios();
+      });
   }
 
   displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
@@ -169,7 +185,7 @@ export class UsuarioComponent implements OnInit {
   }
 
   cargarUsuarios() {
-    this.usuarioService.getAll(this.page, this.size, this.filtroEmpresaId).subscribe(data => {
+    this.usuarioService.getAll(this.page, this.size, this.filtroEmpresaId, this.busqueda).subscribe(data => {
       this.usuarios = data.content;
       this.usuariosFiltrados = data.content;
       this.totalPages = data.page.totalPages;

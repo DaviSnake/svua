@@ -15,13 +15,18 @@ export class UsuarioService {
   
   http = inject(HttpClient);
 
-  getAll(page = 0, size = 3, empresaId?: number | null): Observable<Page<Usuario>> {
+  getAll(page = 0, size = 3, empresaId?: number | null, busqueda?: string | null): Observable<Page<Usuario>> {
     let url = `${this.apiUrl}/usuarios?page=${page}&size=${size}&sort=nombre,asc`;
 
     // 🔥 Filtro por empresa (solo tiene efecto real para SUPER_ADMIN; el
     // backend lo ignora para el resto de los roles).
     if (empresaId) {
       url += `&empresaId=${empresaId}`;
+    }
+
+    // 🔥 Búsqueda por nombre o email (todos los roles).
+    if (busqueda) {
+      url += `&busqueda=${encodeURIComponent(busqueda)}`;
     }
 
     return this.http.get<Page<Usuario>>(url);
