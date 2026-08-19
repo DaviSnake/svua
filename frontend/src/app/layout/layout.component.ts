@@ -1,8 +1,9 @@
 import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { HeaderComponent } from "./components/header/header.component";
 import { SidebarComponent } from "./components/sidebar/sidebar.component";
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { NotificacionStateService } from '../services/notificacion-state.service';
 import { AuthService } from '../services/auth.service';
 import { NotificacionService } from '../services/notificacion.service';
@@ -59,6 +60,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
     // dentro del layout autenticado.
     this.inactivityService.iniciar();
 
+    // 🔥 en mobile, al abrirse una página nueva se contrae el menú
+    // lateral (mismo efecto que tocar el overlay).
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (this.isMobile()) {
+          this.closeSidebar();
+        }
+      });
+
   }
 
   private cargarCantidadNoLeidas(): void {
@@ -90,7 +101,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
   closeSidebar() {
     this.sidebarOpen = false;
   }
-  
+
+  isMobile(): boolean {
+    return window.innerWidth < 768;
+  }
+
   menuBtnClick(flag: string): void {
     if (flag !== "1") {
       this.sidebarPadre.nativeElement.classList.remove('minimize');
