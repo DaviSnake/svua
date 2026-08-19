@@ -100,7 +100,10 @@
   justify-content: center;
   align-items: center;
   backdrop-filter: blur(6px);
-  z-index: 1000;
+  /* 🔥 el header mobile (.mobile-header, layout.component.css) usa
+     z-index: 2000 y quedaba por encima de este modal en mobile,
+     tapando el menú hamburguesa y la campana sobre el modal abierto. */
+  z-index: 99999;
 }
 
 .modal {
@@ -941,4 +944,13 @@ textarea {
     bottom: 16px;
     right: 16px;
   }
+}
+
+.archivo-no-imagen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
 }

@@ -437,14 +437,29 @@
         [src]="archivoUrlImagen"
         style="max-width:100%; max-height:700px; display:block; margin:0 auto;" />
 
-        <!-- otros tipos de archivo (ej. PDF) siguen por iframe -->
+        <!-- otros tipos de archivo (ej. PDF) en mobile: se mantiene
+             igual que antes (iframe), ahí no queda bloqueado. -->
         <iframe
-        *ngIf="archivoUrl && !esImagenChecklist"
+        *ngIf="archivoUrl && !esImagenChecklist && isMobile()"
         [src]="archivoUrl"
         sandbox="allow-same-origin"
         width="100%"
         height="700">
-      </iframe>
+        </iframe>
+
+        <!-- en desktop (Chrome/Edge) el iframe con blob: queda
+             bloqueado, así que se abre en una pestaña nueva. -->
+        <div
+        *ngIf="archivoUrlRaw && !esImagenChecklist && !isMobile()"
+        class="archivo-no-imagen">
+          <p>Este tipo de archivo no se puede previsualizar aquí.</p>
+          <button
+            type="button"
+            class="btn primary"
+            (click)="abrirArchivoNuevaPestana()">
+            Abrir archivo en una pestaña nueva
+          </button>
+        </div>
 
       </div>
 
