@@ -36,8 +36,22 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     this.empresaId = this.authService.getEmpresaId() ?? 0;
 
-    this.webSocketService.noLeidas$.subscribe(value => {
-      this.cantidadNoLeidas = value;
+    // 🔥 el conteo de no leidas se cargaba SOLO desde
+    // WebSocketService.noLeidas$, un contador en memoria que arranca
+    // en 0 y solo suma mensajes recibidos por socket durante esta
+    // sesión — las notificaciones no leídas de antes de entrar a la
+    // app nunca se reflejaban. Ahora se pide el conteo real a la BD
+    // al iniciar, y se vuelve a pedir cada vez que llega un mensaje
+    // nuevo por socket o cuando se marca algo como leído/se elimina
+    // (NotificacionStateService.actualizarCantidad$).
+    this.cargarCantidadNoLeidas();
+
+    this.webSocketService.noLeidas$.subscribe(() => {
+      this.cargarCantidadNoLeidas();
+    });
+
+    this.notificacionState.actualizarCantidad$.subscribe(() => {
+      this.cargarCantidadNoLeidas();
     });
 
     // 🔥 Cierra la sesión si no hay actividad del usuario (mouse,
@@ -45,6 +59,18 @@ export class LayoutComponent implements OnInit, OnDestroy {
     // dentro del layout autenticado.
     this.inactivityService.iniciar();
 
+  }
+
+  private cargarCantidadNoLeidas(): void {
+    if (!this.empresaId) {
+      return;
+    }
+
+    this.notificacionService
+      .contarNoLeidas(this.empresaId)
+      .subscribe(count => {
+        this.cantidadNoLeidas = count;
+      });
   }
 
   ngOnDestroy(): void {

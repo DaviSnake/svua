@@ -23,6 +23,16 @@ export class NotificacionService {
       });
   }
 
+  // 🔥 el conteo de no leidas dependia solo de mensajes recibidos por
+  // websocket en la sesion actual (nunca se hidrataba desde la BD al
+  // cargar la pagina), asi que las notificaciones no leidas de antes
+  // de abrir la app no aparecian en el badge/menu.
+  contarNoLeidas(empresaId: number) {
+    return this.http.get<number>(
+      `${this.apiUrl}/notificacion/no-leidas/count/${empresaId}`
+    );
+  }
+
   marcarComoLeida(id: number) {
     return this.http.put(
       `${this.apiUrl}/notificacion/${id}/leer`, {}

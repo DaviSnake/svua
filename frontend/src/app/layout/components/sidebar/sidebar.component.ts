@@ -86,16 +86,22 @@ export class SidebarComponent implements OnInit, OnDestroy  {
         this.detectarRuta(event.url);
       });
 
-      /*this.cargarCantidadNoLeidas(this.empresaId);
+      // 🔥 el conteo de no leidas se calculaba SOLO desde este array
+      // en memoria (poblado únicamente por mensajes recibidos por
+      // socket en esta sesión), así que las notificaciones no leídas
+      // de antes de entrar a la app nunca se reflejaban. Ahora se pide
+      // el conteo real a la BD al iniciar, cada 30s, cuando llega algo
+      // nuevo por socket, y cuando se marca como leído/se elimina.
+      this.cargarCantidadNoLeidas();
       this.intervaloNotificaciones =
         interval(30000).subscribe(() => {
-          this.cargarCantidadNoLeidas(this.empresaId);
+          this.cargarCantidadNoLeidas();
       });
 
       this.notificacionState.actualizarCantidad$
       .subscribe(() => {
-        this.cargarCantidadNoLeidas(this.empresaId);
-      });*/
+        this.cargarCantidadNoLeidas();
+      });
 
       this.webSocketService.conectar(
 
@@ -106,16 +112,26 @@ export class SidebarComponent implements OnInit, OnDestroy  {
             this.notificaciones.unshift(
                 notificacion);
 
-            this.cantidadNoLeidas = this.notificaciones.filter(
-              n => !n.leida
-            ).length;
+            this.cargarCantidadNoLeidas();
 
         });
 
-        this.webSocketService.noLeidas$.subscribe(value => {
-          this.cantidadNoLeidas = value;
+        this.webSocketService.noLeidas$.subscribe(() => {
+          this.cargarCantidadNoLeidas();
         });
 
+  }
+
+  private cargarCantidadNoLeidas(): void {
+    if (!this.empresaId) {
+      return;
+    }
+
+    this.notificacionService
+      .contarNoLeidas(this.empresaId)
+      .subscribe(count => {
+        this.cantidadNoLeidas = count;
+      });
   }
 
   ngOnDestroy(): void {
