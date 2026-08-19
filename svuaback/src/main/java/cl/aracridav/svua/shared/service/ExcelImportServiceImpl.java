@@ -86,6 +86,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final ProveedorRepository proveedorRepository;
     private final ImportProgressService progressService;
     private final ImportFileLogService importFileLogService;
+    private final ImportBatchPersistenceService batchPersistenceService;
 
     @PersistenceContext
     private EntityManager em;
@@ -94,7 +95,11 @@ public class ExcelImportServiceImpl implements ExcelImportService{
 
     @Override
     @Async
-    @Transactional
+    // 🔐 Antes: un solo @Transactional envolvia TODO este metodo (miles de
+    // filas). Se quito: cada lote ahora se persiste en su propia
+    // transaccion independiente (ver ImportBatchPersistenceService), asi
+    // que un error a mitad del archivo ya no revierte los lotes
+    // anteriores ya comprometidos.
     public void procesarAsync(Path path, String jobId, Long empresaId, Long usuarioId, String archivo) {
 
         boolean huboErrores = false;
@@ -137,7 +142,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchActivo.add(activo);
 
                             if (batchActivo.size() == BATCH_SIZE) {
-                                guardarActivo(batchActivo, empresaId, usuarioId);
+                                batchPersistenceService.guardarActivoBatch(batchActivo, empresaId, usuarioId);
+                                progressService.incrementarEnLote(jobId, batchActivo.size());
                                 batchActivo.clear();
                             }
                         }
@@ -147,7 +153,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchProveedor.add(proveedor);
 
                             if (batchProveedor.size() == BATCH_SIZE) {
-                                guardarProveedor(batchProveedor);
+                                batchPersistenceService.guardarProveedorBatch(batchProveedor);
+                                progressService.incrementarEnLote(jobId, batchProveedor.size());
                                 batchProveedor.clear();
                             }
                         }
@@ -157,7 +164,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchOrden.add(oM);
 
                             if (batchOrden.size() == BATCH_SIZE) {
-                                guardarOrden(batchOrden);
+                                batchPersistenceService.guardarOrdenBatch(batchOrden);
+                                progressService.incrementarEnLote(jobId, batchOrden.size());
                                 batchOrden.clear();
                             }
                         }
@@ -167,7 +175,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchRepuesto.add(repuesto);
 
                             if (batchRepuesto.size() == BATCH_SIZE) { // ✅ CORREGIDO
-                                guardarRepuesto(batchRepuesto);
+                                batchPersistenceService.guardarRepuestoBatch(batchRepuesto);
+                                progressService.incrementarEnLote(jobId, batchRepuesto.size());
                                 batchRepuesto.clear(); // ✅ CORREGIDO
                             }
                         }
@@ -177,7 +186,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchUbicacion.add(ubicacion);
 
                             if (batchUbicacion.size() == BATCH_SIZE) { // ✅ CORREGIDO
-                                guardarUbicacion(batchUbicacion);
+                                batchPersistenceService.guardarUbicacionBatch(batchUbicacion);
+                                progressService.incrementarEnLote(jobId, batchUbicacion.size());
                                 batchUbicacion.clear(); // ✅ CORREGIDO
                             }
                         }
@@ -187,7 +197,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                             batchTipoActivo.add(tipoActivo);
 
                             if (batchTipoActivo.size() == BATCH_SIZE) { // ✅ CORREGIDO
-                                guardarTipoActivo(batchTipoActivo);
+                                batchPersistenceService.guardarTipoActivoBatch(batchTipoActivo);
+                                progressService.incrementarEnLote(jobId, batchTipoActivo.size());
                                 batchTipoActivo.clear(); // ✅ CORREGIDO
                             }
                         }
@@ -195,7 +206,14 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         default -> throw new IllegalArgumentException("Tipo archivo inválido: " + archivo);
                     }
 
-                    progressService.incrementar(jobId);
+                    // 🔐 Antes: progressService.incrementar(jobId) se llamaba
+                    // aqui, una vez por CADA fila, apenas se mapeaba y se
+                    // agregaba al buffer en memoria — sin esperar a que el
+                    // lote realmente se guardara en BD. Ahora el progreso
+                    // solo avanza dentro de cada case, DESPUES de que el
+                    // lote completo hizo commit real (ver
+                    // ImportBatchPersistenceService), y para el remanente
+                    // de cada archivo (mas abajo, tras el loop).
 
                 } catch (IllegalArgumentException e) {
                     huboErrores = true; // 👈 clave
@@ -226,25 +244,45 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                 }
             }
 
-            // 🔚 Guardar lo restante
+            // 🔚 Guardar lo restante (tambien en su propia transaccion,
+            // via ImportBatchPersistenceService — el progreso solo avanza
+            // aqui si el guardado del remanente realmente comprometio en BD).
             switch (archivo) {
                 case "activo" -> {
-                    if (!batchActivo.isEmpty()) guardarActivo(batchActivo, empresaId, usuarioId);
+                    if (!batchActivo.isEmpty()) {
+                        batchPersistenceService.guardarActivoBatch(batchActivo, empresaId, usuarioId);
+                        progressService.incrementarEnLote(jobId, batchActivo.size());
+                    }
                 }
                 case "proveedor" -> {
-                    if (!batchProveedor.isEmpty()) guardarProveedor(batchProveedor);
+                    if (!batchProveedor.isEmpty()) {
+                        batchPersistenceService.guardarProveedorBatch(batchProveedor);
+                        progressService.incrementarEnLote(jobId, batchProveedor.size());
+                    }
                 }
                 case "orden" -> {
-                    if (!batchOrden.isEmpty()) guardarOrden(batchOrden);
+                    if (!batchOrden.isEmpty()) {
+                        batchPersistenceService.guardarOrdenBatch(batchOrden);
+                        progressService.incrementarEnLote(jobId, batchOrden.size());
+                    }
                 }
                 case "repuesto" -> {
-                    if (!batchRepuesto.isEmpty()) guardarRepuesto(batchRepuesto); // ✅ CORREGIDO
+                    if (!batchRepuesto.isEmpty()) { // ✅ CORREGIDO
+                        batchPersistenceService.guardarRepuestoBatch(batchRepuesto);
+                        progressService.incrementarEnLote(jobId, batchRepuesto.size());
+                    }
                 }
                 case "ubicacion" -> {
-                    if (!batchUbicacion.isEmpty()) guardarUbicacion(batchUbicacion); // ✅ CORREGIDO
+                    if (!batchUbicacion.isEmpty()) { // ✅ CORREGIDO
+                        batchPersistenceService.guardarUbicacionBatch(batchUbicacion);
+                        progressService.incrementarEnLote(jobId, batchUbicacion.size());
+                    }
                 }
                 case "tipoActivo" -> {
-                    if (!batchTipoActivo.isEmpty()) guardarTipoActivo(batchTipoActivo); // ✅ CORREGIDO
+                    if (!batchTipoActivo.isEmpty()) { // ✅ CORREGIDO
+                        batchPersistenceService.guardarTipoActivoBatch(batchTipoActivo);
+                        progressService.incrementarEnLote(jobId, batchTipoActivo.size());
+                    }
                 }
             }
 

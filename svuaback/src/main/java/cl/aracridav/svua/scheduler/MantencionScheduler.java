@@ -69,7 +69,7 @@ public class MantencionScheduler {
 
         List<OrdenMantenimiento> ordenes =
         ordenRepository
-            .findByEstadoAndTipoMantenimientoAndFechaProgramadaBetween(
+            .findByEstadoAndTipoMantenimientoAndFechaProgramadaBetweenAndNotificacionProveedorEnviadaFalse(
                 EstadoOrden.PROGRAMADA,
                 TipoMantenimiento.PREVENTIVO,
                 desde,
@@ -78,12 +78,31 @@ public class MantencionScheduler {
 
         for (OrdenMantenimiento orden : ordenes) {
 
-            System.out.println("ID: " + orden.getId());
-            System.out.println("Título: " + orden.getTitulo());
-            System.out.println("Email: " + orden.getProveedor().getEmail());
+            try {
+                if (orden.getProveedor() == null || orden.getProveedor().getEmail() == null) {
+                    log.warn("Orden {} sin proveedor/email asignado, se omite notificación", orden.getId());
+                    continue;
+                }
 
-            emailService.sendEmailOrdenProgramada(orden.getProveedor().getEmail(), orden);
+                log.info("Notificando orden {} ({}) a {}", orden.getId(), orden.getTitulo(),
+                        orden.getProveedor().getEmail());
 
+                emailService.sendEmailOrdenProgramada(orden.getProveedor().getEmail(), orden);
+
+                // 📜 Se marca inmediatamente despues del envio exitoso,
+                // dentro de la misma transaccion del metodo: si el
+                // scheduler vuelve a correr el mismo dia (redeploy/
+                // reinicio), la query ya no trae esta orden y no se
+                // reenvia el email al proveedor.
+                orden.setNotificacionProveedorEnviada(true);
+                ordenRepository.save(orden);
+            } catch (Exception e) {
+                // 🔐 Una orden con error no debe abortar el envío de las
+                // demás notificaciones del día (antes, una excepción aquí
+                // revertía toda la transacción y ninguna orden del día
+                // recibía notificación).
+                log.error("Error notificando orden {}: {}", orden.getId(), e.getMessage(), e);
+            }
         }
 
     }

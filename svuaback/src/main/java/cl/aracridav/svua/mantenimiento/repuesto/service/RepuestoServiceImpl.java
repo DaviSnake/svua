@@ -143,8 +143,15 @@ public class RepuestoServiceImpl implements RepuestoService {
     }
 
     private Repuesto obtenerRepuesto(Long id) {
-        return repository.findById(id)
+        Repuesto repuesto = repository.findById(id)
                 .orElseThrow(() -> new BusinessException("Repuesto no encontrado"));
+
+        // 🔐 Validación multi-tenant
+        if (!repuesto.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
+
+        return repuesto;
     }
 
     private void validarCodigoUnico(String codigo, Empresa empresa, Long idActual) {

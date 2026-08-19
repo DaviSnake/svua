@@ -107,6 +107,13 @@ public class OrdenMantenimiento extends BaseEntity {
     @Column(name = "costo_mano_obra_proveedor", precision = 15, scale = 2)
     private BigDecimal costoManoObraProveedor;
 
+    // 📜 Evita reenviar el mismo aviso de mantención programada al
+    // proveedor si el scheduler corre mas de una vez el mismo dia
+    // (redeploy/reinicio del backend o disparo manual del trigger).
+    @Column(name = "notificacion_proveedor_enviada", nullable = false)
+    @Builder.Default
+    private Boolean notificacionProveedorEnviada = false;
+
     // =========================
     // USUARIOS
     // =========================

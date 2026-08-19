@@ -157,7 +157,13 @@ public class NotificacionServiceImpl implements NotificacionService {
 
         Notificacion notificacion =
                 notificacionRepository.findById(id)
-                        .orElseThrow();
+                        .orElseThrow(() -> new BusinessException("Notificación no encontrada"));
+
+        // 🔐 Validación multi-tenant
+        if (!SecurityUtils.esSuperAdmin()
+                && !notificacion.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
 
         notificacion.setLeida(true);
 
@@ -174,7 +180,18 @@ public class NotificacionServiceImpl implements NotificacionService {
     @Override
     @Transactional
     public void eliminar(Long id) {
-        notificacionRepository.deleteById(id);
+
+        Notificacion notificacion =
+                notificacionRepository.findById(id)
+                        .orElseThrow(() -> new BusinessException("Notificación no encontrada"));
+
+        // 🔐 Validación multi-tenant
+        if (!SecurityUtils.esSuperAdmin()
+                && !notificacion.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
+
+        notificacionRepository.delete(notificacion);
     }
 
     /*
@@ -200,6 +217,9 @@ public class NotificacionServiceImpl implements NotificacionService {
     }
 
     private Empresa obtenerEmpresaActual(Long empresaId) {
+        if (!SecurityUtils.esSuperAdmin() && !empresaId.equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
         return empresaRepository.findById(empresaId)
             .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
     }

@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './auth/login/login.component';
 import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
+import { escanearAccesoGuard } from './guards/escanear-acceso.guard';
 import { CalendarioComponent } from './calendar/calendario/calendario.component';
 import { LayoutComponent } from './layout/layout.component';
 import { ActivoComponent } from './components/activo/activo.component';
@@ -26,6 +28,13 @@ import { InformeConexionesComponent } from './components/informe-conexiones/info
 import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
 import { EscanearComponent } from './components/escanear/escanear.component';
 
+// 🔐 Roles que SI ven cada seccion "de gestion" segun el sidebar hoy
+// (sidebar.component.html: *ngIf="!esTecnico" en esos items -- TECNICO es
+// el unico rol que el sidebar oculta de estas secciones; el resto las ve
+// todas igual, sin distincion entre ADMIN_EMPRESA/JEFE_MANTENIMIENTO/
+// BODEGUERO/USUARIO).
+const TODOS_MENOS_TECNICO = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'BODEGUERO', 'USUARIO'];
+
 export const routes: Routes = [
     {
         path:'', redirectTo:'/login', pathMatch: 'full'
@@ -40,233 +49,136 @@ export const routes: Routes = [
         path: 'reset-password', component: ResetPasswordComponent 
     },
     {
+        // 🔥 Antes: 21 objetos de ruta separados, todos con path: 'inicio'.
+        // Angular's RouteReuseStrategy solo reutiliza el componente si
+        // future.routeConfig === curr.routeConfig (misma referencia de
+        // objeto): con 21 objetos distintos, cada navegación entre
+        // secciones bajo /inicio destruía y recreaba LayoutComponent y
+        // SidebarComponent (con reconexión de WebSocket incluida), aunque
+        // el usuario nunca "salía" de /inicio. Se consolidan en un único
+        // padre con 21 hijos, preservando exactamente el mismo componente,
+        // guard y componentes hijos.
         path: 'inicio',
         component: LayoutComponent,
         canActivate: [authGuard], // 🔥 aquí
+        // 🔐 roleGuard: replica a nivel de ruta las mismas restricciones
+        // de rol que el sidebar ya aplica visualmente (*ngIf). Antes,
+        // cualquier usuario logueado podia navegar directo por URL a una
+        // seccion que el menu le oculta (defensa en profundidad).
+        canActivateChild: [roleGuard],
         children: [
             {
                 path: 'activo',
-                component: ActivoComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: ActivoComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'dashboard',
-                component: DashboardComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: DashboardComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'calendario',
                 component: CalendarioComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                // Sin data.roles: visible para cualquier usuario logueado
+                // (el sidebar tampoco lo restringe hoy).
+            },
             {
                 path: 'empresa',
-                component: EmpresaComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: EmpresaComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
             {
                 path: 'ubicacion',
-                component: UbicacionComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: UbicacionComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'tipoActivo',
-                component: TipoActivoComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: TipoActivoComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'proveedor',
-                component: ProveedorComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: ProveedorComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'bodega',
-                component: BodegaComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: BodegaComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'repuesto',
-                component: RepuestoComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: RepuestoComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
+                // ⚠️ Sin data.roles: el sidebar hoy NO oculta "Usuarios" a
+                // ningun rol (ni siquiera a TECNICO) -- se replica esa
+                // misma laxitud tal cual, sin inventar una restricción
+                // nueva. Vale la pena confirmar con negocio si esto es
+                // intencional.
                 path: 'usuario',
                 component: UsuarioComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+            },
             {
                 path: 'reportes',
-                component: ReportesComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: ReportesComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'auditorias',
-                component: AuditoriasComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: AuditoriasComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'configuracion',
-                component: ConfiguracionComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: ConfiguracionComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
             {
                 path: 'perfilUsuario',
                 component: PerfilUsuarioComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                // Sin data.roles: visible para cualquier usuario logueado.
+            },
             {
                 path: 'cargaMasiva',
-                component: CargaMasivaComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: CargaMasivaComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'notificaciones',
-                component: NotificacionComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: NotificacionComponent,
+                data: { roles: TODOS_MENOS_TECNICO }
+            },
             {
                 path: 'soporte',
                 component: SoporteComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                // Sin data.roles: visible para cualquier usuario logueado.
+            },
             {
                 path: 'SesionesActivas',
-                component: SesionUsuarioComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: SesionUsuarioComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
             {
                 path: 'informeConexiones',
-                component: InformeConexionesComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: InformeConexionesComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
             {
                 path: 'informeMantenciones',
-                component: InformeMantencionesComponent
-            }
-        ]
-    },
-    {
-        path: 'inicio',
-        component: LayoutComponent,
-        canActivate: [authGuard], // 🔥 aquí
-        children: [
+                component: InformeMantencionesComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
             {
+                // ⚠️ Caso especial: el sidebar usa esAdmin || codigoQrHabilitado
+                // || codigoEan13Habilitado (rol O flags de empresa) -- no se
+                // puede expresar con data.roles, por eso un guard dedicado.
                 path: 'escanear',
-                component: EscanearComponent
+                component: EscanearComponent,
+                canActivate: [escanearAccesoGuard]
             }
         ]
     },

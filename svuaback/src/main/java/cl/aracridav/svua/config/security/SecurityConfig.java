@@ -30,6 +30,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtFilter;
     private final EmpresaRequestFilter empresaRequestFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost}")
     private List<String> corsAllowedOrigins;
@@ -55,7 +56,19 @@ public class SecurityConfig {
                 .authenticationEntryPoint(customAuthenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler)
             )
+            // 🐛 FIX: JwtAuthenticationFilter.class debe registrarse PRIMERO
+            // (via addFilterBefore relativo a UsernamePasswordAuthenticationFilter,
+            // un filtro conocido por Spring Security) antes de poder usarlo
+            // como referencia para rateLimitFilter -- si el
+            // addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
+            // se ejecuta ANTES de registrar el orden de JwtAuthenticationFilter,
+            // Spring lanza "The Filter class ... does not have a registered
+            // order" (falla al arrancar la app). El orden de estas líneas
+            // importa: se ejecutan en el orden en que aparecen.
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            // 🔐 Rate limit de intentos por IP en login/request-reset/
+            // reset-password, ANTES del filtro JWT.
+            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
             .addFilterAfter(empresaRequestFilter, JwtAuthenticationFilter.class);
 
         return http.build();

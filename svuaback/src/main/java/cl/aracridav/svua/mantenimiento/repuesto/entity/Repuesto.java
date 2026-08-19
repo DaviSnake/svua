@@ -22,6 +22,16 @@ public class Repuesto extends BaseEntity {
     @Column(name = "id_repuesto")
     private Long id;
 
+    // 🔐 Optimistic locking: protege stockActual contra "lost update"
+    // cuando dos operaciones concurrentes (ej. dos ordenes de
+    // mantenimiento distintas usando el mismo repuesto) leen, restan y
+    // guardan el stock casi al mismo tiempo. Hibernate incrementa esta
+    // columna en cada UPDATE y rechaza el segundo save() con
+    // ObjectOptimisticLockingFailureException si la version ya cambio.
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(nullable = false)
     private String codigo;
 

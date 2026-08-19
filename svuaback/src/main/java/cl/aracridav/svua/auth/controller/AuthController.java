@@ -63,6 +63,15 @@ public class AuthController {
     @Value("${app.frontend.url}")
     private String frontendUrl; // 👈 AQUÍ, fuera del método
 
+    // 🔐 Mensaje unico para TODO el flujo de login previo a autenticar con
+    // exito: antes, usuario-no-existe / usuario-inactivo / empresa-inactiva
+    // / plan-vencido / password-incorrecta devolvian mensajes DISTINTOS,
+    // lo que permitia a un atacante enumerar que emails/usuarios existen
+    // en el sistema probando uno por uno. El detalle real del motivo sigue
+    // quedando registrado server-side (comentarios/logs), solo el mensaje
+    // que ve el cliente se unifico.
+    private static final String CREDENCIALES_INVALIDAS = "Credenciales inválidas";
+
     @PostMapping("/login")
     public AuthLoginResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
 
@@ -75,32 +84,33 @@ public class AuthController {
         Usuario usuario = usuarioRepository
             .findByEmailWithEmpresa(request.getEmail())
             .orElseThrow(() ->
-                    new BusinessException("Credenciales inválidas"));
+                    new BusinessException(CREDENCIALES_INVALIDAS));
 
         // 🔓 Verificar desbloqueo automático
         verificarDesbloqueoAutomatico(usuario);
 
-        // 🔒 1️⃣ Usuario activo
+        // 🔒 1️⃣ Usuario activo (antes: "Usuario inactivo", revelaba que el
+        // usuario existe)
         if (!usuario.getActivo()) {
-                throw new BusinessException("Usuario inactivo");
+                throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
         Empresa empresa = usuario.getEmpresa();
 
-        // 🔒 2️⃣ Empresa activa
+        // 🔒 2️⃣ Empresa activa (antes: "La empresa se encuentra Inactiva",
+        // revelaba existencia de usuario/empresa)
         if (!empresa.getActiva()) {
-                throw new BusinessException(
-                        "La empresa se encuentra Inactiva");
+                throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
-        // 🔒 3️⃣ Validar vencimiento de plan
+        // 🔒 3️⃣ Validar vencimiento de plan (antes: "El Plan de la Empresa
+        // ha vencido", revelaba existencia de usuario/empresa)
         if (empresa.getFechaFinPlan().isBefore(LocalDate.now())) {
 
                 empresa.setActiva(false);
                 empresaRepository.save(empresa);
 
-                throw new BusinessException(
-                        "El Plan de la Empresa ha vencido");
+                throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
         try{
@@ -118,7 +128,9 @@ public class AuthController {
 
         } catch (BadCredentialsException e) {
                 manejarIntentoFallido(usuario);
-                throw new BusinessException("Correo o contraseña incorrectos");
+                // antes: "Correo o contraseña incorrectos", mensaje distinto
+                // al de usuario-no-existe -- permitia diferenciar por texto.
+                throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
         // 🔹 Generar principal
@@ -130,7 +142,7 @@ public class AuthController {
                 request.getPassword(),
                 usuario.getPassword())) {
 
-                throw new BusinessException("Credenciales inválidas");
+                throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
 
@@ -233,17 +245,19 @@ public class AuthController {
     public ResponseEntity<?> requestReset(@RequestBody EmailResetRequest request,
                                         HttpServletRequest httpRequest) {
 
+        // 🔐 Antes: si el email no existía, lanzaba BusinessException
+        // ("Usuario no encontrado") -- enumeración directa y trivial de
+        // cuentas existentes. Ahora la respuesta es SIEMPRE la misma
+        // (200, mismo mensaje genérico), exista o no el email; el envío
+        // real del correo solo ocurre si el usuario existe.
+        usuarioRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+                String token = usuarioService.createToken(user);
+                String link = frontendUrl + "/reset-password?token=" + token;
+                emailService.sendResetEmail(request.getEmail(), link);
+        });
 
-        Usuario user = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
-
-        String token = usuarioService.createToken(user);
-
-        String link = frontendUrl + "/reset-password?token=" + token;
-
-        emailService.sendResetEmail(request.getEmail(), link);
-
-        return ResponseEntity.ok(Map.of("message", "Correo enviado"));
+        return ResponseEntity.ok(Map.of(
+                "message", "Si el correo existe en nuestro sistema, se enviará un enlace de recuperación"));
     }
 
     @GetMapping("/validate-token")

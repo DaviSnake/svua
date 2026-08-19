@@ -51,8 +51,10 @@ public class TipoActivoServiceImpl implements TipoActivoService {
     @Override
     public TipoActivoResponse actualizar(Long id, TipoActivoCreateRequest request) {
 
+        Long empresaId = resolveEmpresaId(null);
+
         TipoActivo tipo = obtenerTipoActivo(id);
-        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
+        Empresa empresa = obtenerEmpresaActual(empresaId);
 
         validarPerteneceEmpresa(tipo, empresa.getId());
 

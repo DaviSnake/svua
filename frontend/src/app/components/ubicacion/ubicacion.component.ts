@@ -220,7 +220,7 @@ export class UbicacionComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
             
@@ -265,7 +265,7 @@ export class UbicacionComponent implements OnInit {
   
   editar(ubicacion: Ubicacion) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.ubicacionEditandoId = ubicacion.id!;
     this.ubicacionSeleccionado = ubicacion!;
 

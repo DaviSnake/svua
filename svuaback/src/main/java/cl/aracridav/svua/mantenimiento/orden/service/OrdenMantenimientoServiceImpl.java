@@ -852,8 +852,16 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
      */
 
     private OrdenMantenimiento obtenerOrden(Long id) {
-        return ordenRepository.findById(id)
+        OrdenMantenimiento orden = ordenRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Orden no existe"));
+
+        // 🔐 Validación multi-tenant
+        if (!SecurityUtils.esSuperAdmin()
+                && !orden.getActivo().getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
+
+        return orden;
     }
 
     private Activo obtenerActivo(Long id) {

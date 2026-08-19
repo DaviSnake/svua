@@ -219,7 +219,7 @@ export class BodegaComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
           });
@@ -264,7 +264,7 @@ export class BodegaComponent implements OnInit {
 
   editar(bodega: Bodega) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.bodegaEditandoId = bodega.id!;
     this.bodegaSeleccionado = bodega!;
 

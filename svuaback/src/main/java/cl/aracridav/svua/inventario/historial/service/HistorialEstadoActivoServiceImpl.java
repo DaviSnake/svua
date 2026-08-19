@@ -76,6 +76,12 @@ public class HistorialEstadoActivoServiceImpl implements HistorialEstadoActivoSe
                 .orElseThrow(() ->
                         new BusinessException("Activo no encontrado"));
 
+        // 🔐 Validación multi-tenant
+        if (!esSuperAdmin()
+                && !activo.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
+
         List<HistorialActivoResponse> eventos =
                 new ArrayList<>();
 

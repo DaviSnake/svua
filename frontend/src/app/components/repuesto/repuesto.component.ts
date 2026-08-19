@@ -248,7 +248,7 @@ export class RepuestoComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
           });
@@ -298,7 +298,7 @@ export class RepuestoComponent implements OnInit {
 
   editar(repuesto: Repuesto) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.repuestoEditandoId = repuesto.id!;
     this.repuestoSeleccionado = repuesto!;
 

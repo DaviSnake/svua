@@ -26,6 +26,14 @@ public class ImportProgressServiceImpl implements ImportProgressService {
     }
 
     @Override
+    public void incrementarEnLote(String jobId, int cantidad) {
+        ImportProgressDTO p = progreso.get(jobId);
+        if (p != null) {
+            p.setProcesados(p.getProcesados() + cantidad);
+        }
+    }
+
+    @Override
     public void error(String jobId, int fila, String mensaje, String contenido) {
 
         ImportProgressDTO p = progreso.get(jobId);

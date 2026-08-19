@@ -62,6 +62,16 @@
   .menu-btn {
     display: block;
     color: #1f2937;   /* Gris oscuro */
+    /* 🐛 FIX: la regla base .menu-btn (fuera de este media query) trae
+       position:fixed; top:15px; left:15px -- pensada para cuando el botón
+       vivía suelto en la esquina. Ahora .menu-btn vive dentro de
+       .mobile-header (flex, justify-content:space-between) junto al botón
+       de notificaciones, y la regla combinada .menu-btn,.notification-btn
+       de más abajo lo pasa a position:relative, pero el top/left de 15px
+       de la regla base nunca se limpiaba -- eso desalineaba el ícono de
+       menú 15px hacia abajo/derecha respecto al de notificaciones. */
+    top: auto;
+    left: auto;
   }
 
   .sidebar {

@@ -232,6 +232,8 @@ public class ActivoServiceImpl implements ActivoService {
         }
 
         // 🔄 Actualizar estado
+        EstadoActivo estadoAnterior = activo.getEstadoActual();
+
         activo.setEstadoActual(EstadoActivo.BAJA);
         activo.setFechaBaja(LocalDate.now());
         activo.setMotivoBaja(request.getMotivo());
@@ -242,7 +244,7 @@ public class ActivoServiceImpl implements ActivoService {
         historialService.registrarCambioEstado(
                 activo.getId(),
                 EstadoActivo.BAJA,
-                EstadoActivo.OPERATIVO,
+                estadoAnterior,
                 request.getMotivo(),
                 null
         );
@@ -275,6 +277,13 @@ public class ActivoServiceImpl implements ActivoService {
      */
     @Override
     public double calcularRiesgo(Long activoId) {
+
+        Activo activo = obtenerActivo(activoId);
+
+        // 🔐 Validación multi-tenant
+        if (!activo.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
 
         List<OrdenMantenimiento> ordenes =
                 ordenRepository.findByActivoIdOrderByFechaProgramadaDesc(activoId);
@@ -384,7 +393,7 @@ public class ActivoServiceImpl implements ActivoService {
     // en el caso de "crear" incluso después de haber guardado el activo.
     private void validarVidaUtilMeses(Integer vidaUtilMeses) {
         if (vidaUtilMeses == null || vidaUtilMeses <= 0) {
-            vidaUtilMeses = 1;
+            throw new BusinessException("La vida útil (meses) debe ser un número positivo");
         }
     }
 

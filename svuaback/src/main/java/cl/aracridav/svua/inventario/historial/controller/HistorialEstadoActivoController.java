@@ -16,6 +16,7 @@ import cl.aracridav.svua.inventario.historial.dto.response.HistorialActivoComple
 import cl.aracridav.svua.inventario.historial.dto.response.HistorialEstadoActivoResponse;
 import cl.aracridav.svua.inventario.historial.service.HistorialEstadoActivoService;
 import cl.aracridav.svua.shared.exception.BusinessException;
+import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -37,6 +38,12 @@ public class HistorialEstadoActivoController {
 
         Activo activo = activoRepository.findById(activoId)
                 .orElseThrow(() -> new BusinessException("Activo no encontrado"));
+
+        // 🔐 Validación multi-tenant
+        if (!SecurityUtils.esSuperAdmin()
+                && !activo.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
 
         return ResponseEntity.ok(service.obtenerHistorial(activo.getId()));
     }

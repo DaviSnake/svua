@@ -146,7 +146,7 @@ export class EmpresaComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
           });

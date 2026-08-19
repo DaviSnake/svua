@@ -55,9 +55,8 @@ public class UbicacionServiceImpl implements UbicacionService {
     public UbicacionResponse obtener(Long id) {
 
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual(ubicacion.getEmpresa().getId());
 
-        validarPerteneceEmpresa(ubicacion, empresa.getId());
+        validarPerteneceEmpresaActual(ubicacion);
 
         return mapper.mapUbicacionResponse(ubicacion);
     }
@@ -72,15 +71,14 @@ public class UbicacionServiceImpl implements UbicacionService {
 
 
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
-        validarPerteneceEmpresa(ubicacion, empresa.getId());
+        validarPerteneceEmpresaActual(ubicacion);
         validarRequest(request);
 
         if (request.getNombre() != null &&
             !request.getNombre().equalsIgnoreCase(ubicacion.getNombre())) {
 
-            validarDuplicado(request.getNombre(), empresa.getId());
+            validarDuplicado(request.getNombre(), ubicacion.getEmpresa().getId());
             ubicacion.setNombre(request.getNombre());
         }
 
@@ -104,9 +102,8 @@ public class UbicacionServiceImpl implements UbicacionService {
     public void eliminar(Long id) {
 
         Ubicacion ubicacion = obtenerUbicacion(id);
-        Empresa empresa = obtenerEmpresaActual(ubicacion.getEmpresa().getId());
 
-        validarPerteneceEmpresa(ubicacion, empresa.getId());
+        validarPerteneceEmpresaActual(ubicacion);
 
         ubicacion.setActivo(false);
 
@@ -168,8 +165,9 @@ public class UbicacionServiceImpl implements UbicacionService {
         }
     }
 
-    private void validarPerteneceEmpresa(Ubicacion ubicacion, Long empresaId) {
-        if (!ubicacion.getEmpresa().getId().equals(empresaId)) {
+    private void validarPerteneceEmpresaActual(Ubicacion ubicacion) {
+        if (!esSuperAdmin()
+                && !ubicacion.getEmpresa().getId().equals(SecurityUtils.getEmpresaId())) {
             throw new BusinessException("No pertenece a la empresa");
         }
     }

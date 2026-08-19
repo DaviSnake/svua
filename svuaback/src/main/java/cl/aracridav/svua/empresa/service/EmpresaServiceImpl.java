@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -268,7 +269,16 @@ public class EmpresaServiceImpl implements EmpresaService {
         String device = request.getHeader("User-Agent");
         String ip = request.getRemoteAddr();
 
-        String accessToken = jwtService.generateToken(principal);
+        // 🐛 FIX: antes se llamaba jwtService.generateToken(principal) (el
+        // overload de 1 argumento), que firma con una clave distinta a la
+        // que usa el validador (getClaims()) y ademas no agrega los claims
+        // "userName"/"empresaId"/"jti" que JwtAuthenticationFilter necesita
+        // -- el access token que devolvía el onboarding quedaba "roto": la
+        // primera petición del usuario recién creado fallaba (firma
+        // inválida / usuario no autenticado). Se usa el mismo overload que
+        // login()/refreshToken(), con un tokenJti nuevo.
+        String tokenJti = UUID.randomUUID().toString();
+        String accessToken = jwtService.generateToken(principal, tokenJti);
         String refreshToken = refreshTokenService
                 .createRefreshToken(admin, empresa, device, ip)
                 .getToken();
@@ -310,8 +320,15 @@ public class EmpresaServiceImpl implements EmpresaService {
      */
 
     private Empresa obtenerEmpresa(Long id) {
-        return empresaRepository.findById(id)
+        Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+
+        // 🔐 Validación multi-tenant
+        if (!SecurityUtils.esSuperAdmin() && !empresa.getId().equals(SecurityUtils.getEmpresaId())) {
+            throw new BusinessException("No pertenece a esta empresa");
+        }
+
+        return empresa;
     }
 
     private boolean tieneRol(Authentication auth, String... roles) {

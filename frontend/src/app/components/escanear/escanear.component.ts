@@ -94,7 +94,7 @@ export class EscanearComponent implements OnDestroy {
         Swal.fire({
           icon: 'error',
           title: 'No encontrado',
-          text: err.error?.message || 'No se encontró ningún activo con ese código'
+          text: err.error?.error || 'No se encontró ningún activo con ese código'
         });
       }
     });

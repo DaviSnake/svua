@@ -259,7 +259,10 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         @Param("empresaId") Long empresaId,
         @Param("activoId") Long activoId);
 
-    List<OrdenMantenimiento> findByEstadoAndTipoMantenimientoAndFechaProgramadaBetween(
+    // 📜 notificacionProveedorEnviada = false excluye ordenes ya
+    // notificadas: evita reenvio si el scheduler corre 2 veces el mismo
+    // dia (redeploy/reinicio o disparo manual).
+    List<OrdenMantenimiento> findByEstadoAndTipoMantenimientoAndFechaProgramadaBetweenAndNotificacionProveedorEnviadaFalse(
         EstadoOrden estado,
         TipoMantenimiento tipoMantenimiento,
         LocalDateTime desde,

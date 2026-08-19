@@ -306,7 +306,7 @@ export class ProveedorComponent implements OnInit {
 
   editar(proveedor: Proveedor) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.proveedorEditandoId = proveedor.id!;
     this.proveedorSeleccionado = proveedor!;
 

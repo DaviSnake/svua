@@ -304,9 +304,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private Long resolveEmpresaId(Long requestEmpresaId) {
-        return requestEmpresaId != null
-                ? requestEmpresaId
-                : SecurityUtils.getEmpresaId();
+        // 🔐 Solo SUPER_ADMIN puede registrar un usuario en una empresa
+        // distinta a la propia indicando empresaId en el request; el resto
+        // de roles (ADMIN_EMPRESA, TECNICO, etc.) siempre queda forzado a
+        // su propia empresa, sin importar lo que llegue en el request.
+        if (esSuperAdmin()) {
+            return requestEmpresaId != null
+                    ? requestEmpresaId
+                    : SecurityUtils.getEmpresaId();
+        }
+        return SecurityUtils.getEmpresaId();
     }
 
     private boolean esSuperAdmin() {

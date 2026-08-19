@@ -433,7 +433,7 @@ export class ActivoComponent implements OnInit {
 
   editar(activo: Activo) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.activoEditandoId = activo.id!;
     this.activoSeleccionado = activo!;
 
@@ -543,7 +543,7 @@ export class ActivoComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
 

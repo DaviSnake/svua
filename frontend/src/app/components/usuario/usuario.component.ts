@@ -258,7 +258,7 @@ export class UsuarioComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.error?.message || 'No se pudo actualizar'
+                text: err.error?.error || 'No se pudo actualizar'
               });
             }
           });
@@ -297,7 +297,7 @@ export class UsuarioComponent implements OnInit {
 
   editar(usuario: Usuario) {
     this.editando = true;
-    this.esSuperAdmin = true;
+    this.esSuperAdmin = this.authService.isAdmin();
     this.usuarioEditandoId = usuario.id!;
     this.usuarioSeleccionado = usuario!;
 
@@ -355,7 +355,7 @@ export class UsuarioComponent implements OnInit {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: err.error?.message || 'No se pudo eliminar'
+              text: err.error?.error || 'No se pudo eliminar'
             });
           }
         });
@@ -408,7 +408,7 @@ export class UsuarioComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Error al enviar correo';
+        this.errorMessage = err.error?.error || 'Error al enviar correo';
         this.message = '';
 
         setTimeout(() => this.errorMessage = '', 4000);
