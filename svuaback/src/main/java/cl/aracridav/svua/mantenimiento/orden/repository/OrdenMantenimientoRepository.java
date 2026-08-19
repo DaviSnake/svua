@@ -154,7 +154,8 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         WHERE o.empresa.id = :empresaId
         AND o.estado = :estado
         AND o.tipoMantenimiento = :tipo
-        AND o.fechaProgramada BETWEEN :inicio AND :fin
+        AND o.duracionSegundos > 0
+        AND o.fechaFinEjecucion BETWEEN :inicio AND :fin
         """)
         Double calcularMTTR(
             Long empresaId,
@@ -169,7 +170,8 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         WHERE o.empresa.id = :empresaId
         AND o.estado = :estado
         AND o.tipoMantenimiento = :tipo
-        AND o.fechaProgramada BETWEEN :inicio AND :fin
+        AND o.duracionSegundos > 0
+        AND o.fechaFinEjecucion BETWEEN :inicio AND :fin
         """)
         long contarOrdenesMTTR(
             Long empresaId,
@@ -184,6 +186,7 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         WHERE o.empresa.id = :empresaId
         AND o.estado = 'COMPLETADA'
         AND o.tipoMantenimiento = 'CORRECTIVO'
+        AND o.duracionSegundos > 0
     """)
     Double avgDuracionByEmpresa(@Param("empresaId") Long empresaId);
     
