@@ -1219,7 +1219,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
             // fungible) antes de que el supervisor complete la orden.
             Swal.fire({
               icon: 'info',
-              title: 'Orden pre finalizada',
+              title: 'Orden pre completada',
               html: `
                 <p>
                   Tiene <b>24 horas</b> para ingresar el checklist de
@@ -1245,7 +1245,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   confirmarPreDetencionConArchivo(id: number) {
     Swal.fire({
-      title: 'Pre Finalizar mantención',
+      title: 'Pre Completar mantención',
       html: `
         <div style="text-align:left">
           <p>
@@ -1253,7 +1253,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           </p>
 
           <ul style="margin-top:10px">
-            <li>La orden quedará marcada como pre finalizada, hasta que el supervisor la dé por finalizada.</li>
+            <li>La orden quedará marcada como pre completada, hasta que el supervisor la dé por finalizada.</li>
             <li>Se registrará el documento de chequeo como respaldo, si lo adjunta.</li>
             <li>La información quedará disponible para futuras auditorías y consultas.</li>
           </ul>

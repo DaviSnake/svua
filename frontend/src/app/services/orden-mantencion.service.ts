@@ -50,7 +50,7 @@ export class OrdenMantencionService {
 
   // 🔥 permite adjuntar el checklist DESPUÉS de haber terminado la
   // ejecución sin él (dentro de las 24h de gracia que se avisan al
-  // usuario en el modal de "Pre Finalizar mantención").
+  // usuario en el modal de "Pre Completar mantención").
   subirChecklist(id: number, formData: FormData) {
     return this.http.post(`${this.apiUrl}/ordenes-mantenimiento/${id}/subirChecklist`, formData);
   }

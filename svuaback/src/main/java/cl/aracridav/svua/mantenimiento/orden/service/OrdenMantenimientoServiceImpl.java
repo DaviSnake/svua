@@ -177,7 +177,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         // antes de eso no tiene sentido (aún no terminó la ejecución) y
         // después (COMPLETADA) ya no se puede modificar nada de la orden.
         if (orden.getEstado() != EstadoOrden.PRE_COMPLETADA) {
-            throw new BusinessException("Solo se puede adjuntar el checklist mientras la orden está pre finalizada");
+            throw new BusinessException("Solo se puede adjuntar el checklist mientras la orden está pre completada");
         }
 
         validarArchivo(archivo);
