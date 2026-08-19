@@ -130,6 +130,9 @@ public class DashboardServiceImpl implements DashboardService {
         long totalOrdenes = ordenRepository.countByEmpresaIdAndEstadoNot(
                 empresaId, EstadoOrden.CANCELADA);
 
+        long preCompletadas = ordenRepository.countByEmpresaIdAndEstado(
+                empresaId, EstadoOrden.PRE_COMPLETADA);
+
         long completadas = ordenRepository.countByEmpresaIdAndEstado(
                 empresaId, EstadoOrden.COMPLETADA);
 
@@ -157,6 +160,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         return DashboardIndicadoresResponse.builder()
                 .programadas(totalOrdenes)
+                .preCompletadas(preCompletadas)
                 .completadas(completadas)
                 .pendientes(pendientes)
                 .atrasadas(atrasadas)

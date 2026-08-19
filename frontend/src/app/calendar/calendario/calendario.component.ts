@@ -374,19 +374,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   modoEdicion = false;
   eventoSeleccionadoId!: number;
 
+  // 🔥 en mobile el checklist se sigue viendo dentro de un modal
+  // (imagen inline o iframe); en desktop se abre directo en una
+  // pestaña nueva (ver validarChecklist).
   mostrarModalArchivo = false;
-
-  // 🔥 Chrome/Edge (desktop) bloquean la navegación de un iframe a un
-  // blob: creado en otro documento (el componente padre) — pasa
-  // siempre, tenga o no sandbox. En mobile esto no pasa (o el
-  // navegador lo maneja distinto), así que ahí se mantiene el iframe
-  // tal como estaba. Solo en desktop, para archivos que no son
-  // imagen (ej. PDF), se abre en una pestaña nueva en vez de
-  // embeberlo, porque el iframe queda bloqueado.
   esImagenChecklist = false;
   archivoUrlImagen!: SafeUrl;
   archivoUrl!: SafeResourceUrl;
-  archivoUrlRaw: string | null = null;
 
   page = 0;
   size = 100000;
@@ -1138,11 +1132,35 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     if (this.estadoOrden === 'EN_EJECUCION') {
       this.confirmarPreDetencionConArchivo(id);
     } else if (this.estadoOrden === 'PRE_COMPLETADA') {
-      this.detenerMantencion(id);
+      if (!this.tieneChecklist) {
+        this.confirmarCompletarSinChecklist(id);
+      } else {
+        this.detenerMantencion(id);
+      }
     } else {
       this.iniciarMantencion(id);
     }
 
+  }
+
+  // 🔥 al completar sin haber adjuntado el checklist se advierte antes
+  // de continuar: una vez COMPLETADA la orden ya no admite adjuntar
+  // nada (ver subirChecklist en el backend).
+  confirmarCompletarSinChecklist(id: number) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Falta el checklist',
+      text: 'Esta orden no tiene un checklist adjunto. Una vez completada ya no podrá adjuntarlo. ¿Desea completarla de todas formas?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, completar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#64748b'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.detenerMantencion(id);
+      }
+    });
   }
 
   iniciarMantencion(id: number) {
@@ -1350,6 +1368,48 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   validarChecklist(): void {
 
+    if (this.isMobile()) {
+      // 🔥 en mobile se mantiene el visor dentro de un modal: imagen
+      // inline o iframe para el resto de tipos de archivo (ej. PDF).
+      this.ordenMantencionService
+      .verArchivo(this.eventoSeleccionadoId)
+      .subscribe({
+
+        next: (blob) => {
+
+          const url = URL.createObjectURL(blob);
+
+          this.esImagenChecklist = blob.type.startsWith('image/');
+
+          if (this.esImagenChecklist) {
+            // <img src> exige un SafeUrl, no un SafeResourceUrl.
+            this.archivoUrlImagen = this.sanitizer.bypassSecurityTrustUrl(url);
+          } else {
+            this.archivoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+          }
+
+          this.mostrarModalArchivo = true;
+        },
+
+        error: () => {
+          Swal.fire(
+            'Error',
+            'No fue posible cargar el archivo',
+            'error'
+          );
+        }
+
+      });
+
+      return;
+    }
+
+    // 🔥 en desktop se abre directo en una pestaña nueva, de forma
+    // sincrónica dentro del click (con about:blank), para que el
+    // navegador no la bloquee como popup. Una vez llega el archivo
+    // (async) se navega esa misma pestaña al blob.
+    const nuevaPestana = window.open('', '_blank');
+
     this.ordenMantencionService
     .verArchivo(this.eventoSeleccionadoId)
     .subscribe({
@@ -1357,26 +1417,20 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       next: (blob) => {
 
         const url = URL.createObjectURL(blob);
-        this.archivoUrlRaw = url;
 
-        // 🔥 imagen → <img> (evita el bloqueo de Chrome/Edge al "navegar"
-        // un iframe a un blob: creado en otro documento). El resto
-        // (ej. PDF) se abre en una pestaña nueva (ver abrirArchivoNuevaPestana),
-        // porque el iframe queda igual de bloqueado en desktop.
-        this.esImagenChecklist = blob.type.startsWith('image/');
-
-        if (this.esImagenChecklist) {
-          // <img src> exige un SafeUrl, no un SafeResourceUrl.
-          this.archivoUrlImagen = this.sanitizer.bypassSecurityTrustUrl(url);
-        } else if (this.isMobile()) {
-          // en mobile se mantiene igual que antes (iframe).
-          this.archivoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        if (nuevaPestana) {
+          nuevaPestana.location.href = url;
+        } else {
+          // 🔥 respaldo por si igual quedó bloqueada (bloqueador estricto).
+          window.open(url, '_blank');
         }
-
-        this.mostrarModalArchivo = true;
       },
 
       error: () => {
+        if (nuevaPestana) {
+          nuevaPestana.close();
+        }
+
         Swal.fire(
           'Error',
           'No fue posible cargar el archivo',
@@ -1386,14 +1440,6 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
     });
 
-    this.mostrarModalArchivo = true;
-
-  }
-
-  abrirArchivoNuevaPestana(): void {
-    if (this.archivoUrlRaw) {
-      window.open(this.archivoUrlRaw, '_blank');
-    }
   }
 
   cerrarModalArchivo(): void {

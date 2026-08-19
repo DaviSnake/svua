@@ -11,6 +11,7 @@ import lombok.*;
 public class DashboardIndicadoresResponse {
 
     private long programadas;
+    private long preCompletadas;
     private long completadas;
     private long pendientes;
     private long atrasadas;
