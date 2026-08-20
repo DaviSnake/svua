@@ -34,9 +34,19 @@
 
 <div class="dashboard-grid">
 
-  <div class="dashboard-card cumplimiento" matTooltip="Porcentaje de ordenes completadas sobre el total de ordenes, sin contar las canceladas.">
-    <span class="titulo">Cumplimiento</span>
-    <span class="valor">{{ data?.cumplimiento }}%</span>
+  <div class="dashboard-card" matTooltip="Porcentaje de ordenes preventivas completadas sobre el total de ordenes preventivas, sin contar las canceladas.">
+    <span class="titulo">Cumplimiento Preventivo</span>
+    <span class="valor">{{ data?.cumplimientoPreventivo }}%</span>
+  </div>
+
+  <div class="dashboard-card" matTooltip="Porcentaje de ordenes correctivas completadas sobre el total de ordenes correctivas, sin contar las canceladas.">
+    <span class="titulo">Cumplimiento Correctivo</span>
+    <span class="valor">{{ data?.cumplimientoCorrectivo }}%</span>
+  </div>
+
+  <div class="dashboard-card" matTooltip="Disponibilidad = (Horas programadas - Horas de detencion) / Horas programadas x 100, sobre las ordenes completadas.">
+    <span class="titulo">Disponibilidad</span>
+    <span class="valor">{{ data?.disponibilidad }}%</span>
   </div>
 
   <div class="dashboard-card" matTooltip="Tiempo medio de reparacion: promedio de duracion de las ordenes correctivas ya completadas.">

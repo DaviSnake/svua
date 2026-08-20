@@ -122,6 +122,16 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
 
     long countByEmpresaIdAndEstadoNot(Long empresaId, EstadoOrden estado);
 
+    // 🔥 Cumplimiento separado por tipo de mantenimiento (preventivo /
+    // correctivo) en el Centro de Monitoreo: mismo criterio que
+    // countByEmpresaIdAndEstadoNot (excluye canceladas del universo),
+    // pero acotado a un tipoMantenimiento puntual.
+    long countByEmpresaIdAndEstadoNotAndTipoMantenimiento(
+        Long empresaId, EstadoOrden estado, TipoMantenimiento tipo);
+
+    long countByEmpresaIdAndEstadoAndTipoMantenimiento(
+        Long empresaId, EstadoOrden estado, TipoMantenimiento tipo);
+
     @Query("""
         SELECT COUNT(o)
         FROM OrdenMantenimiento o
@@ -268,6 +278,24 @@ public interface OrdenMantenimientoRepository extends JpaRepository<OrdenManteni
         LocalDateTime desde,
         LocalDateTime hasta
     );
+
+    // 🔥 Disponibilidad (Centro de Monitoreo): "Horas de detencion" real
+    // dentro de un periodo, para comparar contra las horas programadas
+    // del periodo (horas del calendario x cantidad de activos — ver
+    // DashboardServiceImpl.calcularDisponibilidad). Se filtra por
+    // fechaFinEjecucion (cuando realmente termino la detencion), no por
+    // fechaProgramada, para que la suma quede dentro del periodo.
+    @Query("""
+        SELECT COALESCE(SUM(o.duracionSegundos), 0)
+        FROM OrdenMantenimiento o
+        WHERE o.empresa.id = :empresaId
+        AND o.estado = 'COMPLETADA'
+        AND o.fechaFinEjecucion BETWEEN :inicio AND :fin
+    """)
+    Long sumDuracionSegundosCompletadasEnPeriodo(
+        @Param("empresaId") Long empresaId,
+        @Param("inicio") LocalDateTime inicio,
+        @Param("fin") LocalDateTime fin);
 
     @Modifying
     @Query("""

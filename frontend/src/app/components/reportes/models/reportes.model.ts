@@ -6,7 +6,9 @@ export interface DashboardResponse {
   atrasadas: number;
   canceladas: number;
 
-  cumplimiento: number;
+  cumplimientoPreventivo: number;
+  cumplimientoCorrectivo: number;
+  disponibilidad: number;
   mttrHoras: number;
   mtbfHoras: number;
 }

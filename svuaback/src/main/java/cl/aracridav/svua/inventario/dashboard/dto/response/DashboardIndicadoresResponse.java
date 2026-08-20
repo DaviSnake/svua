@@ -17,7 +17,10 @@ public class DashboardIndicadoresResponse {
     private long atrasadas;
     private long canceladas;
 
-    private double cumplimiento;
+    private double cumplimientoPreventivo;
+    private double cumplimientoCorrectivo;
+
+    private double disponibilidad;
 
     private double mttrHoras;
     private double mtbfHoras;

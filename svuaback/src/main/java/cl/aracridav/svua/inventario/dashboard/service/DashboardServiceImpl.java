@@ -145,9 +145,33 @@ public class DashboardServiceImpl implements DashboardService {
         long canceladas = ordenRepository.countByEmpresaIdAndEstado(
                 empresaId, EstadoOrden.CANCELADA);
 
-        double cumplimiento =
-                totalOrdenes == 0 ? 0 :
-                ((double) completadas / totalOrdenes) * 100;
+        // 🔥 Cumplimiento separado por tipo de mantenimiento: mismo
+        // calculo de antes (completadas / total, sin contar canceladas),
+        // pero acotado a PREVENTIVO y a CORRECTIVO por separado. Las
+        // ordenes PREDICTIVO no entran en ninguna de las dos tarjetas.
+        long totalPreventivas = ordenRepository.countByEmpresaIdAndEstadoNotAndTipoMantenimiento(
+                empresaId, EstadoOrden.CANCELADA, TipoMantenimiento.PREVENTIVO);
+
+        long completadasPreventivas = ordenRepository.countByEmpresaIdAndEstadoAndTipoMantenimiento(
+                empresaId, EstadoOrden.COMPLETADA, TipoMantenimiento.PREVENTIVO);
+
+        double cumplimientoPreventivo =
+                totalPreventivas == 0 ? 0 :
+                ((double) completadasPreventivas / totalPreventivas) * 100;
+
+        long totalCorrectivas = ordenRepository.countByEmpresaIdAndEstadoNotAndTipoMantenimiento(
+                empresaId, EstadoOrden.CANCELADA, TipoMantenimiento.CORRECTIVO);
+
+        long completadasCorrectivas = ordenRepository.countByEmpresaIdAndEstadoAndTipoMantenimiento(
+                empresaId, EstadoOrden.COMPLETADA, TipoMantenimiento.CORRECTIVO);
+
+        double cumplimientoCorrectivo =
+                totalCorrectivas == 0 ? 0 :
+                ((double) completadasCorrectivas / totalCorrectivas) * 100;
+
+        // Disponibilidad = (Horas programadas - Horas de detencion) /
+        // Horas programadas x 100 (ver calcularDisponibilidad).
+        double disponibilidad = calcularDisponibilidad(empresaId);
 
         // MTTR
         Double mttrSeg =
@@ -165,10 +189,59 @@ public class DashboardServiceImpl implements DashboardService {
                 .pendientes(pendientes)
                 .atrasadas(atrasadas)
                 .canceladas(canceladas)
-                .cumplimiento(Math.round(cumplimiento * 100.0) / 100.0)
+                .cumplimientoPreventivo(Math.round(cumplimientoPreventivo * 100.0) / 100.0)
+                .cumplimientoCorrectivo(Math.round(cumplimientoCorrectivo * 100.0) / 100.0)
+                .disponibilidad(disponibilidad)
                 .mttrHoras(Math.round(mttr * 100.0) / 100.0)
                 .mtbfHoras(mtbf)
                 .build();
+    }
+
+    // 🔧 Disponibilidad = (Horas programadas - Horas de detencion) /
+    // Horas programadas x 100.
+    //
+    // "Horas programadas" = horas de calendario transcurridas en lo que
+    // va del mes actual, multiplicadas por la cantidad de activos de la
+    // empresa (cada activo "deberia" estar disponible todo ese tiempo).
+    // "Horas de detencion" = suma real de duracionSegundos de las
+    // ordenes COMPLETADA cuya fechaFinEjecucion cae en ese mismo tramo.
+    //
+    // 🔒 Antes se comparaba contra la duracion ESTIMADA del ticket
+    // (fechaTermino - fechaProgramada, un numero chico ingresado al
+    // crear la orden) en vez de contra horas de calendario: como la
+    // detencion real casi siempre supera esa estimacion (la orden queda
+    // EN_EJECUCION de un dia para otro, fin de semana, etc.), el
+    // resultado daba negativo. Con el periodo de calendario como base,
+    // el denominador es siempre mayor o igual a la detencion real salvo
+    // que la empresa realmente haya estado mas tiempo detenida que
+    // operativa.
+    private double calcularDisponibilidad(Long empresaId) {
+
+        LocalDateTime inicio = inicioMesActual();
+        LocalDateTime fin = LocalDateTime.now();
+
+        long totalActivos = activoRepository.countByEmpresaId(empresaId);
+
+        if (totalActivos == 0) {
+            return 0;
+        }
+
+        double horasPeriodo = Duration.between(inicio, fin).getSeconds() / 3600.0;
+
+        if (horasPeriodo <= 0) {
+            return 0;
+        }
+
+        double horasProgramadas = horasPeriodo * totalActivos;
+
+        Long segundosDetencion =
+            ordenRepository.sumDuracionSegundosCompletadasEnPeriodo(empresaId, inicio, fin);
+
+        double horasDetencion = (segundosDetencion != null ? segundosDetencion : 0L) / 3600.0;
+
+        double disponibilidad = ((horasProgramadas - horasDetencion) / horasProgramadas) * 100;
+
+        return Math.round(disponibilidad * 100.0) / 100.0;
     }
     
     @Override
