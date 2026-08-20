@@ -44,7 +44,7 @@
     <span class="valor">{{ data?.cumplimientoCorrectivo }}%</span>
   </div>
 
-  <div class="dashboard-card" matTooltip="Disponibilidad = (Horas programadas - Horas de detencion) / Horas programadas x 100, sobre las ordenes completadas.">
+  <div class="dashboard-card" matTooltip="Disponibilidad = (Horas programadas - Horas de detencion) / Horas programadas x 100. Horas programadas = horas transcurridas en el mes actual x cantidad de activos de la empresa; horas de detencion = suma real de duracion de las ordenes completadas en ese mismo periodo.">
     <span class="titulo">Disponibilidad</span>
     <span class="valor">{{ data?.disponibilidad }}%</span>
   </div>
