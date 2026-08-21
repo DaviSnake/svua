@@ -252,12 +252,12 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         // "Completar" en el calendario).
         boolean retroactivo = Boolean.TRUE.equals(req.getIngresoRetroactivo());
 
-        if (retroactivo) {
-            // 🔥 mismo resguardo que ejecutarOrden(): no se puede declarar
-            // un trabajo retroactivo si el activo ya tiene otra orden
-            // fisicamente en curso ahora mismo.
-            validarNoExisteOrdenEnCurso(activo.getId());
-        }
+        // 🔥 a diferencia de INICIAR una orden en vivo (ejecutarOrden()),
+        // declarar una orden retroactiva no debe bloquearse aunque el
+        // activo ya tenga otra orden EN_EJECUCION en este momento: son
+        // dos cosas distintas (una es un trabajo que ya se hizo, en el
+        // pasado; la otra es lo que esta pasando ahora mismo), asi que
+        // no hay conflicto real que validar aca.
 
         EstadoActivo viejoEstadoActivo = activo.getEstadoActual();
 
