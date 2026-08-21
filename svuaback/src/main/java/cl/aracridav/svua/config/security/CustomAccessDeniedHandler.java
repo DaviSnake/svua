@@ -19,7 +19,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         response.getWriter().write("""
             {
-                "error": "No tienes permisos para acceder a este recurso",
+                "error": "No tienes permisos para realizar esa accion",
                 "status": 403
             }
         """);

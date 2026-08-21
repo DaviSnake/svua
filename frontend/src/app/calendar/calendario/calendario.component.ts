@@ -1485,14 +1485,18 @@ export class CalendarioComponent implements OnInit, OnDestroy {
         this.cargarEventos();
         this.cerrar();
       },
-      error: () => {
+      error: (err) => {
+        // 🔥 antes se mostraba un mensaje generico fijo, ignorando el
+        // motivo real que informa el backend (por ejemplo, sin permiso:
+        // ver CustomAccessDeniedHandler, "No tienes permisos para
+        // acceder a este recurso"). Igual que en iniciarMantencion().
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'error',
-          title: 'No se pudo detener la mantención',
+          title: `No se pudo completar: ${err.error?.error || 'Intenta nuevamente'}`,
           showConfirmButton: false,
-          timer: 2500
+          timer: 3000
         });
       }
     });
