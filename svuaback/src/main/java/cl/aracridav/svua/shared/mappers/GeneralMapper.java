@@ -1,5 +1,7 @@
 package cl.aracridav.svua.shared.mappers;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.List;
 
@@ -279,11 +281,25 @@ public class GeneralMapper {
     oMantenimientoResponse.setDuracionMinutos(Duration
         .between(oMantenimiento.getFechaProgramada(), oMantenimiento.getFechaTermino())
         .toMinutes());
+    oMantenimientoResponse.setDuracionEstimadaSegundos(oMantenimiento.getDuracionEstimadaSegundos());
     oMantenimientoResponse.setFechaEjecucion(oMantenimiento.getFechaEjecucion());
+    oMantenimientoResponse.setFechaFinEjecucion(oMantenimiento.getFechaFinEjecucion());
     oMantenimientoResponse.setTipoMantenimiento(oMantenimiento.getTipoMantenimiento());
     oMantenimientoResponse.setEstado(oMantenimiento.getEstado());
     oMantenimientoResponse.setCostoTotal(oMantenimiento.getCostoTotal());
-    oMantenimientoResponse.setHorasEstimadas(oMantenimiento.getHorasEstimadasProveedor());
+
+    // 🔥 la hora estimada se calcula siempre desde duracionEstimadaSegundos
+    // (la duracion planificada, registrada una sola vez al crear la
+    // orden y nunca modificada despues) en vez del campo persistido
+    // horasEstimadasProveedor, que en ordenes creadas antes de este
+    // cambio puede haber quedado desactualizado. Fallback al campo
+    // persistido solo si por algun motivo no hay duracion estimada.
+    BigDecimal horasEstimadas = oMantenimiento.getDuracionEstimadaSegundos() != null
+        ? BigDecimal.valueOf(oMantenimiento.getDuracionEstimadaSegundos())
+            .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP)
+        : oMantenimiento.getHorasEstimadasProveedor();
+
+    oMantenimientoResponse.setHorasEstimadas(horasEstimadas);
     oMantenimientoResponse.setHorasReal(oMantenimiento.getHorasRealesProveedor());
     oMantenimientoResponse.setValorHora(oMantenimiento.getValorHoraProveedor());
     oMantenimientoResponse.setCostoManoObraEstimada(oMantenimiento.getCostoManoObraEstimadasProveedor());

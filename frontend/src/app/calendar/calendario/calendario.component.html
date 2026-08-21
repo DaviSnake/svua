@@ -134,19 +134,37 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Fecha</label>
-          <input type="datetime-local" formControlName="fechaHora" />
-        </div>
+        <ng-container *ngIf="!ordenMantencionForm.get('ingresoRetroactivo')?.value; else camposIngresoRetroactivo">
 
-        <div class="form-group">
-          <label>Duración (min)</label>
-          <input
-            type="text"
-            formControlName="duracionMinutos"
-            (input)="formatearMiles($event, 'duracionMinutos')"
-          />
-        </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="datetime-local" formControlName="fechaHora" />
+          </div>
+
+          <div class="form-group">
+            <label>Duración (min)</label>
+            <input
+              type="text"
+              formControlName="duracionMinutos"
+              (input)="formatearMiles($event, 'duracionMinutos')"
+            />
+          </div>
+
+        </ng-container>
+
+        <ng-template #camposIngresoRetroactivo>
+
+          <div class="form-group">
+            <label>Inicio real</label>
+            <input type="datetime-local" formControlName="fechaEjecucionReal" />
+          </div>
+
+          <div class="form-group">
+            <label>Término real</label>
+            <input type="datetime-local" formControlName="fechaFinEjecucionReal" />
+          </div>
+
+        </ng-template>
 
       </div>
 

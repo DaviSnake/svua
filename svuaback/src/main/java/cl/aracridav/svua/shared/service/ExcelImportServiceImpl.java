@@ -3,6 +3,7 @@ package cl.aracridav.svua.shared.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -48,6 +49,7 @@ import cl.aracridav.svua.mantenimiento.orden.entity.EstadoOrden;
 import cl.aracridav.svua.mantenimiento.orden.entity.OrdenMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.entity.TipoMantenimiento;
 import cl.aracridav.svua.mantenimiento.orden.repository.OrdenMantenimientoRepository;
+import cl.aracridav.svua.notificacion.service.NotificacionService;
 import cl.aracridav.svua.mantenimiento.repuesto.dto.request.RepuestoImportRowDTO;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.TipoRepuesto;
@@ -87,6 +89,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
     private final ImportProgressService progressService;
     private final ImportFileLogService importFileLogService;
     private final ImportBatchPersistenceService batchPersistenceService;
+    private final NotificacionService notificacionService;
 
     @PersistenceContext
     private EntityManager em;
@@ -538,7 +541,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                     datos.getHorasEstimadasProveedor(),
                     datos.getCostoManoObraEstimadasProveedor(),
                     empresaId,
-                    usuarioId
+                    usuarioId,
+                    true // 🔒 carga manual: acepta ingreso retroactivo si Estado=COMPLETADA (ver construirOrdenDesdeCampos)
                 );
 
                 validos.add(orden);
@@ -560,6 +564,43 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             try {
                 guardarOrden(validos);
                 asignarIds(resultados, validos, OrdenMantenimiento::getId);
+
+                // 🔥 Ingreso retroactivo (Estado=COMPLETADA en la grilla,
+                // ver construirOrdenDesdeCampos): igual que en el
+                // formulario normal de "Nueva Orden", la orden ya quedo
+                // en PRE_COMPLETADA y ahora hay que disparar los mismos
+                // efectos que una orden real recien terminada
+                // (notificacion al supervisor, estado del activo,
+                // historial). fechaEjecucion != null es la marca de que
+                // la fila vino por esta via (una orden PRE_COMPLETADA
+                // elegida directamente en el dropdown no la trae).
+                for (OrdenMantenimiento orden : validos) {
+
+                    if (orden.getEstado() != EstadoOrden.PRE_COMPLETADA
+                            || orden.getFechaEjecucion() == null) {
+                        continue;
+                    }
+
+                    notificacionService.ordenPreCompletada(orden);
+
+                    Activo activo = orden.getActivo();
+                    EstadoActivo viejoEstadoActivo = activo.getEstadoActual();
+
+                    if (viejoEstadoActivo != EstadoActivo.OPERATIVO) {
+
+                        activo.setEstadoActual(EstadoActivo.OPERATIVO);
+                        activoRepository.save(activo);
+
+                        historialEstadoActivoService.registrarCambioEstado(
+                            activo.getId(),
+                            EstadoActivo.OPERATIVO,
+                            viejoEstadoActivo,
+                            "Ingreso retroactivo orden # " + orden.getId() + " (pendiente aprobación final)",
+                            usuarioId
+                        );
+                    }
+                }
+
             } catch (Exception e) {
                 marcarLoteComoFallido(resultados, e);
             }
@@ -935,7 +976,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
             horaEstimada,
             costoManoObraEstimada,
             empresaId,
-            usuarioId
+            usuarioId,
+            false // 🔒 Excel: nunca se permite ingreso retroactivo (ver construirOrdenDesdeCampos)
         );
     }
 
@@ -1104,7 +1146,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         BigDecimal horasEstimada,
         BigDecimal costoManoObraEstimada,
         Long empresaId,
-        Long usuarioId
+        Long usuarioId,
+        boolean esCargaManual
     ) {
 
         if (titulo == null || titulo.isBlank()) {
@@ -1128,6 +1171,15 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         TipoMantenimiento tipo = parseEnumOrThrow(TipoMantenimiento.class, tipoMantenimientoStr, "Tipo de mantenimiento inválido");
         EstadoOrden estado = parseEnumOrThrow(EstadoOrden.class, estadoStr, "Estado inválido");
 
+        // 🔒 Ingreso retroactivo (orden ya COMPLETADA, con tiempo real
+        // editable) solo esta permitido desde la carga manual (grilla):
+        // por Excel solo se pueden ingresar ordenes a futuro.
+        if (!esCargaManual && estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA) {
+            throw new BusinessException(
+                "Por Excel solo se pueden ingresar ordenes en estado PENDIENTE o PROGRAMADA"
+            );
+        }
+
         if (activoNombre == null || activoNombre.isBlank()) {
             throw new BusinessException("Activo requerido");
         }
@@ -1141,6 +1193,11 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         o.setFechaProgramada(fechaProgramada);
         o.setFechaTermino(fechaProgramada.plusMinutes(duracionMinutos));
         o.setDuracionSegundos(Long.valueOf(duracionMinutos * 60));
+        // 🔥 duracion ESTIMADA (planificada), registrada una sola vez.
+        // Para una fila retroactiva (ver mas abajo) duracionMinutos pasa
+        // a representar la duracion REAL, asi que ahi se recalcula desde
+        // horasEstimada (la estimacion propia de esa fila) en vez de esto.
+        o.setDuracionEstimadaSegundos(Long.valueOf(duracionMinutos * 60));
         o.setTipoMantenimiento(tipo);
         o.setEstado(estado);
         o.setObservaciones(observaciones);
@@ -1151,6 +1208,64 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         o.setHorasEstimadasProveedor(horasEstimada);
         o.setCostoManoObraEstimadasProveedor(costoManoObraEstimada);
         o.setEmpresa(empresa);
+
+        // 🔒 Ingreso retroactivo (solo carga manual, nunca Excel): si la
+        // fila ya viene como COMPLETADA, fechaProgramada/duracionMinutos
+        // se interpretan como el inicio y la duracion REAL del trabajo
+        // (no una estimacion a futuro), y quedan sujetos a la misma
+        // regla de 24 horas que el formulario normal (ver
+        // OrdenMantenimientoServiceImpl.construirOrdenRetroactiva). La
+        // orden queda en PRE_COMPLETADA (no COMPLETADA): de ahi en
+        // adelante se comporta igual que una orden normal recien
+        // terminada (los efectos -notificacion, estado del activo,
+        // historial- se disparan en procesarOrdenesManual una vez que
+        // el lote ya se guardo y tiene id).
+        if (esCargaManual && estado == EstadoOrden.COMPLETADA) {
+
+            LocalDateTime ahora = LocalDateTime.now();
+
+            if (fechaProgramada.isBefore(ahora.minusHours(24))) {
+                throw new BusinessException(
+                    "El ingreso retroactivo solo permite registrar trabajos de hasta 24 horas atras"
+                );
+            }
+
+            if (o.getFechaTermino().isAfter(ahora)) {
+                throw new BusinessException(
+                    "Una orden completada no puede tener una fecha/hora de termino futura"
+                );
+            }
+
+            o.setEstado(EstadoOrden.PRE_COMPLETADA);
+            o.setFechaEjecucion(fechaProgramada);
+            o.setFechaFinEjecucion(o.getFechaTermino());
+            o.setUsuarioEjecucion(usuario);
+            o.setUsuarioPreFinalizacion(usuario);
+
+            // 🔥 en esta fila duracionMinutos paso a representar la
+            // duracion REAL (ver comentario mas arriba), asi que la
+            // duracion ESTIMADA no puede salir de ahi: se deriva de
+            // horasEstimada, la estimacion propia que trae la fila.
+            if (horasEstimada != null) {
+                o.setDuracionEstimadaSegundos(
+                    horasEstimada.multiply(BigDecimal.valueOf(3600)).longValue()
+                );
+            }
+
+            // 🔥 horasEstimada/costoManoObraEstimada de la fila (seteados
+            // arriba) son el estimado propio que el usuario ya cargo para
+            // esta orden: NO se tocan aqui. Solo se calculan los campos
+            // "reales" en base a la duracion real (fechaProgramada/
+            // duracionMinutos interpretados como inicio y duracion reales
+            // para una fila retroactiva, ver comentario mas arriba).
+            BigDecimal horasReales = BigDecimal.valueOf(o.getDuracionSegundos())
+                .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+
+            BigDecimal valorHoraSeguro = valorHora != null ? valorHora : BigDecimal.ZERO;
+            BigDecimal costoManoObra = horasReales.multiply(valorHoraSeguro);
+            o.setHorasRealesProveedor(horasReales);
+            o.setCostoManoObraProveedor(costoManoObra);
+        }
 
         return o;
     }

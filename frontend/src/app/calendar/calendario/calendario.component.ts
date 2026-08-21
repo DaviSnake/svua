@@ -59,6 +59,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   // resto de los roles el calendario sigue mostrando solo su propia
   // empresa, como antes.
   esSuperAdmin = false;
+
+  // 🔥 Ingreso retroactivo de ordenes (solo SUPER_ADMIN / ADMIN_EMPRESA,
+  // ver OrdenMantenimientoServiceImpl.construirOrdenRetroactiva).
+  esAdminEmpresa = false;
+  puedeIngresoRetroactivo = false;
   empresas: Empresa[] = [];
   empresasFiltradas: Empresa[] = [];
   filtroEmpresaControl = new FormControl();
@@ -392,6 +397,8 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     });
 
     this.esSuperAdmin = this.authService.isAdmin();
+    this.esAdminEmpresa = this.authService.isAdminEmpresa();
+    this.puedeIngresoRetroactivo = this.esSuperAdmin || this.esAdminEmpresa;
 
     if (this.esSuperAdmin) {
       this.initFiltroEmpresa();
@@ -414,7 +421,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       costoManoObraEstimada: [''],
       costoManoObra: [''],
       tipoMantenimiento: [null, Validators.required],
-      repuestos: this.fb.array([])
+      repuestos: this.fb.array([]),
+      // 🔥 Ingreso retroactivo: al marcarlo, "Fecha"/"Duración (min)"
+      // dejan de ser obligatorias y en su lugar se piden el inicio y
+      // termino REALES del trabajo (ver onToggleIngresoRetroactivo).
+      ingresoRetroactivo: [false],
+      fechaEjecucionReal: [''],
+      fechaFinEjecucionReal: ['']
     });
 
     this.repuestoForm = this.fb.group({
@@ -464,8 +477,23 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.ordenMantencionForm.get('valorHora')?.valueChanges
       .subscribe(valor => {
 
-        this.calcularCostoManoObra();
+        if (this.ordenMantencionForm.get('ingresoRetroactivo')?.value) {
+          this.calcularHorasReales();
+        } else {
+          this.calcularCostoManoObra();
+        }
       });
+
+    // 🔥 Ingreso retroactivo: al fijar el inicio y/o termino real del
+    // trabajo, se calculan automaticamente las horas (estimadas y
+    // reales, que en este caso son la misma) y el costo de mano de
+    // obra (estimado y real) en base a esa duracion, sin pedirlos
+    // aparte.
+    this.ordenMantencionForm.get('fechaEjecucionReal')?.valueChanges
+      .subscribe(() => this.calcularHorasReales());
+
+    this.ordenMantencionForm.get('fechaFinEjecucionReal')?.valueChanges
+      .subscribe(() => this.calcularHorasReales());
 
     this.cargarEventos();
     this.cargarActivos();
@@ -480,15 +508,34 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
   const fecha = info.start;
 
-  const ahora = new Date();
-
-  if (fecha < ahora) {
+  // 🔥 se permite crear ordenes hasta 24h atras (ingreso retroactivo,
+  // ver puedeIngresoRetroactivo en el formulario): antes cualquier
+  // fecha pasada, sin importar cuanto, quedaba bloqueada aqui mismo,
+  // impidiendo siquiera abrir el modal.
+  if (this.esFechaDemasiadoAntigua(fecha)) {
     Swal.fire({
       toast: true,
       position: 'top-end',
       icon: 'warning',
       title: 'No puedes usar fechas pasadas',
       timer: 2000,
+      showConfirmButton: false
+    });
+
+    return;
+  }
+
+  // 🔥 fecha pasada (dentro de las 24h permitidas) pero el usuario no
+  // tiene el rol para ingreso retroactivo: se bloquea aca mismo, con
+  // el mismo mensaje que se usa al intentar arrastrar sin permiso, en
+  // vez de abrir el modal igual y dejarla como una creacion normal.
+  if (fecha.getTime() < Date.now() && !this.puedeIngresoRetroactivo) {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'warning',
+      title: 'No tienes permiso para ingresar ordenes de forma retroactiva',
+      timer: 2500,
       showConfirmButton: false
     });
 
@@ -531,6 +578,79 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.ordenMantencionForm.patchValue({
       costoManoObraEstimada: this.formatearMilesBlock(costoManoObraEstimada)
     });
+  }
+
+  // 🔥 hora estimada = duracion ESTIMADA (segundos) / 3600. Se usa al
+  // mostrar una orden existente, para que "Horas estimadas" salga
+  // siempre de la duracion planificada registrada en el backend
+  // (duracionEstimadaSegundos), no de un campo aparte que pudiera
+  // quedar desactualizado.
+  private segundosAHoras(segundos: number | null | undefined): number | null {
+    if (segundos === null || segundos === undefined) {
+      return null;
+    }
+
+    return Math.round((segundos / 3600) * 100) / 100;
+  }
+
+  // 🔥 Ingreso retroactivo: el trabajo ya se realizo, asi que "horas
+  // estimadas" y "horas reales" (y sus costos) son la misma cifra,
+  // calculada a partir del inicio/termino real informado.
+  calcularHorasReales(): void {
+
+    if (!this.ordenMantencionForm.get('ingresoRetroactivo')?.value) {
+      return;
+    }
+
+    const inicio = this.ordenMantencionForm.get('fechaEjecucionReal')?.value;
+    const fin = this.ordenMantencionForm.get('fechaFinEjecucionReal')?.value;
+
+    if (!inicio || !fin) {
+      return;
+    }
+
+    const inicioMs = new Date(inicio).getTime();
+    const finMs = new Date(fin).getTime();
+    const horas = (finMs - inicioMs) / 3600000;
+
+    if (!isFinite(horas) || horas <= 0) {
+      return;
+    }
+
+    const horasRedondeadas = Math.round(horas * 100) / 100;
+
+    let valorHora = String(this.ordenMantencionForm.get('valorHora')?.value || 0);
+    valorHora = valorHora.replace(/\./g, '');
+    valorHora = valorHora.replace(/\D/g, '');
+    const costoManoObra = Number(valorHora) * horasRedondeadas;
+
+    // 🔥 se guarda el numero CRUDO (no formateado) en el form control:
+    // el input de "Costo mano de obra" en el HTML ya le aplica
+    // formatearMilesBlock() al leerlo para mostrarlo ([value]="..."),
+    // asi que si aca se guardaba ya formateado ("1.300") se formateaba
+    // DOS veces: Number("1.300") interpreta el punto como decimal
+    // (no como separador de miles) y da 1.3 -> "1,3". Guardando el
+    // numero tal cual, el formateo lo hace una sola vez el template.
+    const patchReales: any = {
+      horas: horasRedondeadas,
+      costoManoObra: costoManoObra
+    };
+
+    // 🔥 "estimado = real" solo aplica cuando se esta CREANDO una
+    // orden retroactiva nueva (modoEdicion=false): ahi no existe una
+    // estimacion propia distinta, asi que se igualan (asi el campo
+    // "Horas estimadas", que es readonly, se va reflejando en vivo
+    // mientras se completan las fechas de inicio/termino real). Si
+    // se esta editando/viendo una orden que YA existia (modoEdicion=true),
+    // su horasEstimadas/costoManoObraEstimada original (calculado en
+    // base a su propia duracion planificada) NO debe pisarse con lo
+    // calculado desde las horas reales.
+    if (!this.modoEdicion) {
+      patchReales.horasEstimadas = horasRedondeadas;
+      patchReales.costoManoObraEstimada = this.formatearMilesBlock(costoManoObra);
+    }
+
+    this.ordenMantencionForm.patchValue(patchReales);
   }
 
   cargarProveedores() {
@@ -620,7 +740,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
           costoManoObraEstimada: ordenMantencion.costoManoObraEstimada,
           costoManoObra: ordenMantencion.costoManoObra,
           repuestos: ordenMantencion.repuestos,
-          tieneChecklist: ordenMantencion.tieneChecklist
+          tieneChecklist: ordenMantencion.tieneChecklist,
+          fechaEjecucion: ordenMantencion.fechaEjecucion,
+          fechaFinEjecucion: ordenMantencion.fechaFinEjecucion,
+          duracionEstimadaSegundos: ordenMantencion.duracionEstimadaSegundos
         }
       }));
 
@@ -696,15 +819,29 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   onDateClick(info: any) {
     const fecha = info.date;
 
-    const ahora = new Date();
-
-    // 🔥 comparar fechas
-    if (fecha < ahora) {
+    // 🔥 se permite crear ordenes hasta 24h atras (ingreso retroactivo).
+    if (this.esFechaDemasiadoAntigua(fecha)) {
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'warning',
         title: 'No puedes usar fechas pasadas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      return;
+    }
+
+    // 🔥 fecha pasada (dentro de las 24h permitidas) pero el usuario no
+    // tiene el rol para ingreso retroactivo: se bloquea aca mismo, con
+    // el mismo mensaje que se usa al intentar arrastrar sin permiso, en
+    // vez de abrir el modal igual y dejarla como una creacion normal.
+    if (fecha.getTime() < Date.now() && !this.puedeIngresoRetroactivo) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No tienes permiso para ingresar ordenes de forma retroactiva',
         showConfirmButton: false,
         timer: 2500
       });
@@ -726,6 +863,10 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       fechaHora: fechaLocal
      });
 
+    // 🔥 si se pincho dentro de las ultimas 24h, se asume ingreso
+    // retroactivo y se marca el checkbox solo.
+    this.aplicarIngresoRetroactivoSiCorresponde(fecha);
+
     this.repuestosAsociados = [];
 
     this.mostrarModal = true;
@@ -736,14 +877,34 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     if (!info.event.start) return;
 
     const id = info.event.id;
-    const nuevaFecha = info.event.start;
+    // 🔥 clonar la fecha: info.revert() puede mutar el Date interno del
+    // evento, y esta variable se sigue usando despues de revertir para
+    // precargar el ingreso retroactivo.
+    const nuevaFecha = new Date(info.event.start.getTime());
 
     const ahora = new Date();
 
     this.estadoOrden = info.event.extendedProps?.estado;
 
-    // 🔥 comparar fechas
-    if (nuevaFecha < ahora) {
+    // 🔥 solo se puede arrastrar (reprogramar a futuro o ingreso
+    // retroactivo hacia el pasado) una orden PENDIENTE o PROGRAMADA;
+    // el resto de los estados (EN_EJECUCION, PRE_COMPLETADA,
+    // COMPLETADA, CANCELADA, ATRASADA) quedan bloqueados por completo.
+    if (!['PENDIENTE', 'PROGRAMADA'].includes(this.estadoOrden)) {
+      info.revert();
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No puedes arrastrar esta orden',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      return;
+    }
+
+    // 🔥 mas de 24h atras: sigue bloqueado igual que antes
+    if (this.esFechaDemasiadoAntigua(nuevaFecha)) {
       info.revert();
       Swal.fire({
         toast: true,
@@ -756,16 +917,26 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.estadoOrden === 'EN_EJECUCION' || this.estadoOrden === 'COMPLETADA') {
-      info.revert();
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'warning',
-        title: 'No puedes Reprogramar',
-        showConfirmButton: false,
-        timer: 2500
-      });
+    // 🔥 fecha dentro de las ultimas 24h: en vez de "reprogramar", se
+    // trata directamente como ingreso retroactivo (la orden ya se
+    // realizo) — sin pedir confirmacion, igual que si el ingreso
+    // retroactivo ya estuviera marcado.
+    if (nuevaFecha.getTime() < ahora.getTime()) {
+
+      if (!this.puedeIngresoRetroactivo) {
+        info.revert();
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: 'No tienes permiso para ingresar ordenes de forma retroactiva',
+          showConfirmButton: false,
+          timer: 2500
+        });
+        return;
+      }
+
+      this.guardarIngresoRetroactivoDesdeDrag(info, nuevaFecha);
       return;
     }
 
@@ -874,7 +1045,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       proveedorId: info.event.extendedProps?.proveedorId || '',
       costoTotal: info.event.extendedProps?.costoTotal || '',
       valorHora: this.formatearMilesBlock(info.event.extendedProps?.valorHora) || '',
-      horasEstimadas: info.event.extendedProps?.horasEstimadas || '',
+      horasEstimadas: info.event.extendedProps?.horasEstimadas,
       horas: info.event.extendedProps?.horasReal || '',
       costoManoObraEstimada: info.event.extendedProps?.costoManoObraEstimada || '',
       costoManoObra: info.event.extendedProps?.costoManoObra || '',
@@ -889,9 +1060,90 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.setProveedorSeleccionado(info.event.extendedProps?.proveedorId);
     this.tipoMantenimientoControl.setValue(info.event.extendedProps?.tipoMantenimiento || '');
 
+    // 🔥 en PRE_COMPLETADA/COMPLETADA se muestra el horario REAL de
+    // ejecucion (Inicio real / Termino real) en vez de la fecha
+    // estimada de la programacion. emitEvent:false para no disparar
+    // calcularHorasReales() y pisar horas/costoManoObra, que ya se
+    // patchearon arriba con los valores exactos que calculo el backend.
+    if (['PRE_COMPLETADA', 'COMPLETADA'].includes(this.estadoOrden)) {
+      const fechaEjecucion = info.event.extendedProps?.fechaEjecucion;
+      const fechaFinEjecucion = info.event.extendedProps?.fechaFinEjecucion;
+
+      this.ordenMantencionForm.patchValue({
+        ingresoRetroactivo: true,
+        fechaEjecucionReal: fechaEjecucion ? this.formatFechaLocal(new Date(fechaEjecucion)) : '',
+        fechaFinEjecucionReal: fechaFinEjecucion ? this.formatFechaLocal(new Date(fechaFinEjecucion)) : ''
+      }, { emitEvent: false });
+    } else {
+      this.ordenMantencionForm.patchValue({ ingresoRetroactivo: false }, { emitEvent: false });
+    }
+
     this.aplicarEstadoFormulario();
 
     this.mostrarModal = true;
+  }
+
+  // 🔥 Ingreso retroactivo al arrastrar una orden ya programada hasta
+  // 24h atras: se guarda de inmediato como si el ingreso retroactivo
+  // ya estuviera marcado (sin pedir confirmacion ni pasar por el
+  // formulario), con inicio = punto donde se soltó el drag y termino =
+  // inicio + la duracion en minutos que ya tenia la orden. Al terminar,
+  // se reabre el modal ya como una orden PRE_COMPLETADA normal (con sus
+  // botones habituales: Cancelar, Adjuntar/Validar checklist, Completar).
+  private guardarIngresoRetroactivoDesdeDrag(info: any, fechaInicio: Date): void {
+
+    const id = Number(info.event.id);
+    const duracionMinutos = Number(info.event.extendedProps?.duracionMinutos) || 0;
+    const fechaFin = new Date(fechaInicio.getTime() + duracionMinutos * 60000);
+
+    const repuestos = (info.event.extendedProps?.repuestos || []).map((r: any) => ({
+      repuestoId: r.repuestoId,
+      cantidad: r.cantidad
+    }));
+
+    const data: any = {
+      titulo: info.event.title,
+      tipoMantenimiento: info.event.extendedProps?.tipoMantenimiento,
+      observaciones: info.event.extendedProps?.observaciones,
+      repuestos,
+      ingresoRetroactivo: true,
+      fechaEjecucionReal: this.formatFechaLocal(fechaInicio),
+      fechaFinEjecucionReal: this.formatFechaLocal(fechaFin)
+    };
+
+    this.ordenMantencionService.actualizar(id, data).subscribe({
+      next: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Orden marcada como realizada (pendiente aprobación final)',
+          showConfirmButton: false,
+          timer: 2000
+        });
+
+        // 🔥 el arrastre queda resuelto con el toast de arriba: ya no
+        // se reabre el modal automaticamente despues de guardar el
+        // ingreso retroactivo.
+        this.cargarEventos();
+      },
+      error: (err) => {
+        info.revert();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.error?.error || 'No se pudo registrar el ingreso retroactivo'
+        });
+      }
+    });
+  }
+
+  private reabrirOrdenActualizada(id: number): void {
+    const evento = this.calendarComponent?.getApi()?.getEventById(String(id));
+
+    if (evento) {
+      this.onEventClick({ event: evento });
+    }
   }
 
   // 💾 GUARDAR (CREAR / EDITAR)
@@ -912,14 +1164,18 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     }
 
     const { titulo, observaciones, activoId, proveedorId, tipoMantenimiento, duracionMinutos,
-            fechaHora, valorHora, horasEstimadas, costoManoObraEstimada } = this.ordenMantencionForm.getRawValue();
+            fechaHora, valorHora, horasEstimadas, costoManoObraEstimada,
+            ingresoRetroactivo, fechaEjecucionReal, fechaFinEjecucionReal } = this.ordenMantencionForm.getRawValue();
 
-    const data = {
+    // 🔥 Ingreso retroactivo aplica tanto al CREAR una orden nueva como
+    // al EDITAR una existente (p.ej. al arrastrarla en el calendario
+    // hasta 24h atras): la orden queda PRE_COMPLETADA con el tiempo
+    // real declarado, en vez de PROGRAMADA con fecha/duracion estimadas.
+    const esRetroactivo = !!ingresoRetroactivo;
+
+    const data: any = {
       titulo,
-      fechaProgramada: fechaHora,
-      duracionMinutos,
       tipoMantenimiento,
-      estado: "PROGRAMADA",
       observaciones,
       activoId,
       proveedorId,
@@ -931,6 +1187,16 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       // 🔥 NUEVO
       repuestos: this.repuestosFormArray.getRawValue()
     };
+
+    if (esRetroactivo) {
+      data.ingresoRetroactivo = true;
+      data.fechaEjecucionReal = fechaEjecucionReal;
+      data.fechaFinEjecucionReal = fechaFinEjecucionReal;
+    } else {
+      data.fechaProgramada = fechaHora;
+      data.duracionMinutos = duracionMinutos;
+      data.estado = "PROGRAMADA";
+    }
 
     if (this.modoEdicion) {
       // 🔵 EDITAR
@@ -984,12 +1250,37 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       fechaHora: this.formatFechaLocal(fecha)
     });
 
+    // 🔥 si se pincho dentro de las ultimas 24h, se asume ingreso
+    // retroactivo y se marca el checkbox solo (ver esFechaDemasiadoAntigua:
+    // mas de 24h atras ya ni siquiera llega a abrir el modal).
+    this.aplicarIngresoRetroactivoSiCorresponde(fecha);
+
     this.modoEdicion = false;
     this.mostrarModal = true;
 
     setTimeout(() => {
       this.calendarComponent?.getApi()?.updateSize();
     }, 100);
+  }
+
+  // 🔒 Ingreso retroactivo: si la fecha clickeada ya paso (pero esta
+  // dentro de la ventana de 24h permitida) y el usuario tiene el rol
+  // necesario, se marca el checkbox y se precarga el inicio real con
+  // esa misma fecha/hora.
+  private aplicarIngresoRetroactivoSiCorresponde(fecha: Date): void {
+
+    const yaPaso = fecha.getTime() < Date.now();
+
+    if (!this.puedeIngresoRetroactivo || !yaPaso) {
+      return;
+    }
+
+    this.ordenMantencionForm.patchValue({
+      ingresoRetroactivo: true,
+      fechaEjecucionReal: this.formatFechaLocal(fecha)
+    });
+
+    this.onToggleIngresoRetroactivo();
   }
 
   // ❌ CANCELAR ORDEN
@@ -1786,9 +2077,9 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.handleDateInteraction(new Date());
   }
   handleDateInteraction(date: Date) {
-    const now = new Date();
 
-    if (date < now) {
+    // 🔥 se permite crear ordenes hasta 24h atras (ingreso retroactivo).
+    if (this.esFechaDemasiadoAntigua(date)) {
       Swal.fire({
         toast: true,
         position: 'top-end',
@@ -1801,6 +2092,15 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     }
 
     this.abrirModalCreacion(date);
+  }
+
+  // 🔒 true si la fecha es de mas de 24 horas atras (limite del ingreso
+  // retroactivo, ver OrdenMantenimientoServiceImpl.construirOrdenRetroactiva).
+  // Una fecha pasada pero dentro de esas 24h SI se permite: el usuario
+  // podra marcar "Ingreso retroactivo" dentro del modal para declararla.
+  private esFechaDemasiadoAntigua(fecha: Date): boolean {
+    const veinticuatroHorasMs = 24 * 60 * 60 * 1000;
+    return fecha.getTime() < Date.now() - veinticuatroHorasMs;
   }
 
   formatearMilesBlock(valor: any): string {
@@ -1818,6 +2118,41 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.activoControl.reset();
     this.proveedorControl.reset();
     this.tipoMantenimientoControl.reset();
+
+    // 🔥 reset() solo limpia VALORES: los validadores de fechaHora /
+    // duracionMinutos vs fechaEjecucionReal / fechaFinEjecucionReal
+    // hay que devolverlos al estado "normal" (no retroactivo) a mano.
+    this.onToggleIngresoRetroactivo();
+  }
+
+  // 🔥 Ingreso retroactivo: al marcarlo, "Fecha"/"Duración (min)" dejan
+  // de ser obligatorias (la orden ya no se programa, ya se hizo) y en
+  // su lugar se exigen el inicio y termino REALES del trabajo.
+  onToggleIngresoRetroactivo(): void {
+
+    const retroactivo = !!this.ordenMantencionForm.get('ingresoRetroactivo')?.value;
+
+    const fechaHora = this.ordenMantencionForm.get('fechaHora');
+    const duracionMinutos = this.ordenMantencionForm.get('duracionMinutos');
+    const fechaEjecucionReal = this.ordenMantencionForm.get('fechaEjecucionReal');
+    const fechaFinEjecucionReal = this.ordenMantencionForm.get('fechaFinEjecucionReal');
+
+    if (retroactivo) {
+      fechaHora?.clearValidators();
+      duracionMinutos?.clearValidators();
+      fechaEjecucionReal?.setValidators([Validators.required]);
+      fechaFinEjecucionReal?.setValidators([Validators.required]);
+    } else {
+      fechaHora?.setValidators([Validators.required]);
+      duracionMinutos?.setValidators([Validators.required, Validators.pattern('^[0-9]+$')]);
+      fechaEjecucionReal?.clearValidators();
+      fechaFinEjecucionReal?.clearValidators();
+    }
+
+    fechaHora?.updateValueAndValidity();
+    duracionMinutos?.updateValueAndValidity();
+    fechaEjecucionReal?.updateValueAndValidity();
+    fechaFinEjecucionReal?.updateValueAndValidity();
   }
 
   formatFechaLocal(date: Date): string {

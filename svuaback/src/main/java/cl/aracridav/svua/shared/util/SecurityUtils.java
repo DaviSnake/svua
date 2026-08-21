@@ -70,4 +70,28 @@ public class SecurityUtils {
                 .anyMatch(role -> role.equals("ROLE_SUPER_ADMIN"));
     }
 
+    public static boolean esAdminEmpresa() {
+
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        return auth.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN_EMPRESA"));
+    }
+
+    // 🔒 Ingreso retroactivo de ordenes de mantencion (ver
+    // OrdenMantenimientoServiceImpl y ExcelImportServiceImpl): solo
+    // Super Admin o Admin Empresa pueden declarar una orden ya
+    // completada con tiempo real editable, saltandose el flujo en vivo.
+    public static boolean puedeIngresarRetroactivo() {
+        return esSuperAdmin() || esAdminEmpresa();
+    }
+
 }

@@ -654,6 +654,29 @@ textarea {
   grid-column: span 2;
 }
 
+/* 🔥 Checkbox "Ingreso retroactivo": el checkbox hereda el estilo
+   generico de input (padding/borde/fondo grandes), asi que queda
+   desalineado con el texto si no se resetea aparte. */
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  font-size: 14px;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.checkbox-inline input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: #3b82f6;
+  flex-shrink: 0;
+}
+
 .acciones {
   grid-column: span 2;
   display: flex;

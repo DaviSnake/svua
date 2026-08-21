@@ -28,4 +28,13 @@ public class OrdenMantenimientoRequest {
     private Long proveedorId;
     private List<OrdenRepuestoRequest> repuestos;
 
+    // 🔥 Ingreso retroactivo (solo SUPER_ADMIN / ADMIN_EMPRESA, ver
+    // OrdenMantenimientoServiceImpl.construirOrdenRetroactiva): permite
+    // declarar una orden ya completada, con la fecha/hora real de
+    // inicio y termino del trabajo (hasta 24 horas atras), en vez de
+    // pasar por el flujo en vivo (ejecutar -> pre-detener -> completar).
+    private Boolean ingresoRetroactivo;
+    private LocalDateTime fechaEjecucionReal;
+    private LocalDateTime fechaFinEjecucionReal;
+
 }

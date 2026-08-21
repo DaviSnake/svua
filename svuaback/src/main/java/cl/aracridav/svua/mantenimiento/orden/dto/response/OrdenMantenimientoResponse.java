@@ -17,7 +17,9 @@ public class OrdenMantenimientoResponse {
     private LocalDateTime fechaProgramada;
     private LocalDateTime fechaTermino;
     private Long duracionMinutos;
+    private Long duracionEstimadaSegundos;
     private LocalDateTime fechaEjecucion;
+    private LocalDateTime fechaFinEjecucion;
     private TipoMantenimiento tipoMantenimiento;
     private EstadoOrden estado;
     private BigDecimal costoTotal;

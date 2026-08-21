@@ -242,13 +242,28 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         // que se valida que no haya otra orden activa es al INICIAR la
         // ejecución (ver ejecutarOrden()).
 
-        OrdenMantenimiento orden = construirOrden(
-                req,
-                empresa,
-                activo,
-                usuario,
-                proveedor
-        );
+        // 🔥 Ingreso retroactivo: SUPER_ADMIN / ADMIN_EMPRESA pueden
+        // declarar un trabajo ya realizado (con la fecha/hora real de
+        // inicio y termino) en vez de la creacion normal (que siempre
+        // nace PROGRAMADA y pasa por el flujo en vivo). Queda en
+        // PRE_COMPLETADA, exactamente igual que una orden normal recien
+        // terminada: de ahi en adelante sigue el mismo camino de
+        // siempre (checklist opcional, aviso al supervisor, boton
+        // "Completar" en el calendario).
+        boolean retroactivo = Boolean.TRUE.equals(req.getIngresoRetroactivo());
+
+        if (retroactivo) {
+            // 🔥 mismo resguardo que ejecutarOrden(): no se puede declarar
+            // un trabajo retroactivo si el activo ya tiene otra orden
+            // fisicamente en curso ahora mismo.
+            validarNoExisteOrdenEnCurso(activo.getId());
+        }
+
+        EstadoActivo viejoEstadoActivo = activo.getEstadoActual();
+
+        OrdenMantenimiento orden = retroactivo
+                ? construirOrdenRetroactiva(req, empresa, activo, usuario, proveedor)
+                : construirOrden(req, empresa, activo, usuario, proveedor);
 
         // 🔥 guardar primero
         orden = ordenRepository.save(orden);
@@ -261,7 +276,139 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 empresa
         );
 
+        if (retroactivo) {
+
+            // 🔥 la orden retroactiva nunca va a pasar por cambiarEstado()
+            // (que es donde normalmente se recalcula el costoTotal una
+            // vez que los repuestos ya quedaron asociados), asi que se
+            // recalcula aqui mismo, una sola vez.
+            orden.setCostoTotal(calcularCostoTotal(orden));
+            orden = ordenRepository.save(orden);
+
+            // 🔥 misma cola de efectos que cambiarEstado(orden, PRE_COMPLETADA):
+            // notificacion al supervisor, actualizacion del estado del
+            // activo, e historial (solo si el estado del activo cambio
+            // de verdad).
+            notificacionService.ordenPreCompletada(orden);
+
+            actualizarEstadoActivo(orden, EstadoOrden.PRE_COMPLETADA);
+
+            EstadoActivo nuevoEstadoActivo = estadoActivoParaOrden(EstadoOrden.PRE_COMPLETADA);
+
+            if (viejoEstadoActivo != nuevoEstadoActivo) {
+                historialEstadoActivoService.registrarCambioEstado(
+                    activo.getId(),
+                    nuevoEstadoActivo,
+                    viejoEstadoActivo,
+                    "Ingreso retroactivo orden # " + orden.getId() + " (pendiente aprobación final)",
+                    usuario.getId()
+                );
+            }
+        }
+
         return mapper.mapOrdenMantenimientoResponse(orden);
+    }
+
+    // 🔒 Ingreso retroactivo de ordenes de mantencion: crea la orden
+    // directamente en estado PRE_COMPLETADA, con la fecha/hora real de
+    // inicio y termino declaradas por el usuario (en vez de que el
+    // sistema las calcule en vivo via ejecutar/pre-detener). Solo
+    // SUPER_ADMIN o ADMIN_EMPRESA pueden usar esta via; el trabajo
+    // declarado no puede haber comenzado hace mas de 24 horas ni haber
+    // terminado en el futuro. Desde aqui en adelante la orden se
+    // comporta igual que una orden normal que acaba de llegar a
+    // PRE_COMPLETADA (ver crearOrden): sigue pendiente de que un
+    // supervisor la complete.
+    private OrdenMantenimiento construirOrdenRetroactiva(
+            OrdenMantenimientoRequest req,
+            Empresa empresa,
+            Activo activo,
+            Usuario usuario,
+            Proveedor proveedor) {
+
+        if (!SecurityUtils.puedeIngresarRetroactivo()) {
+            throw new BusinessException(
+                "Solo Super Admin o Admin Empresa pueden ingresar ordenes de forma retroactiva"
+            );
+        }
+
+        if (activo.getEstadoActual() == EstadoActivo.BAJA) {
+            throw new BusinessException("Activo dado de baja");
+        }
+
+        LocalDateTime inicio = req.getFechaEjecucionReal();
+        LocalDateTime fin = req.getFechaFinEjecucionReal();
+
+        if (inicio == null || fin == null) {
+            throw new BusinessException(
+                "Debe indicar la fecha/hora de inicio y termino reales del trabajo"
+            );
+        }
+
+        if (!fin.isAfter(inicio)) {
+            throw new BusinessException(
+                "La fecha/hora de termino debe ser posterior al inicio"
+            );
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        if (inicio.isBefore(ahora.minusHours(24))) {
+            throw new BusinessException(
+                "El ingreso retroactivo solo permite registrar trabajos de hasta 24 horas atras"
+            );
+        }
+
+        if (fin.isAfter(ahora)) {
+            throw new BusinessException(
+                "La fecha/hora de termino no puede ser futura"
+            );
+        }
+
+        OrdenMantenimiento orden = new OrdenMantenimiento();
+
+        orden.setTitulo(req.getTitulo());
+        orden.setFechaProgramada(inicio);
+        orden.setFechaTermino(fin);
+        orden.setFechaEjecucion(inicio);
+        orden.setFechaFinEjecucion(fin);
+        orden.setUsuarioEjecucion(usuario);
+        orden.setUsuarioPreFinalizacion(usuario);
+
+        long duracionSegundos = Duration.between(inicio, fin).getSeconds();
+        orden.setDuracionSegundos(duracionSegundos);
+        // 🔥 no existe una duracion planificada distinta en este flujo
+        // (la orden se declara directamente como ya realizada), asi que
+        // el estimado registrado es el mismo real declarado.
+        orden.setDuracionEstimadaSegundos(duracionSegundos);
+
+        orden.setTipoMantenimiento(req.getTipoMantenimiento());
+        orden.setEstado(EstadoOrden.PRE_COMPLETADA);
+        orden.setObservaciones(req.getObservaciones());
+
+        orden.setActivo(activo);
+        orden.setUsuario(usuario);
+        orden.setProveedor(proveedor);
+        orden.setEmpresa(empresa);
+
+        orden.setValorHoraProveedor(req.getValorHora());
+
+        // 🔥 la orden ya se realizo: "estimado" y "real" son la misma
+        // cifra. La hora estimada sale de duracionEstimadaSegundos (ya
+        // registrada arriba, igual al real declarado en este flujo) —
+        // se ignoran horasEstimadas/costoManoObraEstimada del request,
+        // que solo tienen sentido para una orden que aun no se ejecuta.
+        BigDecimal horasEstimadas = BigDecimal.valueOf(orden.getDuracionEstimadaSegundos())
+                .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+        BigDecimal horasReales = horasEstimadas;
+        BigDecimal costoManoObra = calcularCosto(horasReales, orden.getValorHoraProveedor());
+
+        orden.setHorasEstimadasProveedor(horasEstimadas);
+        orden.setCostoManoObraEstimadasProveedor(costoManoObra);
+        orden.setHorasRealesProveedor(horasReales);
+        orden.setCostoManoObraProveedor(costoManoObra);
+
+        return orden;
     }
 
 
@@ -280,14 +427,17 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                 new RuntimeException("Orden no encontrada")
             );
 
+        boolean retroactivo = Boolean.TRUE.equals(request.getIngresoRetroactivo());
+
         // =====================================================
         // VALIDAR ESTADO
         // =====================================================
 
         if (
-            orden.getEstado() == EstadoOrden.EN_EJECUCION ||
+            (orden.getEstado() == EstadoOrden.EN_EJECUCION && !retroactivo) ||
             orden.getEstado() == EstadoOrden.CANCELADA ||
-            orden.getEstado() == EstadoOrden.COMPLETADA
+            orden.getEstado() == EstadoOrden.COMPLETADA ||
+            (retroactivo && orden.getEstado() == EstadoOrden.PRE_COMPLETADA)
         ) {
             throw new RuntimeException(
                 "No se puede editar la orden"
@@ -303,6 +453,82 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setTipoMantenimiento(
             request.getTipoMantenimiento()
         );
+
+        // =====================================================
+        // INGRESO RETROACTIVO (marcar como pre completada con
+        // el horario real informado desde el drag del calendario)
+        // =====================================================
+
+        EstadoActivo viejoEstadoActivoRetro = null;
+
+        if (retroactivo) {
+
+            if (!SecurityUtils.puedeIngresarRetroactivo()) {
+                throw new BusinessException("Solo Super Admin o Admin Empresa pueden ingresar ordenes de forma retroactiva");
+            }
+
+            // 🔒 una orden EN_EJECUCION, PRE_COMPLETADA o COMPLETADA no
+            // se puede arrastrar/declarar retroactiva: solo tiene
+            // sentido si todavia no se ha declarado realizada
+            // (PENDIENTE/PROGRAMADA).
+            if (
+                orden.getEstado() != EstadoOrden.PENDIENTE &&
+                orden.getEstado() != EstadoOrden.PROGRAMADA
+            ) {
+                throw new BusinessException("El ingreso retroactivo solo esta permitido si la orden esta pendiente o programada");
+            }
+
+            LocalDateTime inicio = request.getFechaEjecucionReal();
+            LocalDateTime fin = request.getFechaFinEjecucionReal();
+
+            if (inicio == null || fin == null) throw new BusinessException("Debe indicar la fecha/hora de inicio y termino reales del trabajo");
+            if (!fin.isAfter(inicio)) throw new BusinessException("La fecha/hora de termino debe ser posterior al inicio");
+
+            LocalDateTime ahora = LocalDateTime.now();
+            if (inicio.isBefore(ahora.minusHours(24))) throw new BusinessException("El ingreso retroactivo solo permite registrar trabajos de hasta 24 horas atras");
+            if (fin.isAfter(ahora)) throw new BusinessException("La fecha/hora de termino no puede ser futura");
+
+            Usuario usuarioActual = getUsuarioActual();
+
+            viejoEstadoActivoRetro = orden.getActivo().getEstadoActual();
+
+            // 🔥 el bloque en el calendario se posiciona con
+            // fechaProgramada/fechaTermino (ver cargarEventos() en el
+            // front, que usa esos campos y no fechaEjecucion). Si no se
+            // actualizan aca, al recargar el calendario despues del
+            // arrastre la orden vuelve a aparecer en su horario
+            // original — hay que moverla al horario real declarado,
+            // igual que hace construirOrdenRetroactiva() al crearla.
+            orden.setFechaProgramada(inicio);
+            orden.setFechaTermino(fin);
+
+            orden.setFechaEjecucion(inicio);
+            orden.setFechaFinEjecucion(fin);
+            orden.setUsuarioEjecucion(usuarioActual);
+            orden.setUsuarioPreFinalizacion(usuarioActual);
+
+            long duracionSegundos = Duration.between(inicio, fin).getSeconds();
+            orden.setDuracionSegundos(duracionSegundos);
+            orden.setEstado(EstadoOrden.PRE_COMPLETADA);
+
+            // 🔥 el ingreso retroactivo por arrastre debe comportarse
+            // exactamente igual que crear la orden directamente como
+            // retroactiva (ver construirOrdenRetroactiva): una vez que
+            // se declara el horario REAL en que se hizo el trabajo, el
+            // estimado que tenia la orden mientras estaba programada
+            // deja de tener sentido, y pasa a valer lo mismo que lo
+            // real (no queda una duracion "planificada" distinta que
+            // conservar).
+            orden.setDuracionEstimadaSegundos(duracionSegundos);
+
+            BigDecimal horasReales = BigDecimal.valueOf(duracionSegundos).divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+            BigDecimal costoManoObra = calcularCosto(horasReales, orden.getValorHoraProveedor());
+
+            orden.setHorasEstimadasProveedor(horasReales);
+            orden.setCostoManoObraEstimadasProveedor(costoManoObra);
+            orden.setHorasRealesProveedor(horasReales);
+            orden.setCostoManoObraProveedor(costoManoObra);
+        }
 
         // =====================================================
         // ACTUALIZAR REPUESTOS
@@ -423,6 +649,20 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         OrdenMantenimiento actualizada =
             ordenRepository.save(orden);
 
+        if (retroactivo) {
+            notificacionService.ordenPreCompletada(actualizada);
+            actualizarEstadoActivo(actualizada, EstadoOrden.PRE_COMPLETADA);
+            EstadoActivo nuevoEstadoActivoRetro = estadoActivoParaOrden(EstadoOrden.PRE_COMPLETADA);
+
+            if (viejoEstadoActivoRetro != nuevoEstadoActivoRetro) {
+                historialEstadoActivoService.registrarCambioEstado(
+                    actualizada.getActivo().getId(), nuevoEstadoActivoRetro, viejoEstadoActivoRetro,
+                    "Ingreso retroactivo orden # " + actualizada.getId() + " (pendiente aprobación final)",
+                    actualizada.getUsuarioEjecucion().getId()
+                );
+            }
+        }
+
         return mapper.mapOrdenMantenimientoResponse(actualizada);
     }
 
@@ -442,8 +682,17 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
 
         guardarHistorialReprogramacion(orden, nuevaFecha, motivo);
 
+        // 🔥 se preserva la duracion ESTIMADA (duracionEstimadaSegundos),
+        // no duracionSegundos: si la orden es EN_EJECUCION, duracionSegundos
+        // todavia no tiene el tiempo real (recien se calcula al
+        // pre-completarla), pero usar el campo correcto evita cualquier
+        // inconsistencia si en el futuro se reprogramara una orden que ya
+        // tuviera su duracionSegundos con el tiempo real.
+        long duracionMinutosEstimada = Optional.ofNullable(orden.getDuracionEstimadaSegundos())
+            .orElse(orden.getDuracionSegundos()) / 60;
+
         orden.setFechaProgramada(nuevaFecha);
-        orden.setFechaTermino(nuevaFecha.plusMinutes(orden.getDuracionSegundos()/60));
+        orden.setFechaTermino(nuevaFecha.plusMinutes(duracionMinutosEstimada));
 
         return mapper.mapOrdenMantenimientoResponse(ordenRepository.save(orden));
     }
@@ -924,6 +1173,9 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     }
 
     private void validarEstadoReprogramacion(EstadoOrden estado) {
+        // 🔥 una orden EN_EJECUCION, PRE_COMPLETADA o COMPLETADA ya no
+        // se puede arrastrar (ni hacia el futuro ni retroactivamente):
+        // solo PENDIENTE/PROGRAMADA.
         if (estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA) {
             throw new BusinessException("Solo se puede reprogramar en estado PENDIENTE o PROGRAMADA");
         }
@@ -963,9 +1215,21 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
         orden.setEstado(EstadoOrden.PROGRAMADA);
         orden.setCostoTotal(req.getCostoTotal());
         orden.setDuracionSegundos(req.getDuracionMinutos()*60);
-        orden.setHorasEstimadasProveedor(req.getHorasEstimadas());
+        // 🔥 duracion ESTIMADA (planificada), registrada una sola vez y
+        // nunca modificada despues — a diferencia de duracionSegundos,
+        // que se sobrescribe con el tiempo real al ejecutar la orden.
+        orden.setDuracionEstimadaSegundos(req.getDuracionMinutos()*60L);
         orden.setValorHoraProveedor(req.getValorHora());
-        orden.setCostoManoObraEstimadasProveedor(req.getCostoManoObraEstimada());
+
+        // 🔥 hora estimada se calcula desde la duracion ESTIMADA ya
+        // registrada (duracionEstimadaSegundos), no desde lo que mande
+        // el front, para que quede siempre consistente con ella. El
+        // costo estimado, a su vez, sale de esa misma hora estimada.
+        BigDecimal horasEstimadas = BigDecimal.valueOf(orden.getDuracionEstimadaSegundos())
+                .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+        orden.setHorasEstimadasProveedor(horasEstimadas);
+        orden.setCostoManoObraEstimadasProveedor(calcularCosto(horasEstimadas, orden.getValorHoraProveedor()));
+
         orden.setCostoManoObraProveedor(req.getCostoManoObra());
         orden.setObservaciones(req.getObservaciones());
 

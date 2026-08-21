@@ -7,7 +7,9 @@ export interface OrdenMantencion {
   fechaProgramada?: string;
   fechaTermino?: string;
   fechaEjecucion?: string;
+  fechaFinEjecucion?: string;
   duracionMinutos?: string;
+  duracionEstimadaSegundos?: number;
   end?: string;
   estado?: string;
   tipoMantenimiento?: string;

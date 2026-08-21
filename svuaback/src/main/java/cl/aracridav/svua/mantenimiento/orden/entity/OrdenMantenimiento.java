@@ -53,6 +53,19 @@ public class OrdenMantenimiento extends BaseEntity {
     private Long duracionSegundos;
 
     // =========================
+    // DURACIÓN ESTIMADA
+    // =========================
+
+    // 🔥 se registra UNA sola vez al crear la orden y nunca se vuelve a
+    // tocar: es la duracion planificada, distinta de duracionSegundos
+    // (que se sobrescribe con el tiempo REAL una vez que la orden se
+    // ejecuta). Cualquier calculo que necesite "lo estimado" (p.ej. al
+    // reprogramar, o para comparar estimado vs. real) debe usar este
+    // campo, no duracionSegundos.
+    @Column(name = "duracion_estimada_segundos")
+    private Long duracionEstimadaSegundos;
+
+    // =========================
     // TIPO Y ESTADO
     // =========================
 
