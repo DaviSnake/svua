@@ -495,6 +495,24 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.ordenMantencionForm.get('fechaFinEjecucionReal')?.valueChanges
       .subscribe(() => this.calcularHorasReales());
 
+    // 🔥 lo mismo que ya pasa al pinchar/arrastrar en el calendario o
+    // usar el FAB de mobile, pero para cuando el usuario escribe la
+    // fecha directamente en el campo "Fecha" del formulario de
+    // creacion: al tipear/elegir una fecha pasada, se resuelve al
+    // toque (sin esperar a guardar) — mismo formulario reactivo tanto
+    // en desktop como en mobile, asi que esto cubre ambos.
+    this.ordenMantencionForm.get('fechaHora')?.valueChanges
+      .subscribe(valor => this.onFechaHoraIngresada(valor));
+
+    // 🔥 una vez que ya se cambio a la vista de ingreso retroactivo
+    // (Inicio real / Termino real), el campo que queda visible y
+    // editable es "Inicio real", no "Fecha". Si ahi el usuario corrige
+    // la fecha a algo que ya no corresponde a un ingreso retroactivo
+    // (mas de 24h atras, o una fecha futura), hay que resolverlo igual
+    // que arriba en vez de dejarlo pasar en silencio hasta guardar.
+    this.ordenMantencionForm.get('fechaEjecucionReal')?.valueChanges
+      .subscribe(valor => this.onFechaEjecucionRealIngresada(valor));
+
     this.cargarEventos();
     this.cargarActivos();
     this.cargarRepustos();
@@ -1261,6 +1279,112 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.calendarComponent?.getApi()?.updateSize();
     }, 100);
+  }
+
+  // 🔥 se dispara con cada cambio del campo "Fecha" (tipeado a mano o
+  // elegido con el selector nativo, en desktop o mobile) MIENTRAS se
+  // esta CREANDO una orden nueva (no aplica editando una existente).
+  // Si la fecha ingresada ya paso:
+  //   - dentro de las 24h permitidas y el usuario tiene el rol
+  //     necesario -> se pasa solo a la vista de ingreso retroactivo
+  //     (Inicio real / Termino real), igual que al pinchar/arrastrar.
+  //   - dentro de las 24h pero SIN el rol -> mensaje "no tienes
+  //     permisos para crear ordenes retroactivas" y se limpia el campo.
+  //   - mas de 24h atras (para cualquiera, incluso con el rol) ->
+  //     mensaje "no se pueden crear ordenes con fechas pasadas" y se
+  //     limpia el campo.
+  private onFechaHoraIngresada(valor: string): void {
+
+    if (this.modoEdicion || !valor) {
+      return;
+    }
+
+    if (this.ordenMantencionForm.get('ingresoRetroactivo')?.value) {
+      return;
+    }
+
+    const fecha = new Date(valor);
+
+    if (isNaN(fecha.getTime()) || fecha.getTime() >= Date.now()) {
+      return;
+    }
+
+    if (this.esFechaDemasiadoAntigua(fecha)) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No se pueden crear ordenes con fechas pasadas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      this.ordenMantencionForm.get('fechaHora')?.setValue('', { emitEvent: false });
+      return;
+    }
+
+    if (!this.puedeIngresoRetroactivo) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No tienes permisos para crear ordenes retroactivas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      this.ordenMantencionForm.get('fechaHora')?.setValue('', { emitEvent: false });
+      return;
+    }
+
+    this.aplicarIngresoRetroactivoSiCorresponde(fecha);
+  }
+
+  // 🔥 mientras se esta CREANDO una orden nueva y ya se paso a la
+  // vista de ingreso retroactivo (Inicio real / Termino real), este
+  // handler vigila cambios posteriores al campo "Inicio real":
+  //   - si lo corrigen a una fecha futura (o "ahora") -> ya no
+  //     corresponde ingreso retroactivo, se vuelve a la vista normal
+  //     (Fecha / Duracion), llevandose la fecha escrita.
+  //   - si lo corrigen a algo mas de 24h atras -> mensaje "no se
+  //     pueden crear ordenes con fechas pasadas" y se limpia el campo
+  //     (el permiso de rol ya se valido al entrar en modo retroactivo,
+  //     no hace falta volver a chequearlo aca).
+  private onFechaEjecucionRealIngresada(valor: string): void {
+
+    if (this.modoEdicion || !valor) {
+      return;
+    }
+
+    if (!this.ordenMantencionForm.get('ingresoRetroactivo')?.value) {
+      return;
+    }
+
+    const fecha = new Date(valor);
+
+    if (isNaN(fecha.getTime())) {
+      return;
+    }
+
+    if (fecha.getTime() >= Date.now()) {
+      this.ordenMantencionForm.patchValue({
+        ingresoRetroactivo: false,
+        fechaHora: valor
+      });
+      this.onToggleIngresoRetroactivo();
+      return;
+    }
+
+    if (this.esFechaDemasiadoAntigua(fecha)) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'No se pueden crear ordenes con fechas pasadas',
+        showConfirmButton: false,
+        timer: 2500
+      });
+      this.ordenMantencionForm.get('fechaEjecucionReal')?.setValue('', { emitEvent: false });
+      return;
+    }
   }
 
   // 🔒 Ingreso retroactivo: si la fecha clickeada ya paso (pero esta

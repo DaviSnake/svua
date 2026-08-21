@@ -1200,6 +1200,36 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             Usuario usuario,
             Proveedor proveedor) {
 
+        // 🔒 la creacion NORMAL (ingresoRetroactivo=false) es para
+        // AGENDAR trabajo (PROGRAMADA): no debe aceptar una fecha
+        // pasada, porque asi se estaba colando por la puerta de atras
+        // el mismo caso que el ingreso retroactivo ya resuelve con sus
+        // propios resguardos (rol SUPER_ADMIN/ADMIN_EMPRESA, ventana de
+        // 24h) — por ejemplo, un TECNICO en mobile escribiendo a mano
+        // una fecha vieja en el campo "Fecha" del formulario normal, sin
+        // pasar nunca por esos resguardos. Se da un margen de 2 minutos
+        // para no romper el caso legitimo de "agendar para ahora mismo"
+        // (el FAB de mobile precarga la hora actual, y pueden pasar
+        // unos segundos hasta que el usuario guarda).
+        if (
+            req.getFechaProgramada() != null &&
+            req.getFechaProgramada().isBefore(LocalDateTime.now().minusMinutes(2))
+        ) {
+            // 🔥 si el usuario ni siquiera tiene permiso para ingreso
+            // retroactivo (p.ej. TECNICO), no tiene sentido sugerirle
+            // "usa el ingreso retroactivo" — se le informa directamente
+            // que no tiene permiso para crear ordenes retroactivas.
+            if (!SecurityUtils.puedeIngresarRetroactivo()) {
+                throw new BusinessException(
+                    "No tienes permisos para crear ordenes retroactivas"
+                );
+            }
+
+            throw new BusinessException(
+                "La fecha programada no puede ser en el pasado. Si el trabajo ya se realizo, usa el ingreso retroactivo."
+            );
+        }
+
         OrdenMantenimiento orden = new OrdenMantenimiento();
 
         orden.setTitulo(req.getTitulo());
