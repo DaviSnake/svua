@@ -2,7 +2,6 @@ package cl.aracridav.svua.inventario.activo.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,8 +55,11 @@ public class Activo extends BaseEntity {
     @Column(name = "fecha_adquisicion", nullable = false)
     private LocalDate fechaAdquisicion;
 
-    @Column(name = "fecha_creacion", nullable = false)
-    private LocalDateTime fechaCreacion;
+    // 🔥 fechaCreacion ahora se hereda de BaseEntity (columna
+    // "fecha_creacion" ya existente en esta tabla) — se saco la
+    // declaracion propia para no mapear la misma columna dos veces.
+    // getFechaCreacion()/setFechaCreacion() siguen funcionando igual
+    // (heredados), asi que el resto del codigo no cambia.
 
     @Column(name = "valor_adquisicion", nullable = false)
     private BigDecimal valorAdquisicion;

@@ -1,9 +1,5 @@
 package cl.aracridav.svua.notificacion.entity;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,7 +43,10 @@ public class Notificacion extends BaseEntity {
     @Column(name = "tipo_notificacion")
     private TipoNotificacion tipoNotificacion;
 
-    @CreationTimestamp
-    private LocalDateTime fechaCreacion;
+    // 🔥 fechaCreacion ahora se hereda de BaseEntity (antes usaba su
+    // propio @CreationTimestamp) — se saco la declaracion propia para
+    // no mapear la misma columna "fecha_creacion" dos veces.
+    // getFechaCreacion()/setFechaCreacion() siguen funcionando igual
+    // (heredados), asi que el resto del codigo no cambia.
 
 }
