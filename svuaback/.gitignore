@@ -1,5 +1,8 @@
 HELP.md
 target/
+# 🔥 Logs de errores de cargas masivas (ver ImportFileLogService /
+# pantalla "Ver Logs"): quedan en disco, no se versionan.
+log/
 capturas/
 _to_delete/
 logs/
