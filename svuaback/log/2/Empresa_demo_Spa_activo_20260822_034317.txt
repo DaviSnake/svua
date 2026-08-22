@@ -1,3 +1,0 @@
-=== INICIO carga 'activo' (jobId=1160cac0-f1fa-447b-b745-f06b1d2da0ae) - 7 filas - 2026-08-22 03:43:09 ===
-[FILA 2] Tipo de activo no existe: Tipo Activo 5 Demo | datos: ACTDEMO-005 | Activo Demo 5 | Activo Demo 5 | Tipo Activo 5 Demo | 0.0 | 0.0 | 0.0 | 18-jun-2025 | 0.0 | 0.0 | 0.0 | Ubicación 4 Demo | 22222222-2 | 
-=== FIN carga 'activo' (jobId=1160cac0-f1fa-447b-b745-f06b1d2da0ae) - estado=COMPLETADO_CON_ERRORES - total=2, procesados=1, errores=1 - 2026-08-22 03:43:17 ===

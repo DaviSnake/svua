@@ -7,5 +7,9 @@
 !.env.example
 certbot/conf
 certbot/www
+
+# 🔥 Logs de errores de cargas masivas (ver ImportFileLogService /
+# pantalla "Ver Logs"): quedan en disco, no se versionan.
+log/
 # Archivos temporales de parcheo (scripts de patch, verificaciones, locks)
 _to_delete/
