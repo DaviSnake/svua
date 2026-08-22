@@ -1659,12 +1659,14 @@ export class CalendarioComponent implements OnInit, OnDestroy {
               title: 'Orden pre completada',
               html: `
                 <p>
-                  Tiene <b>24 horas</b> para ingresar el checklist de
-                  mantención, o algún repuesto o fungible utilizado.
+                  Aún puede ingresar el checklist de mantención,
+                  repuestos o fungibles utilizados: para eso, abra
+                  nuevamente esta orden antes de que el supervisor la
+                  marque como completada.
                 </p>
                 <p>
-                  Puede hacerlo abriendo nuevamente esta orden, antes de
-                  que el supervisor la dé por completada.
+                  Mientras la orden no esté completada, los costos
+                  asociados no se reflejarán en los reportes.
                 </p>
               `,
               confirmButtonText: 'Entendido'
@@ -1697,8 +1699,7 @@ export class CalendarioComponent implements OnInit, OnDestroy {
 
           <p style="margin-top:15px">
             Puede adjuntar el documento de chequeo (checklist) ahora, o
-            hacerlo después: tiene <b>24 horas</b> para ingresarlo, junto
-            con los repuestos o fungibles utilizados.
+            hacerlo después, junto con los repuestos o fungibles utilizados.
           </p>
           <small style="color:#64748b">
             Formatos permitidos: PDF, JPG, JPEG y PNG.
