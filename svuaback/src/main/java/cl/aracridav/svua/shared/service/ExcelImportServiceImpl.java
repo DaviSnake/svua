@@ -1147,6 +1147,11 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         BigDecimal costoManoObraEstimada,
         Long empresaId,
         Long usuarioId,
+        // 🔥 ya no se usa para validar el estado permitido (Excel y
+        // carga manual aceptan las mismas: PENDIENTE/PROGRAMADA/
+        // COMPLETADA, con la misma regla de 24h para el retroactivo).
+        // Se deja el parametro por si alguna vez hace falta distinguir
+        // el origen para otra cosa (auditoria, etc.).
         boolean esCargaManual
     ) {
 
@@ -1171,12 +1176,16 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         TipoMantenimiento tipo = parseEnumOrThrow(TipoMantenimiento.class, tipoMantenimientoStr, "Tipo de mantenimiento inválido");
         EstadoOrden estado = parseEnumOrThrow(EstadoOrden.class, estadoStr, "Estado inválido");
 
-        // 🔒 Ingreso retroactivo (orden ya COMPLETADA, con tiempo real
-        // editable) solo esta permitido desde la carga manual (grilla):
-        // por Excel solo se pueden ingresar ordenes a futuro.
-        if (!esCargaManual && estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA) {
+        // 🔒 tanto por Excel como por carga manual se puede ingresar una
+        // orden a futuro (PENDIENTE/PROGRAMADA) o declararla retroactiva
+        // (COMPLETADA, con tiempo real editable — ver el bloque de
+        // ingreso retroactivo mas abajo, que aplica la misma regla de
+        // 24 horas sin importar la via de ingreso). Cualquier otro
+        // estado (EN_EJECUCION, CANCELADA, ATRASADA) no tiene sentido
+        // ingresarlo directamente por carga masiva.
+        if (estado != EstadoOrden.PENDIENTE && estado != EstadoOrden.PROGRAMADA && estado != EstadoOrden.COMPLETADA) {
             throw new BusinessException(
-                "Por Excel solo se pueden ingresar ordenes en estado PENDIENTE o PROGRAMADA"
+                "Por carga masiva solo se pueden ingresar ordenes en estado PENDIENTE, PROGRAMADA o COMPLETADA"
             );
         }
 
@@ -1209,7 +1218,7 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         o.setCostoManoObraEstimadasProveedor(costoManoObraEstimada);
         o.setEmpresa(empresa);
 
-        // 🔒 Ingreso retroactivo (solo carga manual, nunca Excel): si la
+        // 🔒 Ingreso retroactivo (tanto Excel como carga manual): si la
         // fila ya viene como COMPLETADA, fechaProgramada/duracionMinutos
         // se interpretan como el inicio y la duracion REAL del trabajo
         // (no una estimacion a futuro), y quedan sujetos a la misma
@@ -1219,8 +1228,9 @@ public class ExcelImportServiceImpl implements ExcelImportService{
         // adelante se comporta igual que una orden normal recien
         // terminada (los efectos -notificacion, estado del activo,
         // historial- se disparan en procesarOrdenesManual una vez que
-        // el lote ya se guardo y tiene id).
-        if (esCargaManual && estado == EstadoOrden.COMPLETADA) {
+        // el lote ya se guardo y tiene id; el pipeline de Excel, al ser
+        // por lotes/async, no dispara esos mismos efectos todavia).
+        if (estado == EstadoOrden.COMPLETADA) {
 
             LocalDateTime ahora = LocalDateTime.now();
 

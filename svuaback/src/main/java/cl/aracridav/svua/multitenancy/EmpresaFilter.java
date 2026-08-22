@@ -4,6 +4,7 @@ import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import cl.aracridav.svua.config.security.UsuarioPrincipal;
@@ -16,6 +17,9 @@ public class EmpresaFilter {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private RlsContextService rlsContextService;
 
     public void activarFiltroEmpresa() {
 
@@ -33,6 +37,13 @@ public class EmpresaFilter {
         }
 
         if (SecurityUtils.esSuperAdmin()) {
+            // 🔒 mismo criterio que ya tenia esta linea para el filtro
+            // de Hibernate (SUPER_ADMIN queda exento), pero ahora
+            // tambien se lo informa a Postgres (ver migracion V27):
+            // sin esto, las consultas cross-empresa de SUPER_ADMIN
+            // (ej. obtenerInformeMantenciones sin empresaId) quedarian
+            // en cero filas por Row Level Security.
+            rlsContextService.aplicarBypass();
             return; // no aplicar filtro
         }
 
@@ -48,6 +59,11 @@ public class EmpresaFilter {
 
         Filter filter = session.enableFilter("empresaFilter");
         filter.setParameter("empresaId", empresaId);
+
+        // 🔒 mismo empresaId que se le acaba de pasar al @Filter de
+        // Hibernate, pero para la policy de Row Level Security de
+        // Postgres (ver migracion V27 y RlsContextService).
+        rlsContextService.aplicarEmpresa(empresaId);
     }
 
 }

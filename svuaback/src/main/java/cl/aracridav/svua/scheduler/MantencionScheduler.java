@@ -20,6 +20,7 @@ import cl.aracridav.svua.mantenimiento.orden.repository.OrdenReprogramacionRepos
 import cl.aracridav.svua.mantenimiento.ordenrepuesto.repository.OrdenRepuestoRepository;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.mantenimiento.repuesto.repository.RepuestoRepository;
+import cl.aracridav.svua.multitenancy.RlsContextService;
 import cl.aracridav.svua.notificacion.repository.NotificacionRepository;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import cl.aracridav.svua.shared.service.EmailService;
@@ -37,6 +38,13 @@ public class MantencionScheduler {
     private final EmailService emailService;
 
     private final NotificacionRepository notificacionRepository;
+    // 🔒 Row Level Security (ver migracion V27): este scheduler corre
+    // fuera de un request HTTP, no hay Authentication en el
+    // SecurityContext, asi que EmpresaFilter nunca se ejecuta para el
+    // (a diferencia de un metodo de servicio llamado desde un
+    // controller). Sin setear esto explicitamente, Postgres devolveria
+    // cero filas en TODAS las consultas de estos metodos.
+    private final RlsContextService rlsContextService;
     private final OrdenRepuestoRepository ordenRepuestoRepository;
     private final OrdenReprogramacionRepository ordenReprogramacionRepository;
     private final HistorialEstadoActivoRepository historialEstadoActivoRepository;
@@ -62,6 +70,11 @@ public class MantencionScheduler {
         if (!enabled) {
             return;
         }
+
+        // 🔒 este job recorre ordenes PROGRAMADA de TODAS las empresas
+        // (no de una sola), asi que corresponde bypass, igual que
+        // SUPER_ADMIN (ver EmpresaFilter).
+        rlsContextService.aplicarBypass();
 
         LocalDate fechaNotificacion = LocalDate.now().plusDays(diasNotificacion);
         LocalDateTime desde = fechaNotificacion.atStartOfDay();
@@ -118,6 +131,11 @@ public class MantencionScheduler {
             log.info("Limpieza de órdenes demo deshabilitada en este ambiente");
             return;
         }
+
+        // 🔒 este job SI opera sobre una sola empresa conocida (la
+        // demo), asi que se le informa esa empresa puntual a Postgres
+        // en vez de hacer bypass completo (ver RlsContextService).
+        rlsContextService.aplicarEmpresa(empresaId);
 
         log.info("Iniciando limpieza de órdenes de la empresa {}", empresaId);
 
