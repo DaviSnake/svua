@@ -131,6 +131,15 @@
       <span class="tooltip">Informe de Mantenciones</span>
     </li>
 
+    <!-- VER LOGS (solo SUPER_ADMIN) -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
+      <a routerLink="/inicio/verLogs" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class='bx bx-file-find'></i>
+        <span *ngIf="!isCollapsed">Ver Logs</span>
+      </a>
+      <span class="tooltip">Ver Logs</span>
+    </li>
+
     <!-- SESIONES ACTIVAS -->
     <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
       <a routerLink="/inicio/SesionesActivas" (click)="closeAllMenus(); $event.stopPropagation()">

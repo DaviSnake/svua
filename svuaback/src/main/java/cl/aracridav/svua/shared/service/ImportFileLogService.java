@@ -1,13 +1,17 @@
 package cl.aracridav.svua.shared.service;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
@@ -20,54 +24,100 @@ import org.springframework.stereotype.Service;
  * se cierra la pantalla de carga masiva. Este log queda en disco para
  * poder revisar después qué falló en una carga puntual.
  *
- * Un archivo de texto por carga: logs/carga-masiva/{archivo}_{jobId}.log
+ * 🔥 Las líneas de una carga se acumulan en memoria (por jobId) y recién
+ * se escriben a disco al terminar, en finalizar() — y SOLO si hubo al
+ * menos un error. Antes se escribía a disco en cada evento (registrarInicio
+ * ya generaba el archivo), dejando un log por cada carga aunque hubiera
+ * salido perfecta. Un archivo de texto por ejecución CON error:
+ *   log/{empresaId}/{nombreEmpresa}_{archivo}_{timestamp}.txt
  */
 @Service
 public class ImportFileLogService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final Path DIRECTORIO = Paths.get("logs", "carga-masiva");
+    private static final DateTimeFormatter TS_ARCHIVO = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final Path DIRECTORIO_BASE = Paths.get("log");
+
+    private final Map<String, List<String>> buffers = new ConcurrentHashMap<>();
 
     public void registrarInicio(String jobId, String archivo, int totalFilas) {
-        escribir(jobId, archivo,
+        agregar(jobId,
             "=== INICIO carga '%s' (jobId=%s) - %d filas - %s ==="
                 .formatted(archivo, jobId, totalFilas, ahora()));
     }
 
     public void registrarError(String jobId, String archivo, int fila, String mensaje, String contenido) {
-        escribir(jobId, archivo,
+        agregar(jobId,
             "[FILA %d] %s | datos: %s".formatted(fila, mensaje, contenido));
     }
 
-    public void registrarResumen(String jobId, String archivo, int total, int procesados, int errores, String estado) {
-        escribir(jobId, archivo,
+    /**
+     * Cierra el log de una carga: agrega la línea de resumen y, si hubo
+     * al menos un error, vuelca todo el buffer a un archivo .txt bajo
+     * log/{empresaId}/. Si la carga terminó sin errores, el buffer se
+     * descarta sin escribir nada a disco.
+     */
+    public void finalizar(
+            String jobId,
+            String archivo,
+            Long empresaId,
+            String nombreEmpresa,
+            int total,
+            int procesados,
+            int errores,
+            String estado
+    ) {
+
+        agregar(jobId,
             "=== FIN carga '%s' (jobId=%s) - estado=%s - total=%d, procesados=%d, errores=%d - %s ==="
                 .formatted(archivo, jobId, estado, total, procesados, errores, ahora()));
-    }
 
-    private String ahora() {
-        return LocalDateTime.now().format(TS);
-    }
+        List<String> lineas = buffers.remove(jobId);
 
-    private synchronized void escribir(String jobId, String archivo, String linea) {
+        if (errores <= 0 || lineas == null || lineas.isEmpty()) {
+            return;
+        }
+
         try {
-            Files.createDirectories(DIRECTORIO);
+            Path directorioEmpresa = DIRECTORIO_BASE.resolve(String.valueOf(empresaId));
+            Files.createDirectories(directorioEmpresa);
 
-            Path archivoLog = DIRECTORIO.resolve(archivo + "_" + jobId + ".log");
+            String nombreArchivo = sanitizar(nombreEmpresa) + "_" + sanitizar(archivo)
+                    + "_" + LocalDateTime.now().format(TS_ARCHIVO) + ".txt";
 
-            try (PrintWriter writer = new PrintWriter(
-                    Files.newBufferedWriter(
-                        archivoLog,
-                        StandardOpenOption.CREATE,
-                        StandardOpenOption.APPEND))) {
+            Path archivoLog = directorioEmpresa.resolve(nombreArchivo);
 
-                writer.println(linea);
-            }
+            Files.write(
+                archivoLog,
+                lineas,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            );
 
         } catch (IOException e) {
             // 🔒 Un problema escribiendo el log NO debe interrumpir la carga
             // masiva en sí; solo se deja constancia en stderr.
             e.printStackTrace();
         }
+    }
+
+    private void agregar(String jobId, String linea) {
+        buffers
+            .computeIfAbsent(jobId, k -> Collections.synchronizedList(new ArrayList<>()))
+            .add(linea);
+    }
+
+    // 🔒 nombre de empresa y de archivo van directo al nombre del archivo
+    // en disco: se sanean para no arrastrar espacios, tildes raras desde
+    // Excel, ni caracteres invalidos para un nombre de archivo.
+    private String sanitizar(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return "desconocido";
+        }
+        return valor.trim().replaceAll("[^a-zA-Z0-9-_]+", "_");
+    }
+
+    private String ahora() {
+        return LocalDateTime.now().format(TS);
     }
 }

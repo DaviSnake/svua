@@ -35,6 +35,10 @@ services:
       - internal
     volumes:
     - ./uploads:/app/uploads
+    # 🔥 Logs de errores de cargas masivas (ver ImportFileLogService /
+    # pantalla "Ver Logs"): sin este volumen se pierden cada vez que se
+    # reinicia o redespliega el contenedor.
+    - ./log:/app/log
     # 🔒 Monta el .env real (solo lectura/escritura desde el propio
     # backend) para que la pantalla de Configuración (SUPER_ADMIN) pueda
     # leerlo y editarlo. Los cambios requieren reiniciar este contenedor

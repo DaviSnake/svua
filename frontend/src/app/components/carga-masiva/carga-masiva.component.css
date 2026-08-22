@@ -99,6 +99,13 @@
   transition: width 0.5s ease;
 }
 
+/* 🔥 Si la carga terminó con errores, la barra no puede verse igual que
+   una carga 100% exitosa (aunque el 100% sea correcto: significa que se
+   terminó de procesar todas las filas, no que todas se cargaron bien). */
+.progress-fill.progress-fill--error {
+  background: linear-gradient(90deg, #b00020, #e57373);
+}
+
 .status {
   margin-top: 10px;
   font-size: 14px;

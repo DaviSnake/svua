@@ -352,13 +352,23 @@ export class CargaMasivaComponent implements OnInit {
       if (p.estado === 'COMPLETADO' || p.estado === 'COMPLETADO_CON_ERRORES' || p.estado === 'ERROR') {
         clearInterval(this.interval);
 
+        // 🔥 Resumen de la carga: filas cargadas correctamente vs. con
+        // error. `procesados` cuenta TODAS las filas que se intentaron
+        // (éxito + error, ver ImportProgressServiceImpl.incrementarEnLote),
+        // así que las exitosas son procesados - errores.
+        const exitosas = p.procesados - p.errores;
+
         switch (p.estado) {
           case 'ERROR':
             this.mensaje = '❌ Error en el proceso de carga';
             break;
 
+          case 'COMPLETADO':
+            this.mensaje = `✅ Carga completada: ${exitosas} de ${p.total} fila(s) cargada(s) correctamente`;
+            break;
+
           case 'COMPLETADO_CON_ERRORES':
-            this.mensaje = '❌ Proceso de carga terminado con errores';
+            this.mensaje = `❌ Carga terminada con errores: ${exitosas} de ${p.total} fila(s) cargada(s) correctamente, ${p.errores} con error`;
             console.log('Errores:', p.erroresDetalle);
             break;
         }

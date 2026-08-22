@@ -60,6 +60,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoActivo === 'COMPLETADO_CON_ERRORES' || estadoActivo === 'ERROR'"
               [style.width.%]="progressActivo">
             </div>
           </div>
@@ -133,6 +134,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoProveedor === 'COMPLETADO_CON_ERRORES' || estadoProveedor === 'ERROR'"
               [style.width.%]="progressProveedor">
             </div>
           </div>
@@ -206,6 +208,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoOrden === 'COMPLETADO_CON_ERRORES' || estadoOrden === 'ERROR'"
               [style.width.%]="progressOrden">
             </div>
           </div>
@@ -279,6 +282,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoRepuesto === 'COMPLETADO_CON_ERRORES' || estadoRepuesto === 'ERROR'"
               [style.width.%]="progressRepuesto">
             </div>
           </div>
@@ -352,6 +356,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoUbicacion === 'COMPLETADO_CON_ERRORES' || estadoUbicacion === 'ERROR'"
               [style.width.%]="progressUbicacion">
             </div>
           </div>
@@ -425,6 +430,7 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
+              [class.progress-fill--error]="estadoTipoActivo === 'COMPLETADO_CON_ERRORES' || estadoTipoActivo === 'ERROR'"
               [style.width.%]="progressTipoActivo">
             </div>
           </div>

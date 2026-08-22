@@ -1,0 +1,95 @@
+<div class="page-header">
+
+  <h1>Ver Logs</h1>
+
+  <p>
+    Registro de errores de cargas masivas (Excel), filtrable por
+    empresa. Cada archivo corresponde a una ejecución que tuvo al menos
+    una fila con error.
+  </p>
+
+</div>
+
+<!-- FILTROS -->
+<div class="filtro-grilla">
+
+  <div class="form-group form-group--combo">
+    <label>Empresa</label>
+    <input type="text"
+           placeholder="Todas las empresas"
+           [matAutocomplete]="autoFiltroEmpresa"
+           [formControl]="filtroEmpresaControl"
+           (focus)="onFocusFiltroEmpresa()">
+    <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+      <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+        {{ empresa.nombre }}
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+  <small>
+    {{ totalElements }} logs encontrados
+  </small>
+
+</div>
+
+<!-- TABLA -->
+<div class="tabla-container">
+
+  <table class="tabla-logs">
+
+    <thead>
+      <tr>
+        <th>Empresa</th>
+        <th>Archivo</th>
+        <th>Tamaño</th>
+        <th>Fecha</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let log of logs; trackBy: trackByLog">
+        <td>{{ log.nombreEmpresa }}</td>
+        <td>{{ log.nombreArchivo }}</td>
+        <td>{{ formatearTamanio(log.tamanioBytes) }}</td>
+        <td>{{ log.fechaCreacion | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+        <td class="col-accion">
+          <button class="btn-ver" (click)="verLog(log)">Ver</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="!logs.length">
+        <td colspan="5" class="sin-datos">
+          No hay logs de errores para el filtro seleccionado.
+        </td>
+      </tr>
+    </tbody>
+
+  </table>
+
+</div>
+
+<!-- PAGINACIÓN -->
+<div class="paginacion">
+
+  <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+    ⬅ Anterior
+  </button>
+
+  <ng-container *ngFor="let p of paginasVisibles()">
+    <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+    <button
+      *ngIf="p !== -1"
+      (click)="cambiarPagina(p)"
+      [class.activa]="p === page">
+      {{ p + 1 }}
+    </button>
+  </ng-container>
+
+  <button (click)="cambiarPagina(page + 1)"
+          [disabled]="page + 1 >= totalPages">
+    Siguiente ➡
+  </button>
+
+</div>

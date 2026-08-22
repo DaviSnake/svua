@@ -25,6 +25,7 @@ import { NotificacionComponent } from './components/notificacion/notificacion.co
 import { SoporteComponent } from './components/soporte/soporte.component';
 import { SesionUsuarioComponent } from './components/sesion-usuario/sesion-usuario.component';
 import { InformeConexionesComponent } from './components/informe-conexiones/informe-conexiones.component';
+import { VerLogsComponent } from './components/ver-logs/ver-logs.component';
 import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
 import { EscanearComponent } from './components/escanear/escanear.component';
 
@@ -165,6 +166,11 @@ export const routes: Routes = [
             {
                 path: 'informeConexiones',
                 component: InformeConexionesComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
+            {
+                path: 'verLogs',
+                component: VerLogsComponent,
                 data: { roles: ['SUPER_ADMIN'] }
             },
             {

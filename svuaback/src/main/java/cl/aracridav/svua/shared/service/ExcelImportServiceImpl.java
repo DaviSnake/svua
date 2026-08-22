@@ -227,6 +227,14 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         e.getMessage(),
                         getRowData(row)
                     );
+                    // 🔥 esta fila tambien se "proceso" (se intento), aunque
+                    // haya fallado. Sin este incremento, procesados solo
+                    // contaba filas EXITOSAS: con errores, procesados nunca
+                    // llegaba a total (la barra de progreso se quedaba a
+                    // mitad de camino) y el resumen final mostraba menos
+                    // filas correctas de las que realmente se cargaron
+                    // (ver frontend, exitosas = procesados - errores).
+                    progressService.incrementarEnLote(jobId, 1);
                     importFileLogService.registrarError(
                         jobId, archivo, row.getRowNum(), e.getMessage(), getRowData(row)
                     );
@@ -241,6 +249,8 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                         e.getMessage(),
                         getRowData(row)
                     );
+                    // 🔥 ver comentario equivalente en el catch de arriba.
+                    progressService.incrementarEnLote(jobId, 1);
                     importFileLogService.registrarError(
                         jobId, archivo, row.getRowNum(), e.getMessage(), getRowData(row)
                     );
@@ -310,8 +320,20 @@ public class ExcelImportServiceImpl implements ExcelImportService{
                 progressService.finalizar(jobId);
             }
 
-            importFileLogService.registrarResumen(
-                jobId, archivo, total, procesados, p.getErrores(), p.getEstado()
+            // 🔥 nombre de la empresa: solo para nombrar el archivo de log
+            // (ver ImportFileLogService.finalizar) — si por algun motivo
+            // ya no existe (empresa eliminada entremedio, caso extremo),
+            // no debe tumbar el job entero, solo se deja constancia.
+            String nombreEmpresa;
+            try {
+                nombreEmpresa = obtenerEmpresa(empresaId).getNombre();
+            } catch (Exception e) {
+                nombreEmpresa = "empresa-" + empresaId;
+            }
+
+            importFileLogService.finalizar(
+                jobId, archivo, empresaId, nombreEmpresa,
+                total, procesados, p.getErrores(), p.getEstado()
             );
 
         } catch (IOException e) {
