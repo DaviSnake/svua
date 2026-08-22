@@ -79,7 +79,14 @@ public class ImportFileLogService {
         }
 
         try {
-            Path directorioEmpresa = DIRECTORIO_BASE.resolve(String.valueOf(empresaId));
+            // 🔥 la carpeta lleva el id Y el nombre de la empresa (ej.
+            // "2_Empresa_demo_Spa"), no solo el id — mucho mas facil de
+            // ubicar a simple vista en el filesystem. El id va primero y
+            // se mantiene como prefijo estable aunque la empresa cambie
+            // de nombre despues (LogArchivoServiceImpl la sigue
+            // encontrando por el prefijo "{empresaId}_").
+            String nombreCarpetaEmpresa = empresaId + "_" + sanitizar(nombreEmpresa);
+            Path directorioEmpresa = DIRECTORIO_BASE.resolve(nombreCarpetaEmpresa);
             Files.createDirectories(directorioEmpresa);
 
             String nombreArchivo = sanitizar(nombreEmpresa) + "_" + sanitizar(archivo)
