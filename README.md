@@ -203,6 +203,66 @@ docker run -p 80:80 frontend
 * No exponer PostgreSQL innecesariamente
 * Mantener versiones de Node y Java compatibles
 
+
+---
+
+# 🚀 Despliegue a Dev y Producción
+
+El despliegue NO es manual: se hace con GitHub Actions (`.github/workflows/deploy-dev.yml` y `deploy-prod.yml`), que se conectan por SSH a la VPS, actualizan el código y levantan los contenedores con `docker compose`. Como developer, tu trabajo se reduce a hacer push/tag en el lugar correcto — el resto es automático.
+
+## Dev
+
+1. Trabaja normalmente sobre la rama `desarrollo` (o mergea tu feature branch ahí).
+2. Al hacer push a `desarrollo`:
+
+   ```bash
+   git checkout desarrollo
+   git push origin desarrollo
+   ```
+
+   se dispara automáticamente el workflow **Deploy Dev**, que en la VPS:
+   * clona o actualiza `/home/davisnake/svua-dev` (`git reset --hard origin/desarrollo`),
+   * genera el `.env` de dev la primera vez (con los secrets `DEV_*` configurados en GitHub),
+   * corre `docker compose down` + `docker compose up -d --build`.
+3. Revisa el resultado en el ambiente de dev (dev.svua.cl / api-dev.svua.cl) y en la pestaña *Actions* de GitHub si algo falla.
+
+No hace falta correr migraciones a mano: Flyway las aplica solo al levantar el backend.
+
+## Producción
+
+Producción **no se despliega en cada push a master** — un merge a `master` no tumba el sitio. El deploy real ocurre solo al pushear un tag `vX.Y.Z`, o disparando el workflow manualmente eligiendo un tag existente.
+
+1. Una vez probado en dev, mergea `desarrollo` a `master`:
+
+   ```bash
+   git checkout master
+   git pull origin master
+   git merge desarrollo
+   git push origin master
+   ```
+
+2. Crea y sube el tag de la nueva versión (siguiendo semver: `vMAJOR.MINOR.PATCH`):
+
+   ```bash
+   git tag v1.0.2
+   git push origin v1.0.2
+   ```
+
+   Esto dispara **Deploy Prod**, que en la VPS:
+   * clona o actualiza `/home/davisnake/svua-prod`,
+   * hace `git checkout "$TAG_NAME"` (detached HEAD, exactamente ese tag),
+   * genera el `.env` de prod la primera vez (secrets sin prefijo `DEV_`),
+   * corre `docker compose down` + `docker compose --profile prod up -d --build`,
+   * valida/genera el certificado SSL con certbot si todavía no existe.
+
+3. **Rollback o reintento sin crear un tag nuevo**: en GitHub → *Actions* → *Deploy Prod* → *Run workflow*, indicando el tag a desplegar (puede ser uno anterior, ej. `v1.0.1`, para volver atrás).
+
+### ⚠️ Antes de taguear una versión con cambios de base de datos
+
+* Toda migración nueva en `svuaback/src/main/resources/db/migration` se aplica sola al arrancar el backend (Flyway) — pruébala primero en dev.
+* Si la migración es sensible (ej. la de Row Level Security, `V27`), confirma que el `POSTGRES_USER` de producción **no sea superuser** (`rolsuper=false`, `rolbypassrls=false` en `pg_roles`) — con un superuser, RLS queda sin efecto en silencio.
+* Las carpetas `uploads/` y `log/` ya están montadas como volumen en `docker-compose.yml`, así que sobreviven a `docker compose down/up` — no se pierden con cada deploy.
+
 ---
 
 # 🚀 Listo
@@ -210,7 +270,3 @@ docker run -p 80:80 frontend
 Si seguiste todos los pasos:
 
 👉 Tu aplicación debería estar corriendo en local sin problemas.
-
----
-
-💡 Recomendación: luego puedes desplegar fácilmente usando Docker + Dokploy o CI/CD desde GitHub.
