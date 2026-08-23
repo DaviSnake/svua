@@ -142,6 +142,37 @@ ng serve
 📍 Frontend disponible en:
 http://localhost:4200
 
+## 5. Otros comandos útiles (Angular CLI)
+
+Fusionado desde `frontend/README.md` (el generado por Angular CLI) para tener un solo README de referencia:
+
+* Generar un componente/servicio/etc.:
+
+  ```bash
+  ng generate component nombre-componente
+  # también: directive | pipe | service | class | guard | interface | enum | module
+  ```
+
+* Compilar para producción (los artefactos quedan en `frontend/dist/`):
+
+  ```bash
+  ng build
+  ```
+
+* Tests unitarios (Karma):
+
+  ```bash
+  ng test
+  ```
+
+* Tests end-to-end (requiere agregar antes un paquete que implemente e2e):
+
+  ```bash
+  ng e2e
+  ```
+
+* Ayuda general: `ng help`, o la [referencia de comandos de Angular CLI](https://angular.dev/tools/cli).
+
 ---
 
 # 🔁 Flujo correcto de ejecución
