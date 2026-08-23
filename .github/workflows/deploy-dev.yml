@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - desarrollo
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Rama, tag o commit a desplegar en dev (default: desarrollo)'
+        required: false
+        default: 'desarrollo'
 
 jobs:
   deploy:
@@ -12,15 +18,23 @@ jobs:
     steps:
       - name: Deploy to VPS (dev)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          # 🔥 Si se disparo manualmente (workflow_dispatch) usa el ref
+          # que se escribio a mano (rama, tag o commit); si se disparo
+          # por push normal a "desarrollo", usa esa misma rama.
+          REF_NAME: ${{ github.event.inputs.ref || 'desarrollo' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: REF_NAME
 
           script: |
 
             APP_DIR=/home/davisnake/svua-dev
+
+            echo "🎯 Desplegando ref: $REF_NAME"
 
             echo "📁 Verificando proyecto..."
 
@@ -30,13 +44,19 @@ jobs:
               git clone -b desarrollo git@github.com:DaviSnake/svua.git $APP_DIR
             else
               echo "🔄 Actualizando proyecto"
-
-              cd $APP_DIR
-              git fetch origin
-              git reset --hard origin/desarrollo
             fi
 
             cd $APP_DIR
+            git fetch origin --tags --force
+
+            # 🔥 Deja el checkout exactamente en el ref pedido: por
+            # defecto la rama "desarrollo" (push normal, sigue esa rama
+            # al dia). Si se disparo manualmente con otro ref (otra
+            # rama, un tag, o un commit puntual), queda apuntando ahi --
+            # sirve para volver dev a un estado anterior sin tener que
+            # revertir commits en la rama.
+            git checkout "$REF_NAME" 2>/dev/null || git checkout -b "$REF_NAME" "origin/$REF_NAME"
+            git reset --hard "origin/$REF_NAME" 2>/dev/null || git reset --hard "$REF_NAME"
 
             if [ ! -f ".env" ]; then
 
@@ -71,4 +91,4 @@ jobs:
             docker compose down
             docker compose up -d --build
 
-            echo "✅ Deploy completado (dev)"
+            echo "✅ Deploy completado (dev) - ref: $REF_NAME"

@@ -256,6 +256,13 @@ El despliegue NO es manual: se hace con GitHub Actions (`.github/workflows/deplo
    * genera el `.env` de dev la primera vez (con los secrets `DEV_*` configurados en GitHub),
    * corre `docker compose down` + `docker compose up -d --build`.
 3. Revisa el resultado en el ambiente de dev (dev.svua.cl / api-dev.svua.cl) y en la pestaña *Actions* de GitHub si algo falla.
+4. **Desplegar un ref puntual (rollback o probar una rama/tag distinto)**: en GitHub → *Actions* → *Deploy Dev* → *Run workflow*, indicando en el campo `ref` la rama, tag o commit a desplegar (por defecto `desarrollo`). También por CLI:
+
+   ```bash
+   gh workflow run deploy-dev.yml -f ref=<rama-tag-o-commit>
+   ```
+
+   A diferencia de un push normal a `desarrollo` (que siempre sigue la rama), esto deja el servidor de dev apuntando exactamente a ese ref.
 
 No hace falta correr migraciones a mano: Flyway las aplica solo al levantar el backend.
 
