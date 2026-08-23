@@ -295,11 +295,15 @@ export class UsuarioComponent implements OnInit {
             confirmButtonColor: '#3498db'
           });
         },
-        error: () => {
+        error: (err) => {
+          // 🔥 antes se mostraba un mensaje generico fijo, ignorando el
+          // motivo real que informa el backend (por ejemplo, limite de
+          // usuarios del plan alcanzado -- ver
+          // UsuarioServiceImpl.validarLimiteUsuarios).
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No se pudo guardar el usuario'
+            text: err.error?.error || 'No se pudo guardar el usuario'
           });
         }
       });

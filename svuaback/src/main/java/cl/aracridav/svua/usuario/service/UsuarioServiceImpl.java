@@ -55,6 +55,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         Empresa empresa = obtenerEmpresa(empresaId);
 
+        validarLimiteUsuarios(empresa);
+
         Usuario usuario = construirUsuario(request, empresa);
 
         return generalMapper.mapUsuarioToResponse(
@@ -229,6 +231,30 @@ public class UsuarioServiceImpl implements UsuarioService {
     private void validarRolCreacion(RolUsuario rol) {
         if (rol == RolUsuario.SUPER_ADMIN) {
             throw new BusinessException("No se permite crear usuarios SUPER ADMIN");
+        }
+    }
+
+    // 🔥 Empresa.maxUsuarios es el limite de usuarios que permite el plan
+    // contratado (ver EmpresaServiceImpl.configurarPlan: FREE=2, BASICO=5,
+    // PROFESIONAL=10, ENTERPRISE=50). maxUsuarios == null significa sin
+    // limite (por compatibilidad, si alguna empresa quedara sin plan
+    // configurado). Solo cuentan los usuarios ACTIVOS: uno deshabilitado
+    // libera un cupo.
+    private void validarLimiteUsuarios(Empresa empresa) {
+
+        Integer limite = empresa.getMaxUsuarios();
+
+        if (limite == null) {
+            return;
+        }
+
+        long usuariosActivos = usuarioRepository.countByEmpresaIdAndActivoTrue(empresa.getId());
+
+        if (usuariosActivos >= limite) {
+            throw new BusinessException(
+                "Se alcanzó el límite de usuarios permitidos para el plan de esta empresa ("
+                    + limite + "). Debe deshabilitar un usuario existente o actualizar el plan."
+            );
         }
     }
 

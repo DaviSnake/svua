@@ -39,6 +39,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Page<Usuario> findByEmpresaId(Long empresaId, Pageable pageable);
 
+    // 🔥 Cuenta usuarios activos de una empresa, para validar contra
+    // Empresa.maxUsuarios (limite de licencias del plan) al registrar un
+    // usuario nuevo. Los usuarios deshabilitados (activo=false) no
+    // cuentan contra el limite.
+    long countByEmpresaIdAndActivoTrue(Long empresaId);
+
     // 🔥 Busqueda unificada para la grilla: empresaId es opcional (NULL =
     // todas las empresas, solo aplica para SUPER_ADMIN) y busqueda es
     // opcional (NULL o vacio = sin filtro de texto). Mismo patron que
