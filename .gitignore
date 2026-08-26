@@ -11,5 +11,9 @@ certbot/www
 # 🔥 Logs de errores de cargas masivas (ver ImportFileLogService /
 # pantalla "Ver Logs"): quedan en disco, no se versionan.
 log/
+
+# 🔒 Dumps de Postgres (ver scripts/backup-postgres.sh): son datos
+# reales de produccion/dev, JAMAS se versionan.
+backups/
 # Archivos temporales de parcheo (scripts de patch, verificaciones, locks)
 _to_delete/

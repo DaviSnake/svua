@@ -19,4 +19,5 @@ public class CreateEmpresaRequest {
     private Boolean demo;
     private Boolean codigoQrHabilitado;
     private Boolean codigoEan13Habilitado;
+    private Boolean controlTurnoHabilitado;
 }

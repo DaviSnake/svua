@@ -11,4 +11,5 @@ export interface Empresa {
   demo?: boolean;
   codigoQrHabilitado?: boolean;
   codigoEan13Habilitado?: boolean;
+  controlTurnoHabilitado?: boolean;
 }

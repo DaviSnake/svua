@@ -7,10 +7,12 @@ import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
+@Audited
 @Getter
 @Setter
 @Table(name = "orden_repuesto")

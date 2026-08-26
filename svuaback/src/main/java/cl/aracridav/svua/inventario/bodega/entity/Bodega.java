@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.bodega.entity;
 
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 
 @Getter
@@ -10,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "bodega")
 public class Bodega extends BaseEntity {
     @Id

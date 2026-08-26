@@ -71,6 +71,38 @@ services:
       # y ambos ambientes (svua-prod y svua-dev) se conectan a ella.
       - edge_net
 
+  # 🔥 Backup automatico de Postgres (NCh-ISO/IEC 27001 A.17 -
+  # Continuidad del negocio) -- ver scripts/backup-postgres.sh y
+  # docs/continuidad-negocio.md para el detalle completo (que cubre,
+  # que NO cubre todavia, y como restaurar). Corre al levantar y
+  # despues cada 24h (mismo patron del loop de certbot mas abajo).
+  # Se levanta en TODOS los ambientes (no tiene --profile): dev tambien
+  # tiene datos de prueba que conviene poder recuperar.
+  postgres-backup:
+    image: postgres:16
+    container_name: ${PROJECT_NAME}_postgres_backup
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./backups/postgres:/backups
+      - ./scripts/backup-postgres.sh:/backup-postgres.sh:ro
+    networks:
+      - internal
+    entrypoint: >
+      /bin/sh -c "
+      trap exit TERM;
+      while :; do
+        sh /backup-postgres.sh;
+        sleep 24h & wait $${!};
+      done"
+
   # 🔥 Solo se levanta en produccion (docker compose --profile prod up -d):
   # es el unico ambiente que necesita renovar un certificado real. Dev
   # no define este servicio en absoluto en su despliegue.

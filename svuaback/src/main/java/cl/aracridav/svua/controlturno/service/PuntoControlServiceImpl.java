@@ -32,6 +32,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     @Override
     public PuntoControlResponse registrar(PuntoControlRequest request) {
 
+        validarControlTurnoHabilitado();
+
         Empresa empresa = obtenerEmpresaActual(request.getEmpresaId());
 
         validarRequest(request);
@@ -46,6 +48,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     @Transactional(readOnly = true)
     public PuntoControlResponse obtener(Long id) {
 
+        validarControlTurnoHabilitado();
+
         PuntoControl puntoControl = obtenerPuntoControl(id);
 
         validarPerteneceEmpresaActual(puntoControl);
@@ -55,6 +59,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
 
     @Override
     public PuntoControlResponse actualizar(Long id, PuntoControlRequest request) {
+
+        validarControlTurnoHabilitado();
 
         PuntoControl puntoControl = obtenerPuntoControl(id);
 
@@ -78,6 +84,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     @Override
     public void eliminar(Long id) {
 
+        validarControlTurnoHabilitado();
+
         PuntoControl puntoControl = obtenerPuntoControl(id);
 
         validarPerteneceEmpresaActual(puntoControl);
@@ -90,6 +98,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     @Override
     @Transactional(readOnly = true)
     public Page<PuntoControlResponse> listar(Pageable pageable, Long empresaId, String busqueda) {
+
+        validarControlTurnoHabilitado();
 
         Page<PuntoControl> puntos;
 
@@ -111,6 +121,8 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     @Transactional(readOnly = true)
     public List<PuntoControlResponse> listarActivos() {
 
+        validarControlTurnoHabilitado();
+
         // 🔥 Combo simple para el formulario de ingreso de lecturas:
         // cualquier rol que registra datos de turno ve los puntos
         // activos de su propia empresa (no hay variante "todas las
@@ -119,6 +131,17 @@ public class PuntoControlServiceImpl implements PuntoControlService {
                 .stream()
                 .map(this::mapResponse)
                 .toList();
+    }
+
+    // 🔒 Defensa en profundidad (V33): el sidebar y el guard de rutas del
+    // frontend ya ocultan/bloquean Control de Turno si la empresa no lo
+    // tiene habilitado, pero eso no impide una llamada directa a la API.
+    // SUPER_ADMIN queda exento, igual que con codigoQrHabilitado/
+    // codigoEan13Habilitado (ver SecurityUtils).
+    private void validarControlTurnoHabilitado() {
+        if (!esSuperAdmin() && !SecurityUtils.tieneControlTurnoHabilitado()) {
+            throw new BusinessException("Control de Turno no está habilitado para su empresa");
+        }
     }
 
     private void validarRequest(PuntoControlRequest request) {

@@ -4,6 +4,7 @@ import cl.aracridav.svua.inventario.bodega.entity.Bodega;
 import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 
 @Getter
@@ -12,6 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "stock_repuesto")
 public class StockRepuesto extends BaseEntity {
     @Id

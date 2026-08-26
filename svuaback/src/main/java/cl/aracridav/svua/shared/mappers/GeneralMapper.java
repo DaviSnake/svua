@@ -79,6 +79,7 @@ public class GeneralMapper {
       .demo(empresa.getDemo())
       .codigoQrHabilitado(empresa.getCodigoQrHabilitado())
       .codigoEan13Habilitado(empresa.getCodigoEan13Habilitado())
+      .controlTurnoHabilitado(empresa.getControlTurnoHabilitado())
       .build();
   }
 

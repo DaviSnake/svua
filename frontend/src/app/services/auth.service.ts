@@ -145,6 +145,18 @@ export class AuthService {
     return payload.codigoEan13Habilitado;
   }
 
+  // 🔒 Empresa.controlTurnoHabilitado (viaja en el JWT igual que demo):
+  // controla si el modulo Control de Turno esta disponible para la
+  // empresa del usuario logueado (ver sidebar.component.ts y
+  // control-turno-acceso.guard.ts).
+  getControlTurnoHabilitado(): boolean | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.controlTurnoHabilitado;
+  }
+
   // 🐛 FIX: init() se llama en CADA carga de la app (AppComponent.ngOnInit,
   // incluido un simple refresh/F5 de la pagina), pero antes solo restauraba
   // el usuario desde el token y NUNCA volvia a armar el timer de refresco

@@ -7,9 +7,11 @@ import cl.aracridav.svua.mantenimiento.repuesto.entity.Repuesto;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 
 @Entity
+@Audited
 @Getter
 @Setter
 @Table(name = "movimiento_inventario")

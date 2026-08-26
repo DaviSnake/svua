@@ -12,6 +12,8 @@ import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.usuario.entity.Usuario;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
 
@@ -21,6 +23,7 @@ import org.hibernate.annotations.BatchSize;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "orden_mantenimiento")
 public class OrdenMantenimiento extends BaseEntity {
 
@@ -157,6 +160,12 @@ public class OrdenMantenimiento extends BaseEntity {
     @BatchSize(size = 20)
     private Set<OrdenRepuesto> repuestosUtilizados = new HashSet<>();
 
+    // ⚠️ @NotAudited: Archivo no esta en el alcance de auditoria acordado
+    // (adjuntos binarios, no datos de negocio editables) -- Envers
+    // exige que el otro lado de una coleccion @OneToMany de una entidad
+    // @Audited este TAMBIEN @Audited o marcado @NotAudited, si no la
+    // app no levanta (ver V30).
+    @NotAudited
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Archivo> archivos;
 

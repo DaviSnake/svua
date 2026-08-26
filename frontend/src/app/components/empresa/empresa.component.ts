@@ -70,10 +70,11 @@ export class EmpresaComponent implements OnInit {
       direccion: ['', Validators.required],
       tipoPlan: ['FREE', Validators.required],
 
-      // 🔹 Configuracion (demo + codigos QR/EAN13 de activos)
+      // 🔹 Configuracion (demo + codigos QR/EAN13 de activos + Control de Turno)
       demo: [false],
       codigoQrHabilitado: [false],
       codigoEan13Habilitado: [false],
+      controlTurnoHabilitado: [false],
 
       // ADMIN
       adminNombre: [''],
@@ -207,7 +208,8 @@ export class EmpresaComponent implements OnInit {
       tipoPlan: 'FREE',
       demo: false,
       codigoQrHabilitado: false,
-      codigoEan13Habilitado: false
+      codigoEan13Habilitado: false,
+      controlTurnoHabilitado: false
     });
     this.editando = false;
     this.loading = false;

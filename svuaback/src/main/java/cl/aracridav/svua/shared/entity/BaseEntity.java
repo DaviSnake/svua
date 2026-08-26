@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import cl.aracridav.svua.empresa.entity.Empresa;
@@ -51,5 +54,33 @@ public abstract class BaseEntity {
     @CreatedDate
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
+
+    // 🔥 quien creo la fila (ver UsuarioAuditorAware, que lee el usuario
+    // autenticado del SecurityContext). Fuera de un request HTTP
+    // autenticado (schedulers, jobs internos) queda en NULL: se
+    // interpreta como "sistema", no como un dato faltante por error.
+    @CreatedBy
+    @Column(name = "creado_por_id", updatable = false)
+    private Long creadoPorId;
+
+    // 🔥 a diferencia de fechaCreacion (se completa una sola vez), esta
+    // se actualiza en CADA update. Junto con creadoPorId/modificadoPorId
+    // cierra la brecha de trazabilidad que pedia NCh-ISO/IEC 27001 A.12
+    // (Seguridad de operaciones): quien y cuando modifico un registro
+    // por ultima vez, no solo quien/cuando lo creo.
+    //
+    // ⚠️ Esto NO es un log de auditoria completo (no guarda el
+    // historico de cada cambio ni los valores anteriores de cada
+    // campo) -- solo la ULTIMA modificacion. Un historial completo de
+    // cambios (quien cambio que campo, de que valor a que valor, en
+    // cada version) es una funcionalidad aparte y mas pesada (ej. con
+    // Hibernate Envers); esto no la reemplaza.
+    @LastModifiedDate
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
+
+    @LastModifiedBy
+    @Column(name = "modificado_por_id")
+    private Long modificadoPorId;
 
 }

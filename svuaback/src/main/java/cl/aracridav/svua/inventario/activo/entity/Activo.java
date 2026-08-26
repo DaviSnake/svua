@@ -15,6 +15,8 @@ import cl.aracridav.svua.proveedor.entity.Proveedor;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import cl.aracridav.svua.shared.enums.EstadoActivo;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import lombok.*;
 
 @Getter
@@ -23,6 +25,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "activo")
 public class Activo extends BaseEntity {
     @Id
@@ -101,9 +104,19 @@ public class Activo extends BaseEntity {
     @Column(name = "motivo_baja", length = 255)
     private String motivoBaja;
 
+    // ⚠️ @NotAudited: Depreciacion NO esta en el alcance de auditoria
+    // acordado (es un calculo derivado, se recalcula solo, no lo edita
+    // un usuario). Envers exige que toda entidad al otro lado de una
+    // coleccion @OneToMany de una entidad @Audited este TAMBIEN
+    // @Audited (o marcada @NotAudited); sin esto la app no levanta.
+    @NotAudited
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
     private List<Depreciacion> depreciaciones;
 
+    // ⚠️ @NotAudited: HistorialEstadoActivo ya ES en si mismo un log de
+    // historial (fuera del alcance acordado, ver V30) — mismo motivo
+    // que depreciaciones arriba.
+    @NotAudited
     @Builder.Default
     @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL)
     private Set<HistorialEstadoActivo> historialEstados = new HashSet<>();

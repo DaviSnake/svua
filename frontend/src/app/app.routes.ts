@@ -3,6 +3,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { escanearAccesoGuard } from './guards/escanear-acceso.guard';
+import { controlTurnoAccesoGuard } from './guards/control-turno-acceso.guard';
 import { CalendarioComponent } from './calendar/calendario/calendario.component';
 import { LayoutComponent } from './layout/layout.component';
 import { ActivoComponent } from './components/activo/activo.component';
@@ -39,8 +40,11 @@ const TODOS_MENOS_TECNICO = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO
 
 // 🔐 Control de Turno: a diferencia de TODOS_MENOS_TECNICO, aqui SI
 // entra TECNICO (es quien registra las lecturas en terreno) y quedan
-// fuera BODEGUERO/USUARIO (no participan de este proceso).
-const ROLES_CONTROL_TURNO = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'TECNICO'];
+// fuera BODEGUERO/USUARIO (no participan de este proceso). Ya no se usa
+// aca como data.roles -- se movio a control-turno-acceso.guard.ts
+// (ROLES_CONTROL_TURNO local a ese archivo) porque tambien necesita
+// cruzarse con Empresa.controlTurnoHabilitado, algo que data.roles no
+// puede expresar.
 
 export const routes: Routes = [
     {
@@ -91,9 +95,14 @@ export const routes: Routes = [
                 // (el sidebar tampoco lo restringe hoy).
             },
             {
+                // ⚠️ Caso especial, igual que 'escanear': el sidebar usa
+                // ROLES_CONTROL_TURNO Y Empresa.controlTurnoHabilitado (rol
+                // Y flag de empresa) -- no se puede expresar con
+                // data.roles, por eso un guard dedicado (ver
+                // control-turno-acceso.guard.ts).
                 path: 'controlTurno',
                 component: ControlTurnoComponent,
-                data: { roles: ROLES_CONTROL_TURNO }
+                canActivate: [controlTurnoAccesoGuard]
             },
             {
                 path: 'empresa',

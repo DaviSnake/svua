@@ -39,6 +39,22 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+            // 🔐 DECISION DE SEGURIDAD (consciente, no descuido — ver
+            // docs/decisiones-seguridad.md para el registro completo):
+            // CSRF queda deshabilitado porque el modelo de ataque CSRF
+            // depende de que el navegador adjunte SOLO una credencial
+            // "ambiente" (una cookie de sesion) automaticamente en un
+            // request cross-site forjado. Esta API es 100% stateless
+            // (SessionCreationPolicy.STATELESS, ver mas abajo) y el JWT
+            // viaja UNICAMENTE en el header Authorization, nunca en una
+            // cookie -- confirmado en JwtAuthenticationFilter, que solo
+            // lee request.getHeader("Authorization"). Un request cross-site
+            // forjado por un atacante no puede setear ese header (el
+            // navegador no lo hace por su cuenta), asi que no hay
+            // credencial que ese ataque pueda explotar. Si en algun
+            // momento el JWT (o un refresh token) pasa a viajar en una
+            // cookie, esta decision hay que revisarla de inmediato y
+            // volver a habilitar CSRF.
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm ->

@@ -4,12 +4,14 @@ import java.math.BigDecimal;
 
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
 
 @Getter
 @Setter
 @Entity
+@Audited
 @Table(name = "repuesto")
 @NoArgsConstructor
 @AllArgsConstructor

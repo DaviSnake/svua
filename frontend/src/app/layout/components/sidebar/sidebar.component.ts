@@ -48,8 +48,11 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   esDemo = false;
   // 🔥 Control de Turno: visible para SUPER_ADMIN/ADMIN_EMPRESA/
   // JEFE_MANTENIMIENTO/TECNICO (ver ROLES_CONTROL_TURNO en
-  // app.routes.ts) -- a diferencia de las secciones de "gestion",
-  // aqui SI debe verlo el TECNICO.
+  // control-turno-acceso.guard.ts) -- a diferencia de las secciones de
+  // "gestion", aqui SI debe verlo el TECNICO. Ademas del rol, ahora
+  // TAMBIEN exige Empresa.controlTurnoHabilitado (V33): antes cualquier
+  // empresa con un usuario de esos roles veia el menu, use o no el
+  // modulo.
   mostrarControlTurno = false;
   codigoQrHabilitado = false; // 🔒 controla el link "Escanear Activo"
   codigoEan13Habilitado = false;
@@ -77,8 +80,15 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.esAdmin = this.authService.isAdmin();
       this.esTecnico = this.authService.isTecnico()!;
       this.esAdminEmpresa = this.authService.isAdminEmpresa();
-      this.mostrarControlTurno = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'TECNICO']
-        .includes(this.authService.getUserRole() ?? '');
+      // 🔥 esAdmin (SUPER_ADMIN) bypasea el flag de empresa, igual que
+      // con codigoQrHabilitado/codigoEan13Habilitado mas abajo -- puede
+      // administrar/revisar el modulo aunque la empresa todavia no lo
+      // tenga habilitado.
+      this.mostrarControlTurno = this.esAdmin || (
+        ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'TECNICO']
+          .includes(this.authService.getUserRole() ?? '')
+        && !!this.authService.getControlTurnoHabilitado()
+      );
       this.esDemo = this.authService.getDemo()!;
       this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
       this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;

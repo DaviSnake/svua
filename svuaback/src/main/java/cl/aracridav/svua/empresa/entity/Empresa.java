@@ -81,4 +81,12 @@ public class Empresa {
 
     @Column(name = "codigo_ean13_habilitado", nullable = false)
     private Boolean codigoEan13Habilitado;
+
+    // 🔹 Habilita, por empresa, el modulo Control de Turno (catalogo de
+    // puntos de control + registro de lecturas + dashboard). Mismo
+    // patron que codigoQrHabilitado/codigoEan13Habilitado: antes el
+    // unico criterio de acceso era el rol del usuario, sin distincion
+    // por empresa (ver V33, sidebar.component.ts, SecurityUtils).
+    @Column(name = "control_turno_habilitado", nullable = false)
+    private Boolean controlTurnoHabilitado;
 }

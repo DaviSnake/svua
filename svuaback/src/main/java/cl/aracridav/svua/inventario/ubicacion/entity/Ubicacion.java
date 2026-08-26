@@ -2,6 +2,7 @@ package cl.aracridav.svua.inventario.ubicacion.entity;
 
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import lombok.*;
 
 @Getter
@@ -10,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "ubicacion")
 public class Ubicacion extends BaseEntity {
     @Id

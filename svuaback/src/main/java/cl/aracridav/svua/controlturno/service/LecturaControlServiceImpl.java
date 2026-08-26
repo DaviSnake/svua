@@ -42,6 +42,7 @@ public class LecturaControlServiceImpl implements LecturaControlService {
     @Override
     public LecturaControlResponse registrar(LecturaControlRequest request) {
 
+        validarControlTurnoHabilitado();
         validarRequest(request);
 
         Long empresaId = SecurityUtils.getEmpresaId();
@@ -78,6 +79,8 @@ public class LecturaControlServiceImpl implements LecturaControlService {
             Pageable pageable, Long puntoControlId,
             LocalDateTime desde, LocalDateTime hasta, TurnoTrabajo turno) {
 
+        validarControlTurnoHabilitado();
+
         Long empresaId = SecurityUtils.getEmpresaId();
 
         Specification<LecturaControl> spec = Specification
@@ -94,6 +97,8 @@ public class LecturaControlServiceImpl implements LecturaControlService {
     @Transactional(readOnly = true)
     public List<PuntoControlDashboardResponse> dashboard(
             Long puntoControlId, LocalDateTime desde, LocalDateTime hasta, TurnoTrabajo turno) {
+
+        validarControlTurnoHabilitado();
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
@@ -155,6 +160,17 @@ public class LecturaControlServiceImpl implements LecturaControlService {
         }
 
         return resultado;
+    }
+
+    // 🔒 Defensa en profundidad (V33): el sidebar y el guard de rutas del
+    // frontend ya ocultan/bloquean Control de Turno si la empresa no lo
+    // tiene habilitado, pero eso no impide una llamada directa a la API.
+    // SUPER_ADMIN queda exento, igual que con codigoQrHabilitado/
+    // codigoEan13Habilitado (ver SecurityUtils).
+    private void validarControlTurnoHabilitado() {
+        if (!SecurityUtils.esSuperAdmin() && !SecurityUtils.tieneControlTurnoHabilitado()) {
+            throw new BusinessException("Control de Turno no está habilitado para su empresa");
+        }
     }
 
     private void validarRequest(LecturaControlRequest request) {

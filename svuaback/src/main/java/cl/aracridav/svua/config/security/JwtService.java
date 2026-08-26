@@ -58,6 +58,7 @@ public class JwtService {
                 .claim("demo", user.getDemo())
                 .claim("codigoQrHabilitado", user.getCodigoQrHabilitado())
                 .claim("codigoEan13Habilitado", user.getCodigoEan13Habilitado())
+                .claim("controlTurnoHabilitado", user.getControlTurnoHabilitado())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + JWT_TIME_VALIDITY))
                 .signWith(key)

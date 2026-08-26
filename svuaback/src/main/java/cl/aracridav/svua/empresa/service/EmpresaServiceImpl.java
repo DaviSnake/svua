@@ -244,6 +244,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         empresa.setDemo(Boolean.TRUE.equals(request.getDemo()));
         empresa.setCodigoQrHabilitado(Boolean.TRUE.equals(request.getCodigoQrHabilitado()));
         empresa.setCodigoEan13Habilitado(Boolean.TRUE.equals(request.getCodigoEan13Habilitado()));
+        empresa.setControlTurnoHabilitado(Boolean.TRUE.equals(request.getControlTurnoHabilitado()));
 
         return empresa;
     }
@@ -346,5 +347,6 @@ public class EmpresaServiceImpl implements EmpresaService {
         if (request.getDemo() != null) empresa.setDemo(request.getDemo());
         if (request.getCodigoQrHabilitado() != null) empresa.setCodigoQrHabilitado(request.getCodigoQrHabilitado());
         if (request.getCodigoEan13Habilitado() != null) empresa.setCodigoEan13Habilitado(request.getCodigoEan13Habilitado());
+        if (request.getControlTurnoHabilitado() != null) empresa.setControlTurnoHabilitado(request.getControlTurnoHabilitado());
     }
 }

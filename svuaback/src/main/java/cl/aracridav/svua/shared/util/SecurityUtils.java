@@ -41,6 +41,14 @@ public class SecurityUtils {
         return Boolean.TRUE.equals(getPrincipal().getCodigoEan13Habilitado());
     }
 
+    // 🔳 Flag de configuracion por empresa (Empresa.controlTurnoHabilitado,
+    // tambien viaja en el JWT): controla si el modulo Control de Turno
+    // esta disponible para la empresa del usuario logueado (ver V33,
+    // PuntoControlServiceImpl, LecturaControlServiceImpl).
+    public static boolean tieneControlTurnoHabilitado() {
+        return Boolean.TRUE.equals(getPrincipal().getControlTurnoHabilitado());
+    }
+
     private static UsuarioPrincipal getPrincipal() {
 
         Authentication auth = SecurityContextHolder
