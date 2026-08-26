@@ -102,9 +102,13 @@ public class LecturaControlServiceImpl implements LecturaControlService {
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
-        // 🔥 Sin rango explicito, se muestran los ultimos 7 dias.
-        LocalDateTime desdeEfectivo = desde != null ? desde : LocalDateTime.now().minusDays(7);
-        LocalDateTime hastaEfectivo = hasta != null ? hasta : LocalDateTime.now();
+        // 🔥 Sin rango explicito, se muestra solo el dia actual (00:00 de
+        // hoy hasta este instante) -- el dashboard es para seguimiento del
+        // turno en curso, no un historico. Para ver dias anteriores hay
+        // que usar el filtro de fecha explicito (mismo endpoint).
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime desdeEfectivo = desde != null ? desde : ahora.toLocalDate().atStartOfDay();
+        LocalDateTime hastaEfectivo = hasta != null ? hasta : ahora;
 
         List<PuntoControl> puntos = puntoControlId != null
                 ? List.of(puntoControlRepository.findById(puntoControlId)

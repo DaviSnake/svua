@@ -15,9 +15,8 @@
 -- Notificacion, LecturaTemperatura y Depreciacion/DepreciacionMensual
 -- (series de tiempo/calculos que se insertan una vez y no se
 -- modifican). PuntoControl/LecturaControl (modulo Control de Turno)
--- quedaron pendientes en esta migracion: ese modulo vivia en la rama
--- "graficos" todavia no fusionada a esta rama al momento de escribir
--- esto. PuntoControl se agrego despues en V34, una vez fusionada.
+-- quedan pendientes: ese modulo vive en la rama "graficos" todavia no
+-- fusionada a esta rama al momento de esta migracion.
 --
 -- Como funciona: Hibernate Envers (@Audited en cada entidad, ver
 -- RevisionInfo/RevisionInfoListener) escribe automaticamente una fila
