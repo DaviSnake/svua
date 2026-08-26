@@ -2,6 +2,9 @@ package cl.aracridav.svua.config.security;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,6 +39,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final int MAX_INTENTOS = 5;
     private static final long VENTANA_MS = 15 * 60 * 1000L; // 15 minutos
+
+    // 🔥 Solo hora:minuto -- alcanza para lo que necesita ver el usuario
+    // ("intente nuevamente despues de las 14:35"), sin acoplar el
+    // mensaje a un formato de fecha completo.
+    private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
     private static class Contador {
         final AtomicInteger intentos = new AtomicInteger(0);
@@ -75,10 +83,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
         int intentos = contador.intentos.incrementAndGet();
 
         if (intentos > MAX_INTENTOS) {
+
+            // 🔥 La ventana NO es deslizante (ver compute() mas arriba):
+            // se desbloquea exactamente VENTANA_MS despues del PRIMER
+            // intento contado en esta ventana, no del ultimo.
+            LocalDateTime desbloqueo = LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(contador.inicioVentana.get() + VENTANA_MS),
+                    ZoneId.systemDefault());
+
             response.setStatus(429); // Too Many Requests
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write(
-                "{\"error\":\"Demasiados intentos. Intente nuevamente más tarde.\"}"
+                "{\"error\":\"Demasiados intentos. Intente nuevamente después de las "
+                    + desbloqueo.format(FORMATO_HORA)
+                    + ".\",\"reintentarDespuesDe\":\"" + desbloqueo + "\"}"
             );
             return;
         }
