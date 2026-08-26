@@ -28,6 +28,7 @@ import { InformeConexionesComponent } from './components/informe-conexiones/info
 import { VerLogsComponent } from './components/ver-logs/ver-logs.component';
 import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
 import { EscanearComponent } from './components/escanear/escanear.component';
+import { ControlTurnoComponent } from './components/control-turno/control-turno.component';
 
 // 🔐 Roles que SI ven cada seccion "de gestion" segun el sidebar hoy
 // (sidebar.component.html: *ngIf="!esTecnico" en esos items -- TECNICO es
@@ -35,6 +36,11 @@ import { EscanearComponent } from './components/escanear/escanear.component';
 // todas igual, sin distincion entre ADMIN_EMPRESA/JEFE_MANTENIMIENTO/
 // BODEGUERO/USUARIO).
 const TODOS_MENOS_TECNICO = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'BODEGUERO', 'USUARIO'];
+
+// 🔐 Control de Turno: a diferencia de TODOS_MENOS_TECNICO, aqui SI
+// entra TECNICO (es quien registra las lecturas en terreno) y quedan
+// fuera BODEGUERO/USUARIO (no participan de este proceso).
+const ROLES_CONTROL_TURNO = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'TECNICO'];
 
 export const routes: Routes = [
     {
@@ -83,6 +89,11 @@ export const routes: Routes = [
                 component: CalendarioComponent
                 // Sin data.roles: visible para cualquier usuario logueado
                 // (el sidebar tampoco lo restringe hoy).
+            },
+            {
+                path: 'controlTurno',
+                component: ControlTurnoComponent,
+                data: { roles: ROLES_CONTROL_TURNO }
             },
             {
                 path: 'empresa',

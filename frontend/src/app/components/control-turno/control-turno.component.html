@@ -1,0 +1,212 @@
+<div class="container">
+
+  <h2>Control de Turno</h2>
+
+  <!-- ===================== CATALOGO DE PUNTOS DE CONTROL ===================== -->
+  @if (esAdminCatalogo) {
+    <h3>{{ editandoPunto ? 'Editar Punto de Control' : 'Nuevo Punto de Control' }}</h3>
+    <form [formGroup]="puntoForm" (ngSubmit)="guardarPunto()" class="form-container">
+      <div class="card-section">
+        <div class="form-grid">
+          <div class="form-group">
+            <input type="text" placeholder="Nombre (ej. Horno 1, Cámara Fría)" formControlName="nombre" />
+          </div>
+          <div class="form-group">
+            <input type="text" placeholder="Unidad (ej. °C, %)" formControlName="unidad" />
+          </div>
+          <div class="form-group">
+            <input type="number" step="0.01" placeholder="Valor mínimo aceptable" formControlName="valorMin" />
+          </div>
+          <div class="form-group">
+            <input type="number" step="0.01" placeholder="Valor máximo aceptable" formControlName="valorMax" />
+          </div>
+          @if (esSuperAdmin) {
+            <div class="form-group form-group--combo">
+              <input type="text"
+                     placeholder="Empresa"
+                     [matAutocomplete]="autoEmpresa"
+                     [formControl]="empresaControl"
+                     (focus)="onFocusEmpresa()">
+              <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                  {{ empresa.nombre }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit">{{ editandoPunto ? 'Actualizar' : 'Guardar' }}</button>
+        @if (editandoPunto) {
+          <button type="button" (click)="nuevoPunto()">Cancelar</button>
+        }
+      </div>
+    </form>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Unidad</th>
+            <th>Rango aceptable</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let punto of puntos">
+            <td>{{ punto.nombre }}</td>
+            <td>{{ punto.unidad }}</td>
+            <td>{{ (punto.valorMin != null && punto.valorMax != null) ? (punto.valorMin + ' - ' + punto.valorMax) : '—' }}</td>
+            <td>{{ punto.activo ? 'Activo' : 'Deshabilitado' }}</td>
+            <td>
+              <button class="btn-editar" (click)="editarPunto(punto)">Editar</button>
+              <button *ngIf="punto.activo" class="btn-eliminar" (click)="eliminarPunto(punto.id!)">Deshabilitar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr />
+  }
+
+  <!-- ===================== REGISTRO DE LECTURA ===================== -->
+  <h3>Registrar Lectura</h3>
+  <form [formGroup]="lecturaForm" (ngSubmit)="registrarLectura()" class="form-container">
+    <div class="card-section">
+      <div class="form-grid">
+        <div class="form-group form-group--combo">
+          <input type="text"
+                 placeholder="Punto de control"
+                 [matAutocomplete]="autoPuntoLectura"
+                 [formControl]="puntoLecturaControl"
+                 (focus)="onFocusPuntoLectura()">
+          <mat-autocomplete #autoPuntoLectura="matAutocomplete" [displayWith]="displayPuntoControl">
+            <mat-option *ngFor="let punto of puntosActivosFiltrados" [value]="punto">
+              {{ punto.nombre }} ({{ punto.unidad }})
+            </mat-option>
+          </mat-autocomplete>
+        </div>
+        <div class="form-group">
+          <input type="number" step="0.01" placeholder="Valor" formControlName="valor" />
+        </div>
+        <div class="form-group">
+          <select formControlName="turno">
+            <option [ngValue]="null" disabled>Turno</option>
+            <option *ngFor="let turno of turnos" [ngValue]="turno">{{ turno }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="datetime-local" formControlName="fechaHora" />
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Observación (opcional)" formControlName="observacion" />
+        </div>
+      </div>
+    </div>
+    <div class="acciones">
+      <button type="submit">Registrar Lectura</button>
+    </div>
+  </form>
+
+  <hr />
+
+  <!-- ===================== HISTORIAL ===================== -->
+  <h3>Historial de Lecturas</h3>
+
+  <div class="toolbar-grilla">
+    <div class="filtro-grilla">
+      <label>Punto de control</label>
+      <div class="form-group form-group--combo">
+        <input type="text"
+               placeholder="Todos los puntos"
+               [matAutocomplete]="autoFiltroPunto"
+               [formControl]="filtroPuntoControl"
+               (focus)="onFocusFiltroPunto()">
+        <mat-autocomplete #autoFiltroPunto="matAutocomplete" [displayWith]="displayPuntoControl">
+          <mat-option *ngFor="let punto of filtroPuntosFiltrados" [value]="punto">
+            {{ punto.nombre }} ({{ punto.unidad }})
+          </mat-option>
+        </mat-autocomplete>
+      </div>
+    </div>
+    <div class="filtro-grilla">
+      <label>Turno</label>
+      <select [(ngModel)]="filtroTurno" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltros()">
+        <option [ngValue]="null">Todos</option>
+        <option *ngFor="let turno of turnos" [ngValue]="turno">{{ turno }}</option>
+      </select>
+    </div>
+    <div class="filtro-grilla">
+      <label>Desde</label>
+      <input type="datetime-local" [(ngModel)]="filtroDesde" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltros()" />
+    </div>
+    <div class="filtro-grilla">
+      <label>Hasta</label>
+      <input type="datetime-local" [(ngModel)]="filtroHasta" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltros()" />
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha/Hora</th>
+          <th>Punto de control</th>
+          <th>Valor</th>
+          <th>Turno</th>
+          <th>Registrado por</th>
+          <th>Observación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lectura of lecturas; trackBy: trackByLecturaId">
+          <td>{{ lectura.fechaHora | date: 'dd-MM-yyyy HH:mm' }}</td>
+          <td>{{ lectura.puntoControlNombre }}</td>
+          <td>{{ lectura.valor }} {{ lectura.unidad }}</td>
+          <td>{{ lectura.turno }}</td>
+          <td>{{ lectura.usuarioNombre }}</td>
+          <td>{{ lectura.observacion }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="paginacion">
+    <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">⬅ Anterior</button>
+    <ng-container *ngFor="let p of paginasVisibles()">
+      <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+      <button *ngIf="p !== -1" (click)="cambiarPagina(p)" [class.activa]="p === page">{{ p + 1 }}</button>
+    </ng-container>
+    <button (click)="cambiarPagina(page + 1)" [disabled]="page + 1 >= totalPages">Siguiente ➡</button>
+  </div>
+
+  <hr />
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <h3>Dashboard de Control de Turno</h3>
+
+  <div class="charts-grid">
+    <div class="chart-card" *ngFor="let chart of lineCharts">
+      <p class="section-subtitle">{{ chart.punto.nombre }} — Evolución ({{ chart.punto.unidad }})</p>
+      <div class="chart-container">
+        <canvas baseChart [data]="chart.data" [type]="chart.type" [options]="chart.options"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card" *ngFor="let chart of donaCharts">
+      <p class="section-subtitle">{{ chart.subtitulo }}</p>
+      <div class="chart-container">
+        <canvas baseChart [data]="chart.data" [type]="chart.type" [options]="chart.options"></canvas>
+      </div>
+    </div>
+
+    <p *ngIf="!lineCharts.length" class="section-subtitle">
+      No hay lecturas registradas en el rango de fechas seleccionado.
+    </p>
+  </div>
+
+</div>

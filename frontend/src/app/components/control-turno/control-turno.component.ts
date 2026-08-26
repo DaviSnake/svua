@@ -1,0 +1,586 @@
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { NgChartsModule } from 'ng2-charts';
+import { ChartType } from 'chart.js';
+import Swal from 'sweetalert2';
+
+import { ControlTurnoService } from '../../services/control-turno.service';
+import { AuthService } from '../../services/auth.service';
+import { EmpresaService } from '../../services/empresa.service';
+import { PuntoControl } from '../../model/punto-control';
+import { LecturaControl, PuntoControlDashboard, TurnoTrabajo } from '../../model/lectura-control';
+import { Empresa } from '../../model/empresa';
+import { calcularPaginasVisibles } from '../../shared/pagination.util';
+
+// 🔥 Pantalla "Control de Turno": administracion del catalogo de
+// puntos de control (temperatura, humedad, etc.), registro de lecturas
+// horarias por turno, y dashboard con los graficos de evolucion y de
+// cumplimiento de rango -- reemplaza el registro en planilla Excel
+// (SISTEMA_DE_CONTROL_DE_MANTENCION). Visible tambien para TECNICO
+// (a diferencia de la mayoria de las pantallas de "gestion"), porque
+// es quien registra las lecturas en terreno.
+@Component({
+  selector: 'app-control-turno',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, NgChartsModule],
+  templateUrl: './control-turno.component.html',
+  styleUrl: './control-turno.component.css'
+})
+export class ControlTurnoComponent implements OnInit {
+
+  authService = inject(AuthService);
+  controlTurnoService = inject(ControlTurnoService);
+  empresaService = inject(EmpresaService);
+  fb = inject(FormBuilder);
+
+  esSuperAdmin = false;
+  esAdminEmpresa = false;
+  esAdminCatalogo = false; // SUPER_ADMIN o ADMIN_EMPRESA: administra el catalogo de puntos
+
+  turnos: TurnoTrabajo[] = ['MANANA', 'TARDE', 'NOCHE'];
+
+  // ---------- Catalogo de puntos de control ----------
+  puntoForm!: FormGroup;
+  empresaControl = new FormControl();
+  empresas: Empresa[] = [];
+  empresasFiltradas: Empresa[] = [];
+  puntos: PuntoControl[] = [];
+  editandoPunto = false;
+  puntoEditandoId: number | null = null;
+
+  // ---------- Registro de lectura ----------
+  lecturaForm!: FormGroup;
+  puntosActivos: PuntoControl[] = [];
+  puntoLecturaControl = new FormControl();
+  puntosActivosFiltrados: PuntoControl[] = [];
+
+  // ---------- Historial ----------
+  lecturas: LecturaControl[] = [];
+  filtroPuntoId: number | null = null;
+  filtroPuntoControl = new FormControl();
+  filtroPuntosFiltrados: PuntoControl[] = [];
+  filtroDesde: string | null = null;
+  filtroHasta: string | null = null;
+  filtroTurno: TurnoTrabajo | null = null;
+
+  page = 0;
+  size = 10;
+  totalPages = 0;
+  totalElements = 0;
+
+  // ---------- Dashboard ----------
+  dashboard: PuntoControlDashboard[] = [];
+  lineCharts: any[] = [];
+  donaCharts: any[] = [];
+
+  ngOnInit(): void {
+
+    this.esSuperAdmin = this.authService.isAdmin();
+    this.esAdminEmpresa = this.authService.isAdminEmpresa();
+    this.esAdminCatalogo = this.esSuperAdmin || this.esAdminEmpresa;
+
+    this.initPuntoForm();
+    this.initLecturaForm();
+    this.initAutocompletePuntoLectura();
+    this.initAutocompleteFiltroPunto();
+
+    if (this.esAdminCatalogo) {
+      this.cargarEmpresas();
+      this.initAutocompleteEmpresa();
+      this.cargarPuntos();
+    }
+
+    this.cargarPuntosActivos();
+    this.cargarLecturas();
+    this.cargarDashboard();
+  }
+
+  // ===================== CATALOGO =====================
+
+  initPuntoForm(): void {
+    this.puntoForm = this.fb.group({
+      nombre: ['', Validators.required],
+      unidad: ['', Validators.required],
+      valorMin: [null],
+      valorMax: [null],
+      empresaId: [null, Validators.required]
+    });
+  }
+
+  initAutocompleteEmpresa(): void {
+    this.empresaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.empresasFiltradas = !search
+        ? this.empresas
+        : this.empresas.filter(e => e.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.puntoForm.patchValue({ empresaId: value.id });
+      }
+    });
+  }
+
+  cargarEmpresas(): void {
+    this.empresaService.getAll().subscribe(data => {
+      this.empresas = data;
+      this.empresasFiltradas = data;
+
+      // 🔥 ADMIN_EMPRESA solo administra su propia empresa: se
+      // precarga automaticamente (mismo criterio que otros
+      // mantenedores de catalogo, ej. Ubicacion).
+      if (this.esAdminEmpresa) {
+        const propia = data.find(e => e.id === this.authService.getEmpresaId());
+        if (propia) {
+          this.puntoForm.patchValue({ empresaId: propia.id });
+          this.empresaControl.setValue(propia, { emitEvent: false });
+        }
+      }
+    });
+  }
+
+  onFocusEmpresa(): void {
+    this.empresasFiltradas = this.empresas;
+  }
+
+  displayEmpresa = (empresa: any): string => empresa?.nombre ?? '';
+
+  cargarPuntos(): void {
+    this.controlTurnoService
+      .getPuntos(0, 50, this.esSuperAdmin ? null : this.authService.getEmpresaId())
+      .subscribe(res => this.puntos = res.content);
+  }
+
+  guardarPunto(): void {
+
+    if (this.puntoForm.invalid) {
+      this.puntoForm.markAllAsTouched();
+      return;
+    }
+
+    const valor = this.puntoForm.value;
+
+    const request$ = this.editandoPunto && this.puntoEditandoId
+      ? this.controlTurnoService.actualizarPunto(this.puntoEditandoId, valor)
+      : this.controlTurnoService.crearPunto(valor);
+
+    request$.subscribe({
+      next: () => {
+        Swal.fire('Listo', 'Punto de control guardado correctamente', 'success');
+        this.nuevoPunto();
+        this.cargarPuntos();
+        this.cargarPuntosActivos();
+      },
+      error: (err) => {
+        Swal.fire('Error', err.error?.error || 'No se pudo guardar el punto de control', 'error');
+      }
+    });
+  }
+
+  editarPunto(punto: PuntoControl): void {
+    this.editandoPunto = true;
+    this.puntoEditandoId = punto.id!;
+    this.puntoForm.patchValue(punto);
+    if (punto.empresaId) {
+      const empresa = this.empresas.find(e => e.id === punto.empresaId);
+      if (empresa) {
+        this.empresaControl.setValue(empresa, { emitEvent: false });
+      }
+    }
+  }
+
+  nuevoPunto(): void {
+    this.editandoPunto = false;
+    this.puntoEditandoId = null;
+    this.puntoForm.reset({ valorMin: null, valorMax: null });
+    if (this.esAdminEmpresa) {
+      this.puntoForm.patchValue({ empresaId: this.authService.getEmpresaId() });
+    }
+  }
+
+  eliminarPunto(id: number): void {
+    Swal.fire({
+      title: '¿Deshabilitar punto de control?',
+      text: 'Ya no aparecerá disponible para registrar nuevas lecturas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, deshabilitar'
+    }).then(result => {
+      if (result.isConfirmed) {
+        this.controlTurnoService.eliminarPunto(id).subscribe(() => {
+          this.cargarPuntos();
+          this.cargarPuntosActivos();
+        });
+      }
+    });
+  }
+
+  // ===================== REGISTRO DE LECTURA =====================
+
+  initLecturaForm(): void {
+    this.lecturaForm = this.fb.group({
+      puntoControlId: [null, Validators.required],
+      valor: [null, Validators.required],
+      turno: [null, Validators.required],
+      fechaHora: [this.horaActualInput()],
+      observacion: ['']
+    });
+  }
+
+  private horaActualInput(): string {
+    const ahora = new Date();
+    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+    return ahora.toISOString().slice(0, 16);
+  }
+
+  cargarPuntosActivos(): void {
+    this.controlTurnoService.getPuntosActivos().subscribe(data => {
+      this.puntosActivos = data;
+      this.puntosActivosFiltrados = data;
+      this.filtroPuntosFiltrados = data;
+    });
+  }
+
+  // 🔥 Autocompletado "escribir para buscar" del punto de control en el
+  // formulario de registro de lectura (mismo patron que Empresa, ver
+  // initAutocompleteEmpresa): al elegir una opcion de la lista, se
+  // guarda el id real en lecturaForm.puntoControlId; si se borra el
+  // texto, se limpia el id para que la validacion "required" lo pesque.
+  initAutocompletePuntoLectura(): void {
+    this.puntoLecturaControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.puntosActivosFiltrados = !search
+        ? this.puntosActivos
+        : this.puntosActivos.filter(p => p.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.lecturaForm.patchValue({ puntoControlId: value.id });
+      } else if (!search) {
+        this.lecturaForm.patchValue({ puntoControlId: null });
+      }
+    });
+  }
+
+  onFocusPuntoLectura(): void {
+    this.puntosActivosFiltrados = this.puntosActivos;
+  }
+
+  // 🔥 Mismo autocompletado, pero para el filtro de punto de control
+  // del historial (equivalente a filtroEmpresaControl en Ubicacion):
+  // al elegir/borrar dispara aplicarFiltros() igual que antes hacia el
+  // <select> con (change).
+  initAutocompleteFiltroPunto(): void {
+    this.filtroPuntoControl.valueChanges.subscribe(value => {
+      const esObjeto = value && typeof value === 'object';
+      const search = (esObjeto ? value.nombre : value || '').toLowerCase().trim();
+
+      this.filtroPuntosFiltrados = !search
+        ? this.puntosActivos
+        : this.puntosActivos.filter(p => p.nombre.toLowerCase().includes(search));
+
+      if (esObjeto) {
+        this.filtroPuntoId = value.id;
+        this.aplicarFiltros();
+      } else if (!search && this.filtroPuntoId !== null) {
+        this.filtroPuntoId = null;
+        this.aplicarFiltros();
+      }
+    });
+  }
+
+  onFocusFiltroPunto(): void {
+    this.filtroPuntosFiltrados = this.puntosActivos;
+  }
+
+  displayPuntoControl = (punto: any): string => punto ? `${punto.nombre} (${punto.unidad})` : '';
+
+  registrarLectura(): void {
+
+    if (this.lecturaForm.invalid) {
+      this.lecturaForm.markAllAsTouched();
+      return;
+    }
+
+    this.controlTurnoService.registrarLectura(this.lecturaForm.value).subscribe({
+      next: () => {
+        Swal.fire('Listo', 'Lectura registrada correctamente', 'success');
+        this.lecturaForm.reset({ fechaHora: this.horaActualInput() });
+        this.puntoLecturaControl.setValue('', { emitEvent: false });
+        this.cargarLecturas();
+        this.cargarDashboard();
+      },
+      error: (err) => {
+        Swal.fire('Error', err.error?.error || 'No se pudo registrar la lectura', 'error');
+      }
+    });
+  }
+
+  // ===================== HISTORIAL =====================
+
+  cargarLecturas(): void {
+    this.controlTurnoService.getLecturas(
+      this.page, this.size, this.filtroPuntoId, this.filtroDesde, this.filtroHasta, this.filtroTurno
+    ).subscribe(res => {
+      this.lecturas = res.content;
+      this.totalPages = res.page.totalPages;
+      this.totalElements = res.page.totalElements;
+    });
+  }
+
+  aplicarFiltros(): void {
+    this.page = 0;
+    this.cargarLecturas();
+    this.cargarDashboard();
+  }
+
+  cambiarPagina(p: number): void {
+    if (p < 0 || p >= this.totalPages) {
+      return;
+    }
+    this.page = p;
+    this.cargarLecturas();
+  }
+
+  paginasVisibles(): number[] {
+    return calcularPaginasVisibles(this.page, this.totalPages);
+  }
+
+  trackByLecturaId(_: number, l: LecturaControl): number | undefined {
+    return l.id;
+  }
+
+  // ===================== DASHBOARD =====================
+
+  cargarDashboard(): void {
+    this.controlTurnoService.getDashboard(
+      this.filtroPuntoId, this.filtroDesde, this.filtroHasta, this.filtroTurno
+    ).subscribe(data => {
+      this.dashboard = data;
+      this.construirGraficos();
+    });
+  }
+
+  private construirGraficos(): void {
+
+    // 🔥 Los puntos cuyo nombre termina en "Sección N°X" (ej. "Proofer 1
+    // - Temperatura Sección N°1") se agrupan en UN solo grafico de linea
+    // por prefijo comun (ej. "Proofer 1 - Temperatura"), con una serie
+    // de color distinto por seccion -- replica los graficos combinados
+    // del Excel original (ver seed V30). Los puntos que no siguen ese
+    // patron (camaras, salas, tiempo de fermentacion, velocidades)
+    // siguen mostrandose cada uno en su propio grafico, como antes.
+    const COLORES = ['#3f51b5', '#e91e63', '#009688', '#ff9800', '#795548', '#607d8b'];
+    const patronSeccion = /^(.*)\s+(Sección N°\d+)$/i;
+
+    // 🔥 Estos 5 puntos no siguen el patron "... Sección N°X" (no son
+    // secciones de un mismo equipo, son sensores sueltos de camaras y
+    // salas distintas), asi que su agrupacion se define a mano en vez
+    // de por regex -- replica los otros 2 graficos combinados del
+    // Excel original ("TEMPERATURA CAMARAS DE CONGELADO" y
+    // "TEMPERATURA DE SALAS DE PROCESOS", ver V30 para los nombres
+    // exactos de los puntos).
+    const GRUPOS_FIJOS: Record<string, string> = {
+      'Cámara Variedades 1': 'Cámaras de Congelado',
+      'Cámara Variedades 2': 'Cámaras de Congelado',
+      'Cámara de Congelado': 'Cámaras de Congelado',
+      'Sala de Envasado': 'Salas de Procesos',
+      'Sala de Variedades': 'Salas de Procesos'
+    };
+
+    const grupos = new Map<string, { unidad: string; miembros: { etiqueta: string; punto: PuntoControlDashboard }[] }>();
+    const individuales: PuntoControlDashboard[] = [];
+
+    for (const punto of this.dashboard) {
+
+      const grupoFijo = GRUPOS_FIJOS[punto.nombre];
+      const match = punto.nombre.match(patronSeccion);
+
+      let titulo: string;
+      let etiqueta: string;
+
+      if (grupoFijo) {
+        titulo = grupoFijo;
+        etiqueta = punto.nombre;
+      } else if (match) {
+        titulo = match[1];
+        etiqueta = match[2];
+      } else {
+        individuales.push(punto);
+        continue;
+      }
+
+      if (!grupos.has(titulo)) {
+        grupos.set(titulo, { unidad: punto.unidad, miembros: [] });
+      }
+
+      grupos.get(titulo)!.miembros.push({ etiqueta, punto });
+    }
+
+    const chartsAgrupados = Array.from(grupos.entries()).map(([titulo, grupo]) =>
+      this.armarLineChart(
+        titulo,
+        grupo.unidad,
+        grupo.miembros
+          .sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, undefined, { numeric: true }))
+          .map((m, i) => ({ etiqueta: m.etiqueta, punto: m.punto, color: COLORES[i % COLORES.length] }))
+      )
+    );
+
+    // 🔥 Estos 5 puntos SI son dona en el Excel original (no linea):
+    // cada hora del turno es una porcion de la dona, de tamaño
+    // proporcional al valor leido en esa hora (ver
+    // armarDonaPorHora) -- a diferencia de la dona "% dentro de
+    // rango" que se arma mas abajo para cualquier punto con
+    // valorMin/valorMax, esta replica fielmente la forma del grafico
+    // original de la planilla para estos puntos puntuales.
+    const PUNTOS_DONA_POR_HORA = new Set([
+      'Tiempo de Fermentación Proofer N°1',
+      'Tiempo de Fermentación Proofer N°2',
+      'Velocidad Espirales de Enfriado y Congelado',
+      'Velocidad Freidora N°1',
+      'Velocidad Freidora N°2'
+    ]);
+
+    const individualesLinea = individuales.filter(p => !PUNTOS_DONA_POR_HORA.has(p.nombre));
+    const individualesDonaPorHora = individuales.filter(p => PUNTOS_DONA_POR_HORA.has(p.nombre));
+
+    const chartsIndividuales = individualesLinea.map(punto =>
+      this.armarLineChart(punto.nombre, punto.unidad, [
+        { etiqueta: punto.nombre, punto, color: COLORES[0] }
+      ])
+    );
+
+    this.lineCharts = [...chartsAgrupados, ...chartsIndividuales];
+
+    const donaPorHoraCharts = individualesDonaPorHora
+      .filter(p => p.fechas.length > 0)
+      .map(punto => this.armarDonaPorHora(punto));
+
+    // 🔥 Dona "% dentro de rango": se arma para cualquier punto con
+    // valorMin/valorMax definido y al menos una lectura (no incluye
+    // los 5 de arriba, que ya tienen su propia dona por hora arriba).
+    // No se agrupan por seccion -- cada punto con rango mantiene su
+    // propia dona.
+    const donaRangoCharts = this.dashboard
+      .filter(p => !PUNTOS_DONA_POR_HORA.has(p.nombre))
+      .filter(p => p.valorMin != null && p.valorMax != null && (p.lecturasDentroRango + p.lecturasFueraRango) > 0)
+      .map(punto => ({
+        punto,
+        subtitulo: `${punto.nombre} — % dentro de rango`,
+        type: 'doughnut' as ChartType,
+        data: {
+          labels: ['Dentro de rango', 'Fuera de rango'],
+          datasets: [{
+            data: [punto.lecturasDentroRango, punto.lecturasFueraRango],
+            backgroundColor: ['#4caf50', '#e57373']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true } }
+        }
+      }));
+
+    this.donaCharts = [...donaPorHoraCharts, ...donaRangoCharts];
+  }
+
+  // 🔥 Dona fiel al Excel original para "Tiempo de Fermentación
+  // Proofer N°1/2" y "Velocidad Espirales/Freidora N°1/2": cada
+  // porcion es una hora del turno, de tamaño proporcional al valor
+  // leido en esa hora (en el Excel eran 18 columnas horarias con un
+  // valor cada una -- aca son las lecturas reales del punto en el
+  // rango filtrado).
+  private armarDonaPorHora(punto: PuntoControlDashboard): any {
+
+    const COLORES_HORA = [
+      '#3f51b5', '#e91e63', '#009688', '#ff9800', '#795548', '#607d8b',
+      '#9c27b0', '#00bcd4', '#8bc34a', '#ffc107', '#f44336', '#3f51b5'
+    ];
+
+    const labels = punto.fechas.map(f =>
+      new Date(f).toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' })
+    );
+
+    return {
+      punto,
+      subtitulo: `${punto.nombre} — Valor por hora (${punto.unidad})`,
+      type: 'doughnut' as ChartType,
+      data: {
+        labels,
+        datasets: [{
+          data: punto.valores,
+          backgroundColor: labels.map((_, i) => COLORES_HORA[i % COLORES_HORA.length])
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'right' } }
+      }
+    };
+  }
+
+  // 🔥 Arma un unico grafico de linea a partir de 1 o mas series. Cada
+  // serie puede traer sus propias fechas (no siempre se registran los
+  // sensores de un grupo exactamente en el mismo instante): se arma un
+  // eje de tiempo unico con la union ordenada de todas las fechas del
+  // grupo, y cada serie se alinea a ese eje dejando "null" donde no
+  // tiene lectura en ese instante exacto (spanGaps une la linea igual,
+  // en vez de cortarla).
+  private armarLineChart(
+    titulo: string,
+    unidad: string,
+    series: { etiqueta: string; punto: PuntoControlDashboard; color: string }[]
+  ): any {
+
+    const fechasUnicas = Array.from(new Set(series.flatMap(s => s.punto.fechas))).sort();
+
+    // 🔥 Eje X = hora de la lectura (HH:mm), como en la planilla
+    // original ("HORA DE MEDICION"). Si el rango filtrado abarca mas
+    // de un dia, se antepone la fecha para no mostrar horas repetidas
+    // sin poder distinguir a que dia pertenece cada una.
+    const diasUnicos = new Set(fechasUnicas.map(f => new Date(f).toDateString()));
+    const incluirFecha = diasUnicos.size > 1;
+
+    const labels = fechasUnicas.map(f => {
+      const fecha = new Date(f);
+      return incluirFecha
+        ? fecha.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+        : fecha.toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    });
+
+    const datasets = series.map(s => {
+      const valorPorFecha = new Map(s.punto.fechas.map((f, i) => [f, s.punto.valores[i]]));
+      return {
+        data: fechasUnicas.map(f => valorPorFecha.has(f) ? valorPorFecha.get(f) : null),
+        label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
+        fill: false,
+        spanGaps: true,
+        tension: 0.4,
+        borderColor: s.color,
+        backgroundColor: s.color
+      };
+    });
+
+    return {
+      punto: { nombre: titulo, unidad },
+      type: 'line' as ChartType,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true } },
+        scales: {
+          x: { title: { display: true, text: 'Hora' } },
+          y: { title: { display: true, text: unidad } }
+        }
+      }
+    };
+  }
+}

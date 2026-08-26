@@ -81,6 +81,15 @@
       <span class="tooltip">Calendario Mantenciones</span>
     </li>
 
+    <!-- CONTROL DE TURNO (SUPER_ADMIN, ADMIN_EMPRESA, JEFE_MANTENIMIENTO, TECNICO) -->
+    <li class="menu-item" routerLinkActive="active" *ngIf="mostrarControlTurno">
+      <a routerLink="/inicio/controlTurno" (click)="closeAllMenus(); $event.stopPropagation()">
+        <i class="bx bx-line-chart"></i>
+        <span *ngIf="!isCollapsed">Control de Turno</span>
+      </a>
+      <span class="tooltip">Control de Turno</span>
+    </li>
+
     <!-- ESCANEAR ACTIVO (solo SUPER_ADMIN y empresa demo) -->
     <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin || codigoQrHabilitado || codigoEan13Habilitado">
       <a routerLink="/inicio/escanear" (click)="closeAllMenus(); $event.stopPropagation()">

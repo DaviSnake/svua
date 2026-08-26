@@ -46,6 +46,11 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   esAdminEmpresa = false;
   esTecnico = false;
   esDemo = false;
+  // 🔥 Control de Turno: visible para SUPER_ADMIN/ADMIN_EMPRESA/
+  // JEFE_MANTENIMIENTO/TECNICO (ver ROLES_CONTROL_TURNO en
+  // app.routes.ts) -- a diferencia de las secciones de "gestion",
+  // aqui SI debe verlo el TECNICO.
+  mostrarControlTurno = false;
   codigoQrHabilitado = false; // 🔒 controla el link "Escanear Activo"
   codigoEan13Habilitado = false;
 
@@ -72,6 +77,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.esAdmin = this.authService.isAdmin();
       this.esTecnico = this.authService.isTecnico()!;
       this.esAdminEmpresa = this.authService.isAdminEmpresa();
+      this.mostrarControlTurno = ['SUPER_ADMIN', 'ADMIN_EMPRESA', 'JEFE_MANTENIMIENTO', 'TECNICO']
+        .includes(this.authService.getUserRole() ?? '');
       this.esDemo = this.authService.getDemo()!;
       this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
       this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;
