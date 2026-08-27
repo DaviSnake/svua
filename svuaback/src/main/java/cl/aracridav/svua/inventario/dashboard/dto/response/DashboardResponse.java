@@ -12,6 +12,7 @@ public class DashboardResponse {
     private Long totalActivos;
     private Long activosOperativos;
     private Long activosFueraServicio;
+    private Long activosDeBaja;
 
     private BigDecimal valorTotal;
     private BigDecimal depreciacionAcumulada;

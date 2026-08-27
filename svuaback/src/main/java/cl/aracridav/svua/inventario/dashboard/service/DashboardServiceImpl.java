@@ -54,6 +54,9 @@ public class DashboardServiceImpl implements DashboardService {
         Long activosFueraServicio =
             activoRepository.countByEmpresaIdAndEstadoActual(empresaId, EstadoActivo.FUERA_SERVICIO);
 
+        Long activosDeBaja =
+            activoRepository.countByEmpresaIdAndEstadoActual(empresaId, EstadoActivo.BAJA);
+
         BigDecimal valorTotal =
             activoRepository.sumValorByEmpresa(empresaId);
 
@@ -110,6 +113,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalActivos(totalActivos)
                 .activosOperativos(activosOperativos)
                 .activosFueraServicio(activosFueraServicio)
+                .activosDeBaja(activosDeBaja)
                 .valorTotal(valorTotal)
                 .depreciacionAcumulada(depreciacion)
                 .ordenesAbiertas(ordenesAbiertas)

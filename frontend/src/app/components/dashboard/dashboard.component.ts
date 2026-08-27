@@ -7,6 +7,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../services/auth.service';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
@@ -14,7 +15,7 @@ import { Empresa } from '../../model/empresa';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NgChartsModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule],
+  imports: [CommonModule, NgChartsModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatTooltipModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -24,8 +25,11 @@ export class DashboardComponent implements OnInit {
   kpis: any;
 
   doughnutData: any;
+  doughnutOptions: any;
   lineData: any;
+  lineOptions: any;
   barData: any;
+  barOptions: any;
   rutaActual = '';
 
   dashboardService = inject(DashboardService);
@@ -103,13 +107,36 @@ export class DashboardComponent implements OnInit {
 
     // Doughnut (activos)
     this.doughnutData = {
-      labels: ['Operativos', 'Fuera de Servicio'],
+      labels: ['Operativos', 'Fuera de Servicio', 'De Baja'],
       datasets: [{
         data: [
           this.data.activosOperativos,
-          this.data.activosFueraServicio
+          this.data.activosFueraServicio,
+          this.data.activosDeBaja
         ]
       }]
+    };
+
+    // 🔥 Tooltip de la torta en porcentaje (ademas del valor absoluto):
+    // el porcentaje se calcula sobre el total de LA TORTA (activos
+    // Operativos + Fuera de Servicio + De Baja), no sobre el total de
+    // la empresa (que podria incluir otros estados no graficados aca).
+    this.doughnutOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const valor = context.parsed || 0;
+              const total = (context.dataset.data as number[])
+                .reduce((acc, v) => acc + (v || 0), 0);
+              const porcentaje = total > 0 ? (valor / total) * 100 : 0;
+              return `${context.label}: ${valor} (${porcentaje.toFixed(1)}%)`;
+            }
+          }
+        }
+      }
     };
 
     // Línea (depreciación)
@@ -121,6 +148,38 @@ export class DashboardComponent implements OnInit {
       }]
     };
 
+    // 🔥 Antes habia que apuntar el mouse justo encima del punto para
+    // que apareciera el tooltip (comportamiento por defecto de
+    // Chart.js: intersect=true). Con interaction/hover en modo
+    // 'index' + intersect=false, el tooltip aparece con solo acercar
+    // el mouse a esa columna del eje X, sin tener que acertarle al
+    // punto exacto. hitRadius agranda ademas el area invisible de cada
+    // punto (el punto se sigue viendo del mismo tamaño, radius/
+    // hoverRadius no cambian el dibujo).
+    this.lineOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      hover: {
+        mode: 'index',
+        intersect: false
+      },
+      elements: {
+        point: {
+          hitRadius: 20
+        }
+      },
+      plugins: {
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      }
+    };
+
     // Barras (órdenes)
     this.barData = {
       labels: ['Pendientes', 'En Ejecucion', 'Pre Completadas', 'Completadas', 'Programadas', 'Canceladas'],
@@ -128,6 +187,29 @@ export class DashboardComponent implements OnInit {
         label: 'Órdenes', // 🔥 AQUÍ ESTÁ LA CLAVE
         data: this.data.ordenesPorEstado
       }]
+    };
+
+    // 🔥 Mismo ajuste que en lineOptions: sin esto, Chart.js exige
+    // apuntar justo encima de la barra (intersect=true por defecto)
+    // para mostrar el tooltip. Con modo 'index' + intersect=false
+    // alcanza con acercar el mouse a esa columna del eje X.
+    this.barOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      hover: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      }
     };
   }
 

@@ -22,43 +22,49 @@
   <!-- KPIs -->
   <div class="kpi-grid">
 
-    <div class="kpi-card">
+    <div class="kpi-card" matTooltip="Cantidad total de activos registrados en la empresa, en cualquier estado.">
       <span>📦</span>
       <h4>Total Activos</h4>
       <p>{{ data?.totalActivos }}</p>
     </div>
 
-    <div class="kpi-card ok">
+    <div class="kpi-card ok" matTooltip="Activos en estado Operativo, disponibles para uso normal.">
       <span>⚙️</span>
       <h4>Operativos</h4>
       <p>{{ data?.activosOperativos }}</p>
     </div>
 
-    <div class="kpi-card critico">
+    <div class="kpi-card critico" matTooltip="Activos fuera de servicio: no disponibles temporalmente por falla o mantención.">
       <span>❌</span>
       <h4>Fuera Servicio</h4>
       <p>{{ data?.activosFueraServicio }}</p>
     </div>
 
-    <div class="kpi-card">
+    <div class="kpi-card critico" matTooltip="Activos dados de baja: retirados definitivamente de operación.">
+      <span>🗑️</span>
+      <h4>De Baja</h4>
+      <p>{{ data?.activosDeBaja }}</p>
+    </div>
+
+    <div class="kpi-card" matTooltip="Suma del valor de adquisición de todos los activos de la empresa.">
       <span>💰</span>
       <h4>Valor Total</h4>
       <p>{{ data?.valorTotal | currency:'CLP' }}</p>
     </div>
 
-    <div class="kpi-card">
+    <div class="kpi-card" matTooltip="Depreciación acumulada total de los activos de la empresa.">
       <span>📉</span>
       <h4>Depreciación</h4>
       <p>{{ data?.depreciacionAcumulada | currency:'CLP' }}</p>
     </div>
 
-    <div class="kpi-card medio">
+    <div class="kpi-card medio" matTooltip="Órdenes de mantenimiento actualmente abiertas (pendientes o en ejecución).">
       <span>🛠️</span>
       <h4>Órdenes</h4>
       <p>{{ data?.ordenesAbiertas }}</p>
     </div>
 
-    <div class="kpi-card critico">
+    <div class="kpi-card critico" matTooltip="Mantenimientos programados cuya fecha de término ya pasó sin completarse.">
       <span>🚨</span>
       <h4>Vencidos</h4>
       <p>{{ data?.mantenimientosVencidos }}</p>
@@ -71,17 +77,20 @@
 
     <div class="card">
       <h3>Estado Activos</h3>
-      <canvas baseChart [data]="doughnutData" [type]="'doughnut'"></canvas>
+      <canvas baseChart [data]="doughnutData" [type]="'doughnut'" [options]="doughnutOptions"
+              matTooltip="Distribución de los activos de la empresa por estado: Operativos, Fuera de Servicio y De Baja."></canvas>
     </div>
 
     <div class="card">
       <h3>Depreciación Mensual</h3>
-      <canvas baseChart [data]="lineData" [type]="'line'"></canvas>
+      <canvas baseChart [data]="lineData" [type]="'line'" [options]="lineOptions"
+              matTooltip="Evolución de la depreciación acumulada de los activos de la empresa en los últimos 6 meses."></canvas>
     </div>
 
     <div class="card">
       <h3>Órdenes Mantenimiento</h3>
-      <canvas baseChart [data]="barData" [type]="'bar'"></canvas>
+      <canvas baseChart [data]="barData" [type]="'bar'" [options]="barOptions"
+              matTooltip="Cantidad de órdenes de mantenimiento por estado: Pendientes, En Ejecución, Pre Completadas, Completadas, Programadas y Canceladas."></canvas>
     </div>
 
   </div>

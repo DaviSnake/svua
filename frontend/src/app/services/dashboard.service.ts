@@ -18,6 +18,7 @@ export class DashboardService {
       totalActivos: 120,
       activosOperativos: 100,
       activosFueraServicio: 20,
+      activosDeBaja: 5,
       valorTotal: 50000000,
       depreciacionAcumulada: 12000000,
       ordenesAbiertas: 15,
