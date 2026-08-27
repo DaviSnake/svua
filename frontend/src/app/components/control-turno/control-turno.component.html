@@ -10,9 +10,15 @@
         <div class="form-grid">
           <div class="form-group">
             <input type="text" placeholder="Nombre (ej. Horno 1, Cámara Fría)" formControlName="nombre" />
+            <small class="error" *ngIf="puntoForm.get('nombre')?.touched && puntoForm.get('nombre')?.errors?.['required']">
+              El nombre es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Unidad (ej. °C, %)" formControlName="unidad" />
+            <small class="error" *ngIf="puntoForm.get('unidad')?.touched && puntoForm.get('unidad')?.errors?.['required']">
+              La unidad es obligatoria
+            </small>
           </div>
           <div class="form-group">
             <input type="number" step="0.01" placeholder="Valor mínimo aceptable" formControlName="valorMin" />
@@ -32,6 +38,9 @@
                   {{ empresa.nombre }}
                 </mat-option>
               </mat-autocomplete>
+              <small class="error" *ngIf="puntoForm.get('empresaId')?.touched && puntoForm.get('empresaId')?.errors?.['required']">
+                Debe seleccionar una empresa
+              </small>
             </div>
           }
         </div>
@@ -89,15 +98,24 @@
               {{ punto.nombre }} ({{ punto.unidad }})
             </mat-option>
           </mat-autocomplete>
+          <small class="error" *ngIf="lecturaForm.get('puntoControlId')?.touched && lecturaForm.get('puntoControlId')?.errors?.['required']">
+            Debe seleccionar un punto de control
+          </small>
         </div>
         <div class="form-group">
           <input type="number" step="0.01" placeholder="Valor" formControlName="valor" />
+          <small class="error" *ngIf="lecturaForm.get('valor')?.touched && lecturaForm.get('valor')?.errors?.['required']">
+            El valor es obligatorio
+          </small>
         </div>
         <div class="form-group">
           <select formControlName="turno">
             <option [ngValue]="null" disabled>Turno</option>
             <option *ngFor="let turno of turnos" [ngValue]="turno">{{ turno }}</option>
           </select>
+          <small class="error" *ngIf="lecturaForm.get('turno')?.touched && lecturaForm.get('turno')?.errors?.['required']">
+            Debe seleccionar un turno
+          </small>
         </div>
         <div class="form-group">
           <input type="datetime-local" formControlName="fechaHora" />

@@ -42,6 +42,15 @@ hr {
   padding-right: 28px;
 }
 
+/* 🔥 Mensaje de campo obligatorio (antes no habia ningun aviso: si
+   guardabas con campos vacios, simplemente no pasaba nada). Mismo
+   patron que el resto de los mantenedores (Activo, Repuesto, etc.). */
+.error {
+  color: red;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
 form {
   display: grid;
   grid-template-columns: 1fr;
