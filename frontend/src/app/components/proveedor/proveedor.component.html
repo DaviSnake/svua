@@ -6,50 +6,73 @@
         <div class="form-grid">
           <div class="form-group">
             <input type="text" placeholder="Nombre" formControlName="nombre" />
+            <small class="error" *ngIf="proveedorForm.get('nombre')?.touched && proveedorForm.get('nombre')?.errors?.['required']">
+              El nombre es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Rut" formControlName="rut" />
+            <small class="error" *ngIf="proveedorForm.get('rut')?.touched && proveedorForm.get('rut')?.errors?.['required']">
+              El rut es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Contacto" formControlName="contacto" />
+            <small class="error" *ngIf="proveedorForm.get('contacto')?.touched && proveedorForm.get('contacto')?.errors?.['required']">
+              El contacto es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Télefono" formControlName="telefono" />
-            <div *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.invalid">
-              <small *ngIf="proveedorForm.get('telefono')?.errors?.['required']">
-                Teléfono obligatorio
-              </small>
-              <small *ngIf="proveedorForm.get('telefono')?.errors?.['pattern']">
-                Solo se permiten números
-              </small>
-            </div>
+            <small class="error" *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.errors?.['required']">
+              Teléfono obligatorio
+            </small>
+            <small class="error" *ngIf="proveedorForm.get('telefono')?.touched && proveedorForm.get('telefono')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
           <div class="form-group">
             <input type="email" placeholder="Email" formControlName="email" />
+            <small class="error" *ngIf="proveedorForm.get('email')?.touched && proveedorForm.get('email')?.errors?.['required']">
+              El email es obligatorio
+            </small>
+            <small class="error" *ngIf="proveedorForm.get('email')?.touched && proveedorForm.get('email')?.errors?.['email']">
+              Ingrese un email válido
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Tipo Proveedor"
-                   [matAutocomplete]="autoTipoProveedor"
-                   [formControl]="tipoProveedorControl"
-                   (focus)="onFocusTipoProveedor()">
-            <mat-autocomplete #autoTipoProveedor="matAutocomplete">
-              <mat-option *ngFor="let tipo of tiposProveedorFiltrados" [value]="tipo">
-                {{ tipo }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Tipo Proveedor"
+                     [matAutocomplete]="autoTipoProveedor"
+                     [formControl]="tipoProveedorControl"
+                     (focus)="onFocusTipoProveedor()">
+              <mat-autocomplete #autoTipoProveedor="matAutocomplete">
+                <mat-option *ngFor="let tipo of tiposProveedorFiltrados" [value]="tipo">
+                  {{ tipo }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="proveedorForm.get('tipoProveedor')?.touched && proveedorForm.get('tipoProveedor')?.errors?.['required']">
+              Debe seleccionar un tipo de proveedor
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Empresa"
-                   [matAutocomplete]="autoEmpresa"
-                   [formControl]="empresaControl"
-                   (focus)="onFocusEmpresa()">
-            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
-              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
-                {{ empresa.nombre }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Empresa"
+                     [matAutocomplete]="autoEmpresa"
+                     [formControl]="empresaControl"
+                     (focus)="onFocusEmpresa()">
+              <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                  {{ empresa.nombre }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="proveedorForm.get('empresaId')?.touched && proveedorForm.get('empresaId')?.errors?.['required']">
+              Debe seleccionar una empresa
+            </small>
           </div>
         </div>
       </div>

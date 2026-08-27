@@ -6,48 +6,88 @@
         <div class="form-grid">
           <div class="form-group">
             <input type="text" placeholder="Código" formControlName="codigo" />
+            <small class="error" *ngIf="repuestoForm.get('codigo')?.touched && repuestoForm.get('codigo')?.errors?.['required']">
+              El código es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Nombre" formControlName="nombre" />
+            <small class="error" *ngIf="repuestoForm.get('nombre')?.touched && repuestoForm.get('nombre')?.errors?.['required']">
+              El nombre es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Descripión" formControlName="descripcion" />
+            <small class="error" *ngIf="repuestoForm.get('descripcion')?.touched && repuestoForm.get('descripcion')?.errors?.['required']">
+              La descripción es obligatoria
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Costo Unitario" formControlName="costoUnitario" />
+            <small class="error" *ngIf="repuestoForm.get('costoUnitario')?.touched && repuestoForm.get('costoUnitario')?.errors?.['required']">
+              El costo unitario es obligatorio
+            </small>
+            <small class="error" *ngIf="repuestoForm.get('costoUnitario')?.touched && repuestoForm.get('costoUnitario')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Stock Actual" formControlName="stockActual" />
+            <small class="error" *ngIf="repuestoForm.get('stockActual')?.touched && repuestoForm.get('stockActual')?.errors?.['required']">
+              El stock actual es obligatorio
+            </small>
+            <small class="error" *ngIf="repuestoForm.get('stockActual')?.touched && repuestoForm.get('stockActual')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Stock Mínimo" formControlName="stockMinimo" />
+            <small class="error" *ngIf="repuestoForm.get('stockMinimo')?.touched && repuestoForm.get('stockMinimo')?.errors?.['required']">
+              El stock mínimo es obligatorio
+            </small>
+            <small class="error" *ngIf="repuestoForm.get('stockMinimo')?.touched && repuestoForm.get('stockMinimo')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Cuenta Contable" formControlName="cuentaContable" />
+            <small class="error" *ngIf="repuestoForm.get('cuentaContable')?.touched && repuestoForm.get('cuentaContable')?.errors?.['required']">
+              La cuenta contable es obligatoria
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Tipo Repuesto"
-                   [matAutocomplete]="autoTipoRepuesto"
-                   [formControl]="tipoRepuestoControl"
-                   (focus)="onFocusTipoRepuesto()">
-            <mat-autocomplete #autoTipoRepuesto="matAutocomplete">
-              <mat-option *ngFor="let tipo of tiposRepuestoFiltrados" [value]="tipo">
-                {{ tipo }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Tipo Repuesto"
+                     [matAutocomplete]="autoTipoRepuesto"
+                     [formControl]="tipoRepuestoControl"
+                     (focus)="onFocusTipoRepuesto()">
+              <mat-autocomplete #autoTipoRepuesto="matAutocomplete">
+                <mat-option *ngFor="let tipo of tiposRepuestoFiltrados" [value]="tipo">
+                  {{ tipo }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="repuestoForm.get('tipoRepuesto')?.touched && repuestoForm.get('tipoRepuesto')?.errors?.['required']">
+              Debe seleccionar un tipo de repuesto
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Empresa"
-                   [matAutocomplete]="autoEmpresa"
-                   [formControl]="empresaControl"
-                   (focus)="onFocusEmpresa()">
-            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
-              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
-                {{ empresa.nombre }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Empresa"
+                     [matAutocomplete]="autoEmpresa"
+                     [formControl]="empresaControl"
+                     (focus)="onFocusEmpresa()">
+              <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                  {{ empresa.nombre }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="repuestoForm.get('empresaId')?.touched && repuestoForm.get('empresaId')?.errors?.['required']">
+              Debe seleccionar una empresa
+            </small>
           </div>
         </div>
       </div>
