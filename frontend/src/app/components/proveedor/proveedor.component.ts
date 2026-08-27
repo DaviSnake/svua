@@ -222,16 +222,11 @@ export class ProveedorComponent implements OnInit {
 
    guardar() {
     if (!FormUtils.esValido(this.proveedorForm)) {
-      const campo = FormUtils.getPrimerCampoInvalido(this.proveedorForm);
+      // 🔥 Antes esto mostraba un popup de SweetAlert2 ("Formulario
+      // incompleto"); se reemplazó por mensajes en linea debajo de
+      // cada campo obligatorio (ver el .html), que se activan solos al
+      // marcar el formulario como "touched".
       FormUtils.marcarComoTocados(this.proveedorForm);
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: `Revisa el campo: ${campo}`
-      });
-
-      console.log(FormUtils.getErrores(this.proveedorForm));
-
       return;
     }
 

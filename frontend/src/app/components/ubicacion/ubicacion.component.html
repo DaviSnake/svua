@@ -6,24 +6,38 @@
         <div class="form-grid">
           <div class="form-group">
             <input type="text" placeholder="Nombre" formControlName="nombre" />
+            <small class="error" *ngIf="ubicacionForm.get('nombre')?.touched && ubicacionForm.get('nombre')?.errors?.['required']">
+              El nombre es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Descripción" formControlName="descripcion" />
+            <small class="error" *ngIf="ubicacionForm.get('descripcion')?.touched && ubicacionForm.get('descripcion')?.errors?.['required']">
+              La descripción es obligatoria
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Dirección" formControlName="direccion" />
+            <small class="error" *ngIf="ubicacionForm.get('direccion')?.touched && ubicacionForm.get('direccion')?.errors?.['required']">
+              La dirección es obligatoria
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Empresa"
-                   [matAutocomplete]="autoEmpresa"
-                   [formControl]="empresaControl"
-                   (focus)="onFocusEmpresa()">
-            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
-              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
-                {{ empresa.nombre }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Empresa"
+                     [matAutocomplete]="autoEmpresa"
+                     [formControl]="empresaControl"
+                     (focus)="onFocusEmpresa()">
+              <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                  {{ empresa.nombre }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="ubicacionForm.get('empresaId')?.touched && ubicacionForm.get('empresaId')?.errors?.['required']">
+              Debe seleccionar una empresa
+            </small>
           </div>
         </div>
       </div>

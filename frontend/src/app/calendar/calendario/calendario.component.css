@@ -234,6 +234,17 @@ textarea {
   border-top-color: #cbd5e1; /* 🔒 triángulo claro solo al pasar por encima */
 }
 
+/* 🔥 Mensaje de campo obligatorio (reemplaza el popup de SweetAlert2
+   que antes se mostraba al guardar con campos vacíos). #ef4444 es el
+   mismo rojo que ya se usaba en este archivo (.riesgo-box.ALTO,
+   .repuesto-chip button), funciona tanto sobre el fondo oscuro del
+   modal "Nueva Orden" como sobre el fondo blanco del modal Repuestos. */
+.error {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
 .btn {
   padding: 8px 14px;
   border-radius: 8px;
@@ -461,6 +472,18 @@ textarea {
   gap: 1rem;
   align-items: end;
   margin-bottom: 2rem;
+}
+
+/* 🔥 Mensajes de campo obligatorio del modal Repuestos: van FUERA de
+   ".form-repuesto" a propósito. Si estuvieran dentro de un ".form-group"
+   de la grilla de 3 columnas, ese ".form-group" crecería y quedaría
+   descentrado respecto a los otros dos (align-items: end los alinea
+   por abajo). Al ir en un bloque aparte debajo, no afectan esa fila. */
+.form-repuesto-errores {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: -1rem;
 }
 
 .tabla-repuestos {

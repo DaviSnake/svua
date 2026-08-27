@@ -94,6 +94,9 @@
         <div class="form-group">
           <label>Título</label>
           <input type="text" formControlName="titulo" />
+          <small class="error" *ngIf="ordenMantencionForm.get('titulo')?.touched && ordenMantencionForm.get('titulo')?.errors?.['required']">
+            El título es obligatorio
+          </small>
         </div>
 
         <div class="form-group">
@@ -110,6 +113,9 @@
               </mat-option>
             </mat-autocomplete>
           </div>
+          <small class="error" *ngIf="ordenMantencionForm.get('tipoMantenimiento')?.touched && ordenMantencionForm.get('tipoMantenimiento')?.errors?.['required']">
+            Debe seleccionar un tipo de mantención
+          </small>
         </div>
 
         <div class="form-group full">
@@ -132,6 +138,9 @@
               </mat-option>
             </mat-autocomplete>
           </div>
+          <small class="error" *ngIf="ordenMantencionForm.get('activoId')?.touched && ordenMantencionForm.get('activoId')?.errors?.['required']">
+            Debe seleccionar un activo
+          </small>
         </div>
 
         <ng-container *ngIf="!ordenMantencionForm.get('ingresoRetroactivo')?.value; else camposIngresoRetroactivo">
@@ -139,6 +148,9 @@
           <div class="form-group">
             <label>Fecha</label>
             <input type="datetime-local" formControlName="fechaHora" />
+            <small class="error" *ngIf="ordenMantencionForm.get('fechaHora')?.touched && ordenMantencionForm.get('fechaHora')?.errors?.['required']">
+              La fecha es obligatoria
+            </small>
           </div>
 
           <div class="form-group">
@@ -148,6 +160,12 @@
               formControlName="duracionMinutos"
               (input)="formatearMiles($event, 'duracionMinutos')"
             />
+            <small class="error" *ngIf="ordenMantencionForm.get('duracionMinutos')?.touched && ordenMantencionForm.get('duracionMinutos')?.errors?.['required']">
+              La duración es obligatoria
+            </small>
+            <small class="error" *ngIf="ordenMantencionForm.get('duracionMinutos')?.touched && ordenMantencionForm.get('duracionMinutos')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
 
         </ng-container>
@@ -157,11 +175,17 @@
           <div class="form-group">
             <label>Inicio real</label>
             <input type="datetime-local" formControlName="fechaEjecucionReal" />
+            <small class="error" *ngIf="ordenMantencionForm.get('fechaEjecucionReal')?.touched && ordenMantencionForm.get('fechaEjecucionReal')?.errors?.['required']">
+              El inicio real es obligatorio
+            </small>
           </div>
 
           <div class="form-group">
             <label>Término real</label>
             <input type="datetime-local" formControlName="fechaFinEjecucionReal" />
+            <small class="error" *ngIf="ordenMantencionForm.get('fechaFinEjecucionReal')?.touched && ordenMantencionForm.get('fechaFinEjecucionReal')?.errors?.['required']">
+              El término real es obligatorio
+            </small>
           </div>
 
         </ng-template>
@@ -189,6 +213,9 @@
               </mat-option>
             </mat-autocomplete>
           </div>
+          <small class="error" *ngIf="ordenMantencionForm.get('proveedorId')?.touched && ordenMantencionForm.get('proveedorId')?.errors?.['required']">
+            Debe seleccionar un proveedor
+          </small>
         </div>
 
         <div class="form-group">
@@ -199,6 +226,12 @@
             formControlName="valorHora"
             (input)="formatearMiles($event, 'valorHora')"
           />
+          <small class="error" *ngIf="ordenMantencionForm.get('valorHora')?.touched && ordenMantencionForm.get('valorHora')?.errors?.['required']">
+            El valor hora es obligatorio
+          </small>
+          <small class="error" *ngIf="ordenMantencionForm.get('valorHora')?.touched && ordenMantencionForm.get('valorHora')?.errors?.['pattern']">
+            Solo se permiten números
+          </small>
         </div>
 
 
@@ -207,6 +240,9 @@
           <input type="number" 
             formControlName="horasEstimadas" 
             readonly />
+          <small class="error" *ngIf="ordenMantencionForm.get('horasEstimadas')?.touched && ordenMantencionForm.get('horasEstimadas')?.errors?.['required']">
+            Debe seleccionar un proveedor para calcular las horas estimadas
+          </small>
         </div>
 
         <div class="form-group">
@@ -386,6 +422,18 @@
           </button>
         </div>
       </form>
+
+      <!-- 🔥 Mensajes de campo obligatorio: van fuera de ".form-repuesto"
+           (ver comentario en el .css) para no descuadrar la fila de 3
+           columnas (select + cantidad + boton), que se alinean por abajo. -->
+      <div class="form-repuesto-errores">
+        <small class="error" *ngIf="repuestoForm.get('repuestoId')?.touched && repuestoForm.get('repuestoId')?.errors?.['required']">
+          Debe seleccionar un repuesto o fungible
+        </small>
+        <small class="error" *ngIf="repuestoForm.get('cantidad')?.touched && (repuestoForm.get('cantidad')?.errors?.['required'] || repuestoForm.get('cantidad')?.errors?.['min'])">
+          La cantidad debe ser al menos 1
+        </small>
+      </div>
 
       <!-- TABLA -->
       <div class="tabla-repuestos">

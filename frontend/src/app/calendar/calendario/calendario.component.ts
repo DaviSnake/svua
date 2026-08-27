@@ -1168,16 +1168,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   guardar() {
     this.ordenMantencionForm.enable();
     if (!FormUtils.esValido(this.ordenMantencionForm)) {
-      const campo = FormUtils.getPrimerCampoInvalido(this.ordenMantencionForm);
+      // 🔥 Antes esto mostraba un popup de SweetAlert2 ("Formulario
+      // incompleto"); se reemplazó por mensajes en linea debajo de
+      // cada campo obligatorio (ver el .html), que se activan solos al
+      // marcar el formulario como "touched".
       FormUtils.marcarComoTocados(this.ordenMantencionForm);
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: `Revisa el campo: ${campo}`
-      });
-
-      console.log(FormUtils.getErrores(this.ordenMantencionForm));
-
       return;
     }
 

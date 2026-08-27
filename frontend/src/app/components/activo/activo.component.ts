@@ -476,16 +476,11 @@ export class ActivoComponent implements OnInit {
 
   guardar() {
     if (!FormUtils.esValido(this.activoForm)) {
-      const campo = FormUtils.getPrimerCampoInvalido(this.activoForm);
+      // 🔥 Antes esto mostraba un popup de SweetAlert2 ("Formulario
+      // incompleto"); se reemplazó por mensajes en linea debajo de
+      // cada campo obligatorio (ver el .html), que se activan solos al
+      // marcar el formulario como "touched".
       FormUtils.marcarComoTocados(this.activoForm);
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: `Revisa el campo: ${campo}`
-      });
-
-      console.log(FormUtils.getErrores(this.activoForm));
-
       return;
     }
     const activo: Activo = this.activoForm.value;

@@ -6,29 +6,47 @@
         <div class="form-grid">
           <div class="form-group">
             <input type="text" placeholder="Nombre" formControlName="nombre" />
+            <small class="error" *ngIf="tipoActivoForm.get('nombre')?.touched && tipoActivoForm.get('nombre')?.errors?.['required']">
+              El nombre es obligatorio
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Descripción" formControlName="descripcion" />
+            <small class="error" *ngIf="tipoActivoForm.get('descripcion')?.touched && tipoActivoForm.get('descripcion')?.errors?.['required']">
+              La descripción es obligatoria
+            </small>
           </div>
           <div class="form-group">
             <input type="text" placeholder="Vida Util Meses" formControlName="vidaUtilReferencialMeses" />
-            <div *ngIf="tipoActivoForm.get('vidaUtilReferencialMeses')?.touched && tipoActivoForm.get('vidaUtilReferencialMeses')?.invalid">  
-              <small *ngIf="tipoActivoForm.get('vidaUtilReferencialMeses')?.errors?.['pattern']">
-                Solo se permiten números
-              </small>
-            </div>
+            <small class="error" *ngIf="tipoActivoForm.get('vidaUtilReferencialMeses')?.touched && tipoActivoForm.get('vidaUtilReferencialMeses')?.errors?.['required']">
+              La vida útil es obligatoria
+            </small>
+            <small class="error" *ngIf="tipoActivoForm.get('vidaUtilReferencialMeses')?.touched && tipoActivoForm.get('vidaUtilReferencialMeses')?.errors?.['pattern']">
+              Solo se permiten números
+            </small>
           </div>
-          <div class="form-group form-group--combo">
-            <input type="text"
-                   placeholder="Empresa"
-                   [matAutocomplete]="autoEmpresa"
-                   [formControl]="empresaControl"
-                   (focus)="onFocusEmpresa()">
-            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
-              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
-                {{ empresa.nombre }}
-              </mat-option>
-            </mat-autocomplete>
+          <div class="form-group">
+            <!-- 🔥 El triangulo de ".form-group--combo" se centra segun
+                 el alto de ESTE contenedor (top: 50%): si el mensaje de
+                 error fuera hermano directo del input aca adentro, el
+                 contenedor crecería y el triangulo quedaria descentrado
+                 respecto al input. Por eso el combo queda en su propio
+                 wrapper interno, y el mensaje de error afuera. -->
+            <div class="form-group--combo">
+              <input type="text"
+                     placeholder="Empresa"
+                     [matAutocomplete]="autoEmpresa"
+                     [formControl]="empresaControl"
+                     (focus)="onFocusEmpresa()">
+              <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+                <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                  {{ empresa.nombre }}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
+            <small class="error" *ngIf="tipoActivoForm.get('empresaId')?.touched && tipoActivoForm.get('empresaId')?.errors?.['required']">
+              Debe seleccionar una empresa
+            </small>
           </div>
         </div>
       </div>
