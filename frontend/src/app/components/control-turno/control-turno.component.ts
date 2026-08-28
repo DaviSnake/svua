@@ -4,6 +4,7 @@ import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartType } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import Swal from 'sweetalert2';
 
 import { ControlTurnoService } from '../../services/control-turno.service';
@@ -74,6 +75,12 @@ export class ControlTurnoComponent implements OnInit {
   dashboard: PuntoControlDashboard[] = [];
   lineCharts: any[] = [];
   donaCharts: any[] = [];
+
+  // 🔥 Plugin de datalabels: se pasa SOLO a los graficos de dona (via
+  // [plugins] en el .html), no se registra global -- los graficos de
+  // linea (lineCharts) siguen sin numeros encima de cada punto, tal
+  // como estaban.
+  donaPlugins = [ChartDataLabels];
 
   ngOnInit(): void {
 
@@ -483,7 +490,18 @@ export class ControlTurnoComponent implements OnInit {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: true } }
+          plugins: {
+            legend: { display: true },
+            // 🔥 Numero de lecturas encima de cada porcion (dentro vs
+            // fuera de rango). Se oculta el "0" cuando una porcion no
+            // tiene lecturas, para no ensuciar la dona con un cero
+            // flotando sobre una porcion de tamaño 0.
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold', size: 12 },
+              formatter: (value: number) => value > 0 ? value : null
+            }
+          }
         }
       }));
 
@@ -521,7 +539,19 @@ export class ControlTurnoComponent implements OnInit {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: true, position: 'right' } }
+        plugins: {
+          legend: { display: true, position: 'right' },
+          // 🔥 Valor de la lectura encima de cada porcion (una porcion
+          // por hora). Con hasta 18 lecturas en un turno las porciones
+          // chicas pueden quedar apretadas -- por eso el texto va en
+          // tamaño reducido, igual sigue siendo mas rapido de leer que
+          // tener que pasar el mouse porcion por porcion.
+          datalabels: {
+            color: '#fff',
+            font: { weight: 'bold', size: 10 },
+            formatter: (value: number) => value
+          }
+        }
       }
     };
   }

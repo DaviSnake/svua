@@ -218,7 +218,7 @@
     <div class="chart-card" *ngFor="let chart of donaCharts">
       <p class="section-subtitle">{{ chart.subtitulo }}</p>
       <div class="chart-container">
-        <canvas baseChart [data]="chart.data" [type]="chart.type" [options]="chart.options"></canvas>
+        <canvas baseChart [data]="chart.data" [type]="chart.type" [options]="chart.options" [plugins]="donaPlugins"></canvas>
       </div>
     </div>
 
