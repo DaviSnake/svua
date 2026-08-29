@@ -207,6 +207,26 @@
   <!-- ===================== DASHBOARD ===================== -->
   <h3>Dashboard de Control de Turno</h3>
 
+  <!-- 🔥 Filtro de fecha propio del dashboard, separado del filtro de
+       "Historial de Lecturas" de arriba (ver comentario en el .ts).
+       Sin filtro, el backend muestra el dia actual. -->
+  <div class="toolbar-grilla">
+    <div class="filtro-grilla">
+      <label>Desde</label>
+      <input type="datetime-local" [(ngModel)]="dashboardDesde" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltroDashboard()" />
+    </div>
+    <div class="filtro-grilla">
+      <label>Hasta</label>
+      <input type="datetime-local" [(ngModel)]="dashboardHasta" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltroDashboard()" />
+    </div>
+    <div class="filtro-grilla" *ngIf="dashboardDesde || dashboardHasta">
+      <label>&nbsp;</label>
+      <button type="button" (click)="dashboardDesde = null; dashboardHasta = null; aplicarFiltroDashboard()">
+        Ver día actual
+      </button>
+    </div>
+  </div>
+
   <div class="charts-grid">
     <div class="chart-card" *ngFor="let chart of lineCharts">
       <p class="section-subtitle">{{ chart.punto.nombre }} — Evolución ({{ chart.punto.unidad }})</p>

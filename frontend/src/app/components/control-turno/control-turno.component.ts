@@ -72,6 +72,16 @@ export class ControlTurnoComponent implements OnInit {
   totalElements = 0;
 
   // ---------- Dashboard ----------
+  // 🔥 Filtro de fecha propio del dashboard, independiente del filtro
+  // "Desde"/"Hasta" del Historial de arriba: son secciones distintas
+  // (el Historial es un listado paginado, el dashboard son graficos
+  // agregados) y antes compartian el mismo filtro sin que se notara,
+  // lo que era confuso (para cambiar el rango de los graficos habia
+  // que ir a mover un campo que visualmente pertenecia al Historial).
+  // Si quedan ambos en null, el backend usa el dia actual (ver
+  // LecturaControlServiceImpl.dashboard()).
+  dashboardDesde: string | null = null;
+  dashboardHasta: string | null = null;
   dashboard: PuntoControlDashboard[] = [];
   lineCharts: any[] = [];
   donaCharts: any[] = [];
@@ -339,9 +349,22 @@ export class ControlTurnoComponent implements OnInit {
     });
   }
 
+  // 🔥 "Punto de control" y "Turno" siguen compartidos entre Historial
+  // y Dashboard a proposito (tiene sentido ver el mismo punto/turno
+  // filtrado en ambos lados a la vez) -- por eso aca se siguen
+  // recargando los dos. Lo unico que se separo fue la fecha (ver
+  // aplicarFiltroDashboard), porque mezclar el rango del Historial con
+  // el del dashboard era confuso (eran secciones distintas).
   aplicarFiltros(): void {
     this.page = 0;
     this.cargarLecturas();
+    this.cargarDashboard();
+  }
+
+  // 🔥 Filtro de fecha propio del dashboard (ver comentario en la
+  // declaracion de dashboardDesde/dashboardHasta): solo recarga el
+  // dashboard, no toca la paginacion ni el listado del Historial.
+  aplicarFiltroDashboard(): void {
     this.cargarDashboard();
   }
 
@@ -365,7 +388,7 @@ export class ControlTurnoComponent implements OnInit {
 
   cargarDashboard(): void {
     this.controlTurnoService.getDashboard(
-      this.filtroPuntoId, this.filtroDesde, this.filtroHasta, this.filtroTurno
+      this.filtroPuntoId, this.dashboardDesde, this.dashboardHasta, this.filtroTurno
     ).subscribe(data => {
       this.dashboard = data;
       this.construirGraficos();
