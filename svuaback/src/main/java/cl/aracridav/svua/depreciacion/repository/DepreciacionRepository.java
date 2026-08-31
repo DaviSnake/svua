@@ -1,6 +1,5 @@
 package cl.aracridav.svua.depreciacion.repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -38,12 +37,5 @@ public interface DepreciacionRepository extends JpaRepository<Depreciacion, Long
        WHERE a.ubicacion.id = :ubicacionId
        """)
     List<Depreciacion> findByUbicacion(@Param("ubicacionId") Long ubicacionId);
-
-   @Query("""
-        SELECT COALESCE(SUM(d.valorInicial - d.valorResidual),0)
-        FROM Depreciacion d
-        WHERE d.empresa.id = :empresaId
-    """)
-    BigDecimal depreciacionTotal(@Param("empresaId") Long empresaId);
 
 }
