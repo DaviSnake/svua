@@ -48,4 +48,24 @@ public interface DepreciacionMensualRepository extends JpaRepository<Depreciacio
         ORDER BY YEAR(d.fecha), MONTH(d.fecha)
     """)
     List<DepreciacionDTO> obtenerUltimos6Meses(Long empresaId, LocalDate fechaInicio, Pageable pageable);
+
+    // 🔒 Depreciación acumulada REAL a la fecha: para cada activo, toma
+    // solo su cuota mensual más reciente cuya fecha ya venció (<=
+    // :fecha) y suma su depreciacionAcumulada. Antes el dashboard sumaba
+    // (valorInicial - valorResidual) desde la tabla `Depreciacion`, que
+    // es la base depreciable TOTAL de cada activo durante toda su vida
+    // util, no lo depreciado hasta hoy: un activo recien comprado
+    // aparecia depreciado al 100% desde el primer dia.
+    @Query("""
+        SELECT COALESCE(SUM(d.depreciacionAcumulada), 0)
+        FROM DepreciacionMensual d
+        WHERE d.empresa.id = :empresaId
+        AND d.fecha = (
+            SELECT MAX(d2.fecha)
+            FROM DepreciacionMensual d2
+            WHERE d2.activo = d.activo
+            AND d2.fecha <= :fecha
+        )
+    """)
+    BigDecimal depreciacionAcumuladaAlDia(Long empresaId, LocalDate fecha);
 }

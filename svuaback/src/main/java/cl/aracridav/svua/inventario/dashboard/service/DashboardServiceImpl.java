@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import cl.aracridav.svua.depreciacion.dto.DepreciacionDTO;
 import cl.aracridav.svua.depreciacion.repository.DepreciacionMensualRepository;
-import cl.aracridav.svua.depreciacion.repository.DepreciacionRepository;
 import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.inventario.dashboard.dto.response.DashboardIndicadoresResponse;
 import cl.aracridav.svua.inventario.dashboard.dto.response.DashboardResponse;
@@ -39,7 +38,6 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final ActivoRepository activoRepository;
     private final OrdenMantenimientoRepository ordenRepository;
-    private final DepreciacionRepository depreciacionRepository;
     private final DepreciacionMensualRepository dMensualRepository;
 
     @Override
@@ -58,7 +56,7 @@ public class DashboardServiceImpl implements DashboardService {
             activoRepository.sumValorByEmpresa(empresaId);
 
         BigDecimal depreciacion =
-            depreciacionRepository.depreciacionTotal(empresaId);
+            dMensualRepository.depreciacionAcumuladaAlDia(empresaId, LocalDate.now());
 
         Pageable top6 = PageRequest.of(0, 6);
 
