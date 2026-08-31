@@ -36,9 +36,15 @@ public interface DepreciacionMensualRepository extends JpaRepository<Depreciacio
     """)
     List<DepreciacionDTO> obtenerUltimos(Long empresaId, Pageable pageable);
 
+        // 🔒 La clave es YEAR*100+MONTH (no solo MONTH) para que el
+        // llamador pueda calzar cada fila con su mes calendario exacto
+        // (año incluido) en vez de solo por posición: si a algun mes del
+        // rango no le corresponde ninguna fila (activo creado a mitad de
+        // año, por ejemplo), la lista quedaba mas corta y el resto de los
+        // meses se corria de lugar contra las etiquetas del grafico.
         @Query("""
         SELECT new cl.aracridav.svua.depreciacion.dto.DepreciacionDTO(
-            MONTH(d.fecha),
+            YEAR(d.fecha) * 100 + MONTH(d.fecha),
             SUM(d.depreciacionMensual)
         )
         FROM DepreciacionMensual d

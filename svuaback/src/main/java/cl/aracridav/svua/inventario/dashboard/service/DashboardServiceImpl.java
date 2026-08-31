@@ -60,12 +60,28 @@ public class DashboardServiceImpl implements DashboardService {
 
         Pageable top6 = PageRequest.of(0, 6);
 
-        LocalDate fechaInicio = LocalDate.now().minusMonths(5).withDayOfMonth(1);
+        // 🔒 Los ultimos 6 meses calendario se calculan UNA sola vez y se
+        // usan como base tanto para las etiquetas ("meses") como para los
+        // valores ("depreciacionMensual"), calzando cada uno por año+mes
+        // (clave YYYYMM) en vez de por posicion. Antes ambas listas se
+        // armaban por separado: si a algun mes del rango no le
+        // correspondia ninguna fila en la BD (activo creado a mitad de
+        // año, por ejemplo), la lista de valores quedaba mas corta que la
+        // de etiquetas y el grafico mostraba los montos corridos de mes.
+        List<LocalDate> ultimosSeisMeses = IntStream.rangeClosed(0, 5)
+            .mapToObj(i -> LocalDate.now().minusMonths(5 - i).withDayOfMonth(1))
+            .toList();
+
+        LocalDate fechaInicio = ultimosSeisMeses.get(0);
 
         List<DepreciacionDTO> ultimos6meses = dMensualRepository.obtenerUltimos6Meses(empresaId, fechaInicio, top6);
 
-        List<BigDecimal> depreciacionMensual = ultimos6meses.stream()
-            .map(DepreciacionDTO::total)
+        Map<Integer, BigDecimal> depreciacionPorMes = ultimos6meses.stream()
+            .collect(Collectors.toMap(DepreciacionDTO::mes, DepreciacionDTO::total));
+
+        List<BigDecimal> depreciacionMensual = ultimosSeisMeses.stream()
+            .map(fecha -> depreciacionPorMes.getOrDefault(
+                fecha.getYear() * 100 + fecha.getMonthValue(), BigDecimal.ZERO))
             .toList();
 
         Long ordenesAbiertas =
@@ -97,8 +113,7 @@ public class DashboardServiceImpl implements DashboardService {
             }
         }
 
-        List<String> meses = IntStream.rangeClosed(0, 5)
-            .mapToObj(i -> LocalDate.now().minusMonths(5 - i))
+        List<String> meses = ultimosSeisMeses.stream()
             .map(fecha -> fecha.getMonth()
                 .getDisplayName(TextStyle.SHORT, Locale.forLanguageTag("es-ES")))
             .map(this::capitalizar)
