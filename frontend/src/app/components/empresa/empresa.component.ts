@@ -28,6 +28,11 @@ export class EmpresaComponent implements OnInit {
   // tiene alguno de los dos habilitado). Ver generarPdfCodigos().
   generandoPdfId: number | null = null;
 
+  // 🎨 Logo propio de la empresa que se está editando (null = sin logo
+  // o creando una empresa nueva, ver editar()/subirLogo()).
+  logoPreviewUrl: string | null = null;
+  subiendoLogo = false;
+
   empresas: Empresa[] = [];
   empresasFiltradas: Empresa[] = [];
 
@@ -77,6 +82,7 @@ export class EmpresaComponent implements OnInit {
       controlTurnoHabilitado: [false],
       hojaControlHabilitado: [false],
       informeMantencionesHabilitado: [false],
+      colorPrimario: ['#3b82f6'],
 
       // ADMIN
       adminNombre: [''],
@@ -187,6 +193,37 @@ export class EmpresaComponent implements OnInit {
     this.empresaEditandoId = emp.id!
     this.desactivarSeccionAdmin(); // 🐛 FIX: ver comentario en el metodo
     this.empresaForm.patchValue(emp);
+    this.logoPreviewUrl = emp.tieneLogo ? this.empresaService.getLogoUrl(emp.id!) : null;
+  }
+
+  // 🎨 Sube el logo de la empresa que se está editando ahora mismo (el
+  // botón solo aparece con editando=true, ver template). Se sube de
+  // inmediato al elegir el archivo, sin esperar al botón "Guardar" del
+  // resto del formulario, igual que el patrón de checklist de órdenes.
+  subirLogo(event: Event): void {
+
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+
+    if (!archivo || !this.empresaEditandoId) {
+      return;
+    }
+
+    this.subiendoLogo = true;
+
+    this.empresaService.subirLogo(this.empresaEditandoId, archivo).subscribe({
+      next: () => {
+        this.subiendoLogo = false;
+        input.value = '';
+        this.logoPreviewUrl = this.empresaService.getLogoUrl(this.empresaEditandoId!);
+        Swal.fire({ icon: 'success', title: 'Logo actualizado', timer: 1500, showConfirmButton: false });
+      },
+      error: (err) => {
+        this.subiendoLogo = false;
+        input.value = '';
+        Swal.fire({ icon: 'error', title: err.error?.error || 'No fue posible subir el logo' });
+      }
+    });
   }
 
   eliminar(id: number) {
@@ -213,8 +250,10 @@ export class EmpresaComponent implements OnInit {
       codigoEan13Habilitado: false,
       controlTurnoHabilitado: false,
       hojaControlHabilitado: false,
-      informeMantencionesHabilitado: false
+      informeMantencionesHabilitado: false,
+      colorPrimario: '#3b82f6'
     });
+    this.logoPreviewUrl = null;
     this.editando = false;
     this.loading = false;
     this.empresaEditandoId = null;

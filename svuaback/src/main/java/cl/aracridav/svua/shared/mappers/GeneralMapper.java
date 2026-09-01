@@ -82,6 +82,8 @@ public class GeneralMapper {
       .controlTurnoHabilitado(empresa.getControlTurnoHabilitado())
       .hojaControlHabilitado(empresa.getHojaControlHabilitado())
       .informeMantencionesHabilitado(empresa.getInformeMantencionesHabilitado())
+      .colorPrimario(empresa.getColorPrimario())
+      .tieneLogo(empresa.getLogoRutaArchivo() != null && !empresa.getLogoRutaArchivo().isBlank())
       .build();
   }
 

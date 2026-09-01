@@ -8,6 +8,7 @@ import { interval, Subscription } from 'rxjs';
 import { NotificacionStateService } from '../../../services/notificacion-state.service';
 import { SesionUsuarioService } from '../../../services/sesion-usuario.service';
 import { WebSocketService } from '../../../services/web-socket.service';
+import { EmpresaService } from '../../../services/empresa.service';
 import { Notificacion } from '../../../model/notificacion';
 import Swal from 'sweetalert2';
 
@@ -27,9 +28,16 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   notificacionState = inject(NotificacionStateService);
   sesionUsuarioService = inject(SesionUsuarioService);
   webSocketService = inject(WebSocketService);
+  empresaService = inject(EmpresaService);
   router = inject(Router);
 
   usuario: any;
+
+  // 🎨 Personalización por empresa: logo propio (con fallback al logo
+  // genérico si la empresa no tiene uno cargado, o el archivo no se
+  // puede cargar) y color de acento (ver ngOnInit).
+  logoUrl: string | null = null;
+  logoFallback = false;
 
   // 🔥 estado sidebar
   isCollapsed = false;
@@ -95,6 +103,21 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
       this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;
       this.informeMantencionesHabilitado = this.authService.getInformeMantencionesHabilitado() ?? false;
+
+      // 🎨 Logo propio de la empresa: se intenta cargar directo (GET
+      // público por empresaId); si la empresa no tiene uno cargado, el
+      // <img> dispara (error) y se cae al logo genérico (ver
+      // onLogoError). Color de acento: se aplica como variable CSS
+      // global para que la reglas var(--color-empresa, #3b82f6) del
+      // sidebar (y de cualquier otra pantalla que la use) tomen el
+      // color de la empresa sin tener que duplicar lógica por página.
+      this.logoFallback = false;
+      this.logoUrl = this.empresaId
+        ? this.empresaService.getLogoUrl(this.empresaId)
+        : null;
+
+      const color = this.authService.getColorPrimario();
+      document.documentElement.style.setProperty('--color-empresa', color || '#3b82f6');
     });
 
     // 🔥 abrir menú según ruta
@@ -152,6 +175,12 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       .subscribe(count => {
         this.cantidadNoLeidas = count;
       });
+  }
+
+  // 🎨 La empresa no tiene logo cargado (404) o el archivo no se pudo
+  // leer: se cae al logo genérico de siempre.
+  onLogoError(): void {
+    this.logoFallback = true;
   }
 
   ngOnDestroy(): void {

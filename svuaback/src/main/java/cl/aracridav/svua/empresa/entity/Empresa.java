@@ -106,4 +106,13 @@ public class Empresa {
     // existentes a FALSE.
     @Column(name = "informe_mantenciones_habilitado", nullable = false)
     private Boolean informeMantencionesHabilitado;
+
+    // 🔹 Personalizacion por empresa (V38): logo propio (reemplaza el
+    // logo generico del sidebar) y color de acento. Ambos opcionales --
+    // si vienen null, el frontend usa el logo/color por defecto.
+    @Column(name = "logo_ruta_archivo", length = 500)
+    private String logoRutaArchivo;
+
+    @Column(name = "color_primario", length = 7)
+    private String colorPrimario;
 }

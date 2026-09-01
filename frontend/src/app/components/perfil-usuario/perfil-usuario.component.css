@@ -13,6 +13,25 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
+.empresa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.empresa-header h3 {
+  margin: 0;
+}
+
+.empresa-logo {
+  height: 72px;
+  width: 72px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
 .badge {
   padding: 5px 10px;
   border-radius: 8px;

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { UsuarioService } from '../../services/usuario.service';
+import { AuthService } from '../../services/auth.service';
+import { EmpresaService } from '../../services/empresa.service';
 import { PerfilUsuario } from '../../model/perfilUsuario';
 import { RouterModule } from '@angular/router';
 
@@ -14,10 +16,25 @@ import { RouterModule } from '@angular/router';
 export class PerfilUsuarioComponent implements OnInit {
 
   usuarioService = inject(UsuarioService);
+  authService = inject(AuthService);
+  empresaService = inject(EmpresaService);
   perfil!: PerfilUsuario;
+
+  // 🎨 Logo propio de la empresa (mismo patrón que sidebar.component.ts):
+  // se intenta cargar directo por empresaId, y si la empresa no tiene
+  // uno cargado el <img> dispara (error) y se oculta sin dejar hueco.
+  logoUrl: string | null = null;
+  logoFallback = false;
 
   ngOnInit(): void {
     this.cargarPerfilUsuarios();
+
+    const empresaId = this.authService.getEmpresaId();
+    this.logoUrl = empresaId ? this.empresaService.getLogoUrl(empresaId) : null;
+  }
+
+  onLogoError(): void {
+    this.logoFallback = true;
   }
 
   cargarPerfilUsuarios() {

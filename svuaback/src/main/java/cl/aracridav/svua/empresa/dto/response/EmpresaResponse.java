@@ -35,4 +35,10 @@ public class EmpresaResponse {
     private Boolean controlTurnoHabilitado;
     private Boolean hojaControlHabilitado;
     private Boolean informeMantencionesHabilitado;
+
+    private String colorPrimario;
+    // 🔥 No se expone logoRutaArchivo (path en disco): solo si existe o
+    // no, igual que OrdenMantenimientoResponse.tieneChecklist. El logo
+    // en si se sirve por GET /public/empresas/{id}/logo.
+    private boolean tieneLogo;
 }

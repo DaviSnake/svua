@@ -14,4 +14,6 @@ export interface Empresa {
   controlTurnoHabilitado?: boolean;
   hojaControlHabilitado?: boolean;
   informeMantencionesHabilitado?: boolean;
+  colorPrimario?: string;
+  tieneLogo?: boolean;
 }

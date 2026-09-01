@@ -22,4 +22,6 @@ public class UpdateEmpresaRequest {
     private Boolean controlTurnoHabilitado;
     private Boolean hojaControlHabilitado;
     private Boolean informeMantencionesHabilitado;
+
+    private String colorPrimario;
 }

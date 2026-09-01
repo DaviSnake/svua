@@ -1,16 +1,26 @@
 package cl.aracridav.svua.empresa.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.auth.dto.response.AuthResponse;
 import cl.aracridav.svua.auth.service.RefreshTokenService;
@@ -38,6 +48,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class EmpresaServiceImpl implements EmpresaService {
+
+    private static final Pattern COLOR_HEX_PATTERN = Pattern.compile("^#[0-9A-Fa-f]{6}$");
 
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -352,5 +364,126 @@ public class EmpresaServiceImpl implements EmpresaService {
         if (request.getControlTurnoHabilitado() != null) empresa.setControlTurnoHabilitado(request.getControlTurnoHabilitado());
         if (request.getHojaControlHabilitado() != null) empresa.setHojaControlHabilitado(request.getHojaControlHabilitado());
         if (request.getInformeMantencionesHabilitado() != null) empresa.setInformeMantencionesHabilitado(request.getInformeMantencionesHabilitado());
+
+        if (request.getColorPrimario() != null) {
+            validarColorPrimario(request.getColorPrimario());
+            empresa.setColorPrimario(request.getColorPrimario());
+        }
+    }
+
+    // 🔒 Se valida el formato porque este valor termina inyectado tal
+    // cual en una variable CSS en el frontend (sidebar.component.ts) --
+    // sin esto, cualquier texto llegaría directo al DOM.
+    private void validarColorPrimario(String colorPrimario) {
+        if (!COLOR_HEX_PATTERN.matcher(colorPrimario).matches()) {
+            throw new BusinessException("El color primario debe ser un hexadecimal válido (ej. #3498db)");
+        }
+    }
+
+    /*
+     * =========================================
+     * LOGO (personalizacion por empresa)
+     * =========================================
+     */
+
+    @Override
+    public EmpresaResponse subirLogo(Long empresaId, MultipartFile archivo) {
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BusinessException("Debe adjuntar un archivo");
+        }
+
+        if (archivo.getSize() > 2 * 1024 * 1024) {
+            throw new BusinessException("El logo no puede superar 2MB");
+        }
+
+        String contentType = archivo.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BusinessException("El logo debe ser una imagen");
+        }
+
+        Empresa empresa = obtenerEmpresa(empresaId);
+
+        String rutaAnterior = empresa.getLogoRutaArchivo();
+
+        String ruta = guardarLogoSeguro(archivo, empresa);
+        empresa.setLogoRutaArchivo(ruta);
+
+        Empresa guardada = empresaRepository.save(empresa);
+
+        // 🔥 Se borra el archivo viejo DESPUES de guardar la referencia
+        // nueva en BD: si el guardado fallara, no queremos habernos
+        // quedado sin logo antiguo Y sin el nuevo.
+        if (rutaAnterior != null && !rutaAnterior.equals(ruta)) {
+            try {
+                Files.deleteIfExists(Paths.get(rutaAnterior));
+            } catch (IOException ignored) {
+                // No es crítico: el archivo viejo queda huérfano en disco.
+            }
+        }
+
+        return mapper.mapEmpresaToResponse(guardada);
+    }
+
+    // 🔒 Sin validación multi-tenant a propósito: este método lo llama
+    // el endpoint público GET /public/empresas/{id}/logo (sin
+    // autenticación, para que un <img src> funcione directo), a
+    // diferencia de obtenerEmpresa() que exige empresaId == empresa del
+    // usuario logueado.
+    @Override
+    @Transactional(readOnly = true)
+    public Resource obtenerLogo(Long empresaId) {
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+
+        if (empresa.getLogoRutaArchivo() == null || empresa.getLogoRutaArchivo().isBlank()) {
+            throw new BusinessException("Esta empresa no tiene un logo cargado");
+        }
+
+        try {
+            Path path = Paths.get(empresa.getLogoRutaArchivo());
+
+            if (!Files.exists(path)) {
+                throw new BusinessException("Archivo no encontrado");
+            }
+
+            return new UrlResource(path.toUri());
+
+        } catch (IOException e) {
+            throw new BusinessException("Error al leer el logo");
+        }
+    }
+
+    private String guardarLogoSeguro(MultipartFile archivo, Empresa empresa) {
+
+        try {
+            Path carpeta = Paths.get("uploads/logos");
+
+            if (!Files.exists(carpeta)) {
+                Files.createDirectories(carpeta);
+            }
+
+            String nombreLimpio = StringUtils.cleanPath(
+                archivo.getOriginalFilename() != null ? archivo.getOriginalFilename() : "logo");
+
+            String extension = nombreLimpio.contains(".")
+                ? nombreLimpio.substring(nombreLimpio.lastIndexOf('.'))
+                : "";
+
+            // 🔥 Nombre fijo por empresa (no se le agrega timestamp): cada
+            // subida reemplaza el logo anterior, así que solo debe existir
+            // un archivo por empresa en esta carpeta.
+            String nombreArchivo = empresa.getId() + extension;
+
+            Path ruta = carpeta.resolve(nombreArchivo);
+
+            Files.copy(archivo.getInputStream(), ruta, StandardCopyOption.REPLACE_EXISTING);
+
+            return ruta.toString();
+
+        } catch (IOException e) {
+            throw new BusinessException("Error al guardar el logo");
+        }
     }
 }

@@ -58,6 +58,23 @@
           Informe de Mantenciones habilitado
         </label>
       </div>
+
+      <!-- 🎨 Personalización: color de acento (sidebar) y logo propio.
+           El logo solo se puede subir editando una empresa ya creada
+           (necesita su id para el endpoint de subida). -->
+      <div class="personalizacion">
+        <label class="color-label">
+          Color de acento
+          <input type="color" formControlName="colorPrimario">
+        </label>
+
+        <div *ngIf="editando" class="logo-upload">
+          <label>Logo</label>
+          <img *ngIf="logoPreviewUrl" [src]="logoPreviewUrl" class="logo-preview" alt="Logo actual">
+          <input type="file" accept="image/*" (change)="subirLogo($event)" [disabled]="subiendoLogo">
+          <small *ngIf="subiendoLogo">Subiendo…</small>
+        </div>
+      </div>
     </div>
 
     <!-- ========================= -->

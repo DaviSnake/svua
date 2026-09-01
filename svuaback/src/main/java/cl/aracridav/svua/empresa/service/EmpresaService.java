@@ -2,6 +2,9 @@ package cl.aracridav.svua.empresa.service;
 
 import java.util.List;
 
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
+
 import cl.aracridav.svua.auth.dto.response.AuthResponse;
 import cl.aracridav.svua.empresa.dto.request.CreateEmpresaRequest;
 import cl.aracridav.svua.empresa.dto.request.CreateEmpresaWithAdminRequest;
@@ -25,4 +28,8 @@ public interface EmpresaService {
     public AuthResponse onboarding(CreateEmpresaWithAdminRequest request, HttpServletRequest httpRequest);
 
     public List<EmpresaResponse> obtenerEmpresa();
+
+    public EmpresaResponse subirLogo(Long empresaId, MultipartFile archivo);
+
+    public Resource obtenerLogo(Long empresaId);
 }

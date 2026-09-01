@@ -44,7 +44,14 @@
     </div>
 
     <div class="card empresa">
-      <h3>Empresa</h3>
+      <div class="empresa-header">
+        <h3>Empresa</h3>
+        <img *ngIf="logoUrl && !logoFallback"
+             class="empresa-logo"
+             [src]="logoUrl"
+             alt="Logo empresa"
+             (error)="onLogoError()">
+      </div>
       <p><strong>{{ perfil.empresaNombre }}</strong></p>
       <p>Rut: {{ formatearRut(perfil.empresaRut) }}</p>
 

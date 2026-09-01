@@ -91,9 +91,13 @@
 }
 
 /* ACTIVO */
+/* 🎨 --color-empresa: variable global seteada en sidebar.component.ts
+   desde Empresa.colorPrimario (JWT), con #3b82f6 como fallback si la
+   empresa no tiene uno configurado. color-mix() da las variantes
+   translúcidas sin tener que duplicar el color en formato rgba. */
 .menu li.active a {
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: color-mix(in srgb, var(--color-empresa, #3b82f6) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-empresa, #3b82f6) 30%, transparent);
   color: #fff;
   border-radius: 12px;
 }
@@ -105,7 +109,7 @@
   left: 0;
   width: 3px;
   height: 60%;
-  background: #3b82f6;
+  background: var(--color-empresa, #3b82f6);
   border-radius: 0 4px 4px 0;
 }
 

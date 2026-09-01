@@ -32,4 +32,19 @@ export class EmpresaService {
     return this.http.delete<void>(`${this.apiUrl}/public/empresas/${id}`);
   }
 
+  subirLogo(id: number, archivo: File): Observable<Empresa> {
+    const formData = new FormData();
+    formData.append('file', archivo);
+
+    return this.http.post<Empresa>(`${this.apiUrl}/public/empresas/${id}/logo`, formData);
+  }
+
+  // 🔥 No requiere autenticación (GET público, ver EmpresaController):
+  // se puede usar directo en un <img [src]>. Se le agrega un query
+  // param con el timestamp de subida (o Date.now() como fallback) para
+  // invalidar el cache del navegador cuando se reemplaza el logo.
+  getLogoUrl(id: number, cacheBust?: number): string {
+    return `${this.apiUrl}/public/empresas/${id}/logo?v=${cacheBust ?? Date.now()}`;
+  }
+
 }

@@ -179,6 +179,17 @@ export class AuthService {
     return payload.informeMantencionesHabilitado;
   }
 
+  // 🎨 Empresa.colorPrimario (viaja en el JWT igual que los demás
+  // flags): color de acento propio de la empresa, aplicado en el
+  // sidebar (ver sidebar.component.ts).
+  getColorPrimario(): string | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.colorPrimario ?? null;
+  }
+
   // 🐛 FIX: init() se llama en CADA carga de la app (AppComponent.ngOnInit,
   // incluido un simple refresh/F5 de la pagina), pero antes solo restauraba
   // el usuario desde el token y NUNCA volvia a armar el timer de refresco

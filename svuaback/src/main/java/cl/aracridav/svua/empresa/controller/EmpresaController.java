@@ -2,7 +2,9 @@ package cl.aracridav.svua.empresa.controller;
 
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.auth.dto.response.AuthResponse;
 import cl.aracridav.svua.empresa.dto.request.CreateEmpresaRequest;
@@ -91,6 +95,42 @@ public class EmpresaController {
         empresaService.eliminarEmpresa(empresaId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    // 🔥 Personalización: logo propio de la empresa. Solo SUPER_ADMIN
+    // (cualquier empresa) o ADMIN_EMPRESA de la propia empresa (misma
+    // validación multi-tenant que actualizar(), ver
+    // EmpresaServiceImpl.obtenerEmpresa).
+    @PreAuthorize(
+        "hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA') or " +
+        "(hasAuthority('EMPRESA_UPDATE') and " +
+        "#empresaId == authentication.principal.empresaId)"
+    )
+    @PostMapping("/{empresaId}/logo")
+    public ResponseEntity<EmpresaResponse> subirLogo(
+            @PathVariable Long empresaId,
+            @RequestParam("file") MultipartFile file) {
+
+        return ResponseEntity.ok(empresaService.subirLogo(empresaId, file));
+    }
+
+    // 🔥 Sin @PreAuthorize a propósito: esta ruta cuelga de
+    // /public/empresas (permitAll en SecurityConfig) para que un
+    // <img src="..."> del sidebar la pueda cargar directo, sin poder
+    // adjuntar un header Authorization. Es solo una imagen de logo, no
+    // hay dato sensible que proteger.
+    @GetMapping("/{empresaId}/logo")
+    public ResponseEntity<Resource> obtenerLogo(@PathVariable Long empresaId) {
+
+        Resource logo = empresaService.obtenerLogo(empresaId);
+
+        String contentType = java.net.URLConnection.guessContentTypeFromName(logo.getFilename());
+
+        return ResponseEntity.ok()
+                .contentType(contentType != null
+                    ? MediaType.parseMediaType(contentType)
+                    : MediaType.APPLICATION_OCTET_STREAM)
+                .body(logo);
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
