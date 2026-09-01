@@ -61,9 +61,10 @@ public interface OrdenMantenimientoService {
     public Resource obtenerArchivo(Long id);
 
     // 🔥 Informe de Mantenciones: historial paginado y filtrable de
-    // ordenes COMPLETADAS, visible solo para SUPER_ADMIN.
+    // ordenes COMPLETADAS, visible para SUPER_ADMIN y ADMIN_EMPRESA.
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             String usuario,
+            String orden,
             Long empresaId,
             EstadoOrden estado,
             LocalDate fecha,

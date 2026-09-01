@@ -76,6 +76,7 @@ export class EmpresaComponent implements OnInit {
       codigoEan13Habilitado: [false],
       controlTurnoHabilitado: [false],
       hojaControlHabilitado: [false],
+      informeMantencionesHabilitado: [false],
 
       // ADMIN
       adminNombre: [''],
@@ -211,7 +212,8 @@ export class EmpresaComponent implements OnInit {
       codigoQrHabilitado: false,
       codigoEan13Habilitado: false,
       controlTurnoHabilitado: false,
-      hojaControlHabilitado: false
+      hojaControlHabilitado: false,
+      informeMantencionesHabilitado: false
     });
     this.editando = false;
     this.loading = false;

@@ -23,10 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SesionScheduler {
 
-    // 2 horas de inactividad (antes eran 2 minutos): margen mas
-    // amplio para no cerrar sesiones de usuarios que solo dejaron la
-    // pestana abierta sin interactuar por un rato.
-    private static final int MINUTOS_INACTIVIDAD_SESION = 120;
+    // 15 minutos de inactividad (antes eran 2 horas, y 2 minutos antes
+    // de eso).
+    private static final int MINUTOS_INACTIVIDAD_SESION = 15;
 
     private final SesionUsuarioRepository sesionRepository;
 

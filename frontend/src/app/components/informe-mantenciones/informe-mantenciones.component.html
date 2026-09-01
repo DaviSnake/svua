@@ -13,6 +13,14 @@
 <div class="filtro-grilla">
 
   <div class="form-group">
+    <label>Orden</label>
+    <input type="text"
+           placeholder="N° de orden o título..."
+           [(ngModel)]="filtroOrden"
+           (ngModelChange)="onFiltroOrdenChange()">
+  </div>
+
+  <div class="form-group">
     <label>Usuario</label>
     <input type="text"
            placeholder="Buscar por usuario..."

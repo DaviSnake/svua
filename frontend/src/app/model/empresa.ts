@@ -13,4 +13,5 @@ export interface Empresa {
   codigoEan13Habilitado?: boolean;
   controlTurnoHabilitado?: boolean;
   hojaControlHabilitado?: boolean;
+  informeMantencionesHabilitado?: boolean;
 }

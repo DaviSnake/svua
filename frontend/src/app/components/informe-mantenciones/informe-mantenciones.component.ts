@@ -27,6 +27,9 @@ export class InformeMantencionesComponent implements OnInit {
   // libre), fecha (input date) y empresa (autocompletado); además el
   // filtro por estado, propio de este informe.
   filtroUsuario = '';
+  // 🔥 Busca por número de orden (id exacto) o por título (texto
+  // libre), ver OrdenMantenimientoServiceImpl.obtenerInformeMantenciones.
+  filtroOrden = '';
   filtroFecha = '';
 
   // 🔥 Filtro por estado: parte en "Completada" para que el informe
@@ -107,6 +110,11 @@ export class InformeMantencionesComponent implements OnInit {
     this.cargarOrdenes();
   }
 
+  onFiltroOrdenChange(): void {
+    this.page = 0;
+    this.cargarOrdenes();
+  }
+
   onFiltroFechaChange(): void {
     this.page = 0;
     this.cargarOrdenes();
@@ -124,6 +132,7 @@ export class InformeMantencionesComponent implements OnInit {
         this.page,
         this.size,
         this.filtroUsuario || undefined,
+        this.filtroOrden || undefined,
         this.filtroEmpresaId ?? undefined,
         this.filtroEstado || undefined,
         this.filtroFecha || undefined

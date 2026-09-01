@@ -168,6 +168,17 @@ export class AuthService {
     return payload.hojaControlHabilitado;
   }
 
+  // 🔒 Empresa.informeMantencionesHabilitado (viaja en el JWT igual que
+  // los demás flags): controla si el Informe de Mantenciones está
+  // disponible para la empresa del usuario logueado.
+  getInformeMantencionesHabilitado(): boolean | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.informeMantencionesHabilitado;
+  }
+
   // 🐛 FIX: init() se llama en CADA carga de la app (AppComponent.ngOnInit,
   // incluido un simple refresh/F5 de la pagina), pero antes solo restauraba
   // el usuario desde el token y NUNCA volvia a armar el timer de refresco

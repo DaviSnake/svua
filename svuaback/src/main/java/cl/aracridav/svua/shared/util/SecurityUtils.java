@@ -57,6 +57,15 @@ public class SecurityUtils {
         return Boolean.TRUE.equals(getPrincipal().getHojaControlHabilitado());
     }
 
+    // 🔳 Flag de configuracion por empresa
+    // (Empresa.informeMantencionesHabilitado, tambien viaja en el JWT):
+    // controla si el Informe de Mantenciones esta disponible para la
+    // empresa del usuario logueado (ver V37,
+    // OrdenMantenimientoServiceImpl).
+    public static boolean tieneInformeMantencionesHabilitado() {
+        return Boolean.TRUE.equals(getPrincipal().getInformeMantencionesHabilitado());
+    }
+
     private static UsuarioPrincipal getPrincipal() {
 
         Authentication auth = SecurityContextHolder

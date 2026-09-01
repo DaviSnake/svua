@@ -1361,15 +1361,34 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
     @Transactional(readOnly = true)
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             String usuario,
+            String orden,
             Long empresaId,
             EstadoOrden estado,
             LocalDate fecha,
             Pageable pageable) {
 
+        // 🔒 Defensa en profundidad: el sidebar/guard del frontend ya
+        // ocultan/bloquean este informe si la empresa no lo tiene
+        // habilitado, pero eso no impide una llamada directa a la API.
+        // SUPER_ADMIN bypasea el flag, igual que con los demas flags de
+        // empresa (ver SecurityUtils).
+        if (!SecurityUtils.esSuperAdmin() && !SecurityUtils.tieneInformeMantencionesHabilitado()) {
+            throw new BusinessException("El Informe de Mantenciones no está habilitado para su empresa");
+        }
+
         String usuarioFiltro =
             (usuario == null || usuario.isBlank())
                 ? null
                 : usuario.trim().toLowerCase();
+
+        // 🔥 Búsqueda por orden: si lo escrito es numérico se busca
+        // también por id exacto (ej. "5" -> Orden #5), además de por
+        // título (siempre, LIKE), para que sirva tanto para pegar el
+        // número de la orden como para buscar por su nombre.
+        String ordenFiltro =
+            (orden == null || orden.isBlank())
+                ? null
+                : orden.trim();
 
         LocalDateTime desde = fecha != null ? fecha.atStartOfDay() : null;
         LocalDateTime hasta = fecha != null ? fecha.atTime(LocalTime.MAX) : null;
@@ -1420,6 +1439,22 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
                         cb.like(cb.lower(usuarioEjecucionJoin.get("nombre")), "%" + usuarioFiltro + "%"),
                         cb.like(cb.lower(usuarioCreadorJoin.get("nombre")), "%" + usuarioFiltro + "%")
                     ));
+            }
+
+            if (ordenFiltro != null) {
+
+                List<Predicate> ordenPredicates = new ArrayList<>();
+                ordenPredicates.add(
+                    cb.like(cb.lower(root.get("titulo")), "%" + ordenFiltro.toLowerCase() + "%"));
+
+                try {
+                    Long ordenId = Long.parseLong(ordenFiltro);
+                    ordenPredicates.add(cb.equal(root.get("id"), ordenId));
+                } catch (NumberFormatException ignored) {
+                    // No es un número: se busca solo por título.
+                }
+
+                predicates.add(cb.or(ordenPredicates.toArray(new Predicate[0])));
             }
 
             if (empresaId != null) {

@@ -57,6 +57,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   mostrarControlTurno = false;
   codigoQrHabilitado = false; // 🔒 controla el link "Escanear Activo"
   codigoEan13Habilitado = false;
+  informeMantencionesHabilitado = false; // 🔒 controla el link "Informe de Mantenciones" (ADMIN_EMPRESA)
 
   // © footer del sidebar
   anioActual = new Date().getFullYear();
@@ -93,6 +94,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
       this.esDemo = this.authService.getDemo()!;
       this.codigoQrHabilitado = this.authService.getCodigoQrHabilitado() ?? false;
       this.codigoEan13Habilitado = this.authService.getCodigoEan13Habilitado() ?? false;
+      this.informeMantencionesHabilitado = this.authService.getInformeMantencionesHabilitado() ?? false;
     });
 
     // 🔥 abrir menú según ruta

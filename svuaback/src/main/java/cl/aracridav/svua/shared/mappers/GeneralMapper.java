@@ -81,6 +81,7 @@ public class GeneralMapper {
       .codigoEan13Habilitado(empresa.getCodigoEan13Habilitado())
       .controlTurnoHabilitado(empresa.getControlTurnoHabilitado())
       .hojaControlHabilitado(empresa.getHojaControlHabilitado())
+      .informeMantencionesHabilitado(empresa.getInformeMantencionesHabilitado())
       .build();
   }
 

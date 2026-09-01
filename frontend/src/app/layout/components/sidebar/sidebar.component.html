@@ -70,7 +70,7 @@
       <ul class="submenu" [class.open]="openMenus.analisis && !isCollapsed">
         <li routerLinkActive="active"><a routerLink="/inicio/reportes">Reportes</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/auditorias">Auditoría</a></li>
-        <li routerLinkActive="active" *ngIf="esAdmin || esAdminEmpresa">
+        <li routerLinkActive="active" *ngIf="esAdmin || (esAdminEmpresa && informeMantencionesHabilitado)">
           <a routerLink="/inicio/informeMantenciones">Informe de Mantenciones</a>
         </li>
       </ul>

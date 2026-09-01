@@ -209,6 +209,7 @@ public class OrdenMantenimientoController {
     @GetMapping("/informe")
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) String orden,
             @RequestParam(required = false) Long empresaId,
             @RequestParam(required = false) EstadoOrden estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
@@ -218,7 +219,7 @@ public class OrdenMantenimientoController {
         Pageable pageable = PageRequest.of(page, size);
 
         return ordenMantenimientoService
-            .obtenerInformeMantenciones(usuario, empresaId, estado, fecha, pageable);
+            .obtenerInformeMantenciones(usuario, orden, empresaId, estado, fecha, pageable);
     }
 
 }

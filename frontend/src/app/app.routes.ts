@@ -4,6 +4,7 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { escanearAccesoGuard } from './guards/escanear-acceso.guard';
 import { controlTurnoAccesoGuard } from './guards/control-turno-acceso.guard';
+import { informeMantencionesAccesoGuard } from './guards/informe-mantenciones-acceso.guard';
 import { CalendarioComponent } from './calendar/calendario/calendario.component';
 import { LayoutComponent } from './layout/layout.component';
 import { ActivoComponent } from './components/activo/activo.component';
@@ -195,9 +196,12 @@ export const routes: Routes = [
                 data: { roles: ['SUPER_ADMIN'] }
             },
             {
+                // ⚠️ Caso especial: el sidebar usa ROL Y
+                // Empresa.informeMantencionesHabilitado -- no se puede
+                // expresar con data.roles, por eso un guard dedicado.
                 path: 'informeMantenciones',
                 component: InformeMantencionesComponent,
-                data: { roles: ['SUPER_ADMIN', 'ADMIN_EMPRESA'] }
+                canActivate: [informeMantencionesAccesoGuard]
             },
             {
                 // ⚠️ Caso especial: el sidebar usa esAdmin || codigoQrHabilitado

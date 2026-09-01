@@ -21,4 +21,5 @@ public class CreateEmpresaRequest {
     private Boolean codigoEan13Habilitado;
     private Boolean controlTurnoHabilitado;
     private Boolean hojaControlHabilitado;
+    private Boolean informeMantencionesHabilitado;
 }

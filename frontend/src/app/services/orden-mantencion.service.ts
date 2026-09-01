@@ -103,6 +103,7 @@ export class OrdenMantencionService {
     page: number,
     size: number,
     usuario?: string,
+    orden?: string,
     empresaId?: number,
     estado?: string,
     fecha?: string
@@ -114,6 +115,10 @@ export class OrdenMantencionService {
 
     if (usuario) {
       params = params.set('usuario', usuario);
+    }
+
+    if (orden) {
+      params = params.set('orden', orden);
     }
 
     if (empresaId != null) {
