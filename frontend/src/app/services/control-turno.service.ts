@@ -52,6 +52,10 @@ export class ControlTurnoService {
     return this.http.delete<void>(`${this.apiUrl}/puntos/${id}`);
   }
 
+  habilitarPunto(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/puntos/${id}/habilitar`, null);
+  }
+
   // ---------------- Lecturas ----------------
 
   registrarLectura(lectura: Partial<LecturaControl>): Observable<LecturaControl> {

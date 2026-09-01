@@ -13,6 +13,7 @@ public interface PuntoControlService {
     PuntoControlResponse registrar(PuntoControlRequest request);
     PuntoControlResponse actualizar(Long id, PuntoControlRequest request);
     void eliminar(Long id);
+    void habilitar(Long id);
     PuntoControlResponse obtener(Long id);
     Page<PuntoControlResponse> listar(Pageable pageable, Long empresaId, String busqueda);
     List<PuntoControlResponse> listarActivos();

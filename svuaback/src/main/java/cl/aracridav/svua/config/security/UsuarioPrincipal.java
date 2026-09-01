@@ -19,6 +19,7 @@ public class UsuarioPrincipal implements UserDetails {
     private Boolean codigoQrHabilitado;
     private Boolean codigoEan13Habilitado;
     private Boolean controlTurnoHabilitado;
+    private Boolean hojaControlHabilitado;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
@@ -30,6 +31,7 @@ public class UsuarioPrincipal implements UserDetails {
         this.codigoQrHabilitado = usuario.getEmpresa().getCodigoQrHabilitado();
         this.codigoEan13Habilitado = usuario.getEmpresa().getCodigoEan13Habilitado();
         this.controlTurnoHabilitado = usuario.getEmpresa().getControlTurnoHabilitado();
+        this.hojaControlHabilitado = usuario.getEmpresa().getHojaControlHabilitado();
         this.email = usuario.getEmail();
         this.password = usuario.getPassword();
         
@@ -71,6 +73,10 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Boolean getControlTurnoHabilitado() {
         return controlTurnoHabilitado;
+    }
+
+    public Boolean getHojaControlHabilitado() {
+        return hojaControlHabilitado;
     }
 
     @Override

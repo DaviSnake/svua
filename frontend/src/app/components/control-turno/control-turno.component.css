@@ -181,6 +181,14 @@ button[type="button"]:hover {
   background: #c0392b;
 }
 
+.btn-habilitar {
+  background: #3498db;
+}
+
+.btn-habilitar:hover {
+  background: #2980b9;
+}
+
 /* FILTROS */
 .toolbar-grilla {
   display: flex;

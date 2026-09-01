@@ -150,6 +150,7 @@ public class HojaControlImportServiceImpl implements HojaControlImportService {
     public ImportHojaControlResponse importar(MultipartFile archivo) {
 
         validarControlTurnoHabilitado();
+        validarHojaControlHabilitado();
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
@@ -332,6 +333,15 @@ public class HojaControlImportServiceImpl implements HojaControlImportService {
     private void validarControlTurnoHabilitado() {
         if (!SecurityUtils.esSuperAdmin() && !SecurityUtils.tieneControlTurnoHabilitado()) {
             throw new BusinessException("Control de Turno no está habilitado para su empresa");
+        }
+    }
+
+    // 🔒 Defensa en profundidad: el frontend ya oculta el botón "Importar
+    // Excel" si la empresa no tiene este flag, pero eso no impide una
+    // llamada directa a la API.
+    private void validarHojaControlHabilitado() {
+        if (!SecurityUtils.esSuperAdmin() && !SecurityUtils.tieneHojaControlHabilitado()) {
+            throw new BusinessException("La importación desde Excel no está habilitada para su empresa");
         }
     }
 }

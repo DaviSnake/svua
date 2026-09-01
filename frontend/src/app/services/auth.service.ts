@@ -157,6 +157,17 @@ export class AuthService {
     return payload.controlTurnoHabilitado;
   }
 
+  // 🔒 Empresa.hojaControlHabilitado (viaja en el JWT igual que
+  // controlTurnoHabilitado): controla si el botón "Importar Excel (HOJA
+  // DE CONTROL)" está disponible para la empresa del usuario logueado.
+  getHojaControlHabilitado(): boolean | null {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.hojaControlHabilitado;
+  }
+
   // 🐛 FIX: init() se llama en CADA carga de la app (AppComponent.ngOnInit,
   // incluido un simple refresh/F5 de la pagina), pero antes solo restauraba
   // el usuario desde el token y NUNCA volvia a armar el timer de refresco

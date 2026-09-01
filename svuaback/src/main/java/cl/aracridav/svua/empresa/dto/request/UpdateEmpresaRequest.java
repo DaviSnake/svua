@@ -20,4 +20,5 @@ public class UpdateEmpresaRequest {
     private Boolean codigoQrHabilitado;
     private Boolean codigoEan13Habilitado;
     private Boolean controlTurnoHabilitado;
+    private Boolean hojaControlHabilitado;
 }

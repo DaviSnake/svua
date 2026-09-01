@@ -12,4 +12,5 @@ export interface Empresa {
   codigoQrHabilitado?: boolean;
   codigoEan13Habilitado?: boolean;
   controlTurnoHabilitado?: boolean;
+  hojaControlHabilitado?: boolean;
 }

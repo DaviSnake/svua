@@ -78,4 +78,13 @@ public class PuntoControlController {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    // 🔥 Reactiva un punto de control deshabilitado (contraparte de
+    // eliminar(), que solo hace soft-delete con activo=false).
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
+    @PutMapping("/{id}/habilitar")
+    public ResponseEntity<Void> habilitar(@PathVariable Long id) {
+        service.habilitar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

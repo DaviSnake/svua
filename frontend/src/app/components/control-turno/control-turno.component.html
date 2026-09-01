@@ -53,6 +53,16 @@
       </div>
     </form>
 
+    <div class="filtro-grilla">
+      <div class="form-group">
+        <label>Buscar por nombre</label>
+        <input type="text"
+               placeholder="Ej. Proofer 1, Cámara..."
+               [(ngModel)]="filtroNombrePunto"
+               (ngModelChange)="onFiltroNombrePuntoChange()">
+      </div>
+    </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
@@ -73,10 +83,20 @@
             <td>
               <button class="btn-editar" (click)="editarPunto(punto)">Editar</button>
               <button *ngIf="punto.activo" class="btn-eliminar" (click)="eliminarPunto(punto.id!)">Deshabilitar</button>
+              <button *ngIf="!punto.activo" class="btn-habilitar" (click)="habilitarPunto(punto.id!)">Habilitar</button>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="paginacion">
+      <button (click)="cambiarPaginaPuntos(paginaPuntos - 1)" [disabled]="paginaPuntos === 0">⬅ Anterior</button>
+      <ng-container *ngFor="let p of paginasVisiblesPuntos()">
+        <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+        <button *ngIf="p !== -1" (click)="cambiarPaginaPuntos(p)" [class.activa]="p === paginaPuntos">{{ p + 1 }}</button>
+      </ng-container>
+      <button (click)="cambiarPaginaPuntos(paginaPuntos + 1)" [disabled]="paginaPuntos + 1 >= totalPagesPuntos">Siguiente ➡</button>
     </div>
 
     <hr />

@@ -80,6 +80,7 @@ public class GeneralMapper {
       .codigoQrHabilitado(empresa.getCodigoQrHabilitado())
       .codigoEan13Habilitado(empresa.getCodigoEan13Habilitado())
       .controlTurnoHabilitado(empresa.getControlTurnoHabilitado())
+      .hojaControlHabilitado(empresa.getHojaControlHabilitado())
       .build();
   }
 

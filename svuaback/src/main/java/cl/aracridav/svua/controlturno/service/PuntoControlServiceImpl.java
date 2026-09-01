@@ -96,6 +96,20 @@ public class PuntoControlServiceImpl implements PuntoControlService {
     }
 
     @Override
+    public void habilitar(Long id) {
+
+        validarControlTurnoHabilitado();
+
+        PuntoControl puntoControl = obtenerPuntoControl(id);
+
+        validarPerteneceEmpresaActual(puntoControl);
+
+        puntoControl.setActivo(true);
+
+        repository.save(puntoControl);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<PuntoControlResponse> listar(Pageable pageable, Long empresaId, String busqueda) {
 

@@ -33,4 +33,5 @@ public class EmpresaResponse {
     private Boolean codigoQrHabilitado;
     private Boolean codigoEan13Habilitado;
     private Boolean controlTurnoHabilitado;
+    private Boolean hojaControlHabilitado;
 }

@@ -110,11 +110,22 @@ public class LecturaControlServiceImpl implements LecturaControlService {
         LocalDateTime desdeEfectivo = desde != null ? desde : ahora.toLocalDate().atStartOfDay();
         LocalDateTime hastaEfectivo = hasta != null ? hasta : ahora;
 
-        List<PuntoControl> puntos = puntoControlId != null
-                ? List.of(puntoControlRepository.findById(puntoControlId)
+        List<PuntoControl> puntos;
+
+        if (puntoControlId != null) {
+
+            PuntoControl punto = puntoControlRepository.findById(puntoControlId)
                     .filter(p -> p.getEmpresa().getId().equals(empresaId))
-                    .orElseThrow(() -> new BusinessException("Punto de control no encontrado")))
-                : puntoControlRepository.findByEmpresaIdAndActivoTrue(empresaId);
+                    .orElseThrow(() -> new BusinessException("Punto de control no encontrado"));
+
+            // 🔒 Un punto deshabilitado no debe graficarse aunque se pida
+            // explícitamente por id (defensa en profundidad: el combo del
+            // frontend ya solo ofrece puntos activos para elegir).
+            puntos = Boolean.TRUE.equals(punto.getActivo()) ? List.of(punto) : List.of();
+
+        } else {
+            puntos = puntoControlRepository.findByEmpresaIdAndActivoTrue(empresaId);
+        }
 
         List<PuntoControlDashboardResponse> resultado = new ArrayList<>();
 

@@ -49,6 +49,14 @@ public class SecurityUtils {
         return Boolean.TRUE.equals(getPrincipal().getControlTurnoHabilitado());
     }
 
+    // 🔳 Flag de configuracion por empresa (Empresa.hojaControlHabilitado,
+    // tambien viaja en el JWT): controla si el boton "Importar Excel
+    // (HOJA DE CONTROL)" esta disponible para la empresa del usuario
+    // logueado (ver V36, HojaControlImportServiceImpl).
+    public static boolean tieneHojaControlHabilitado() {
+        return Boolean.TRUE.equals(getPrincipal().getHojaControlHabilitado());
+    }
+
     private static UsuarioPrincipal getPrincipal() {
 
         Authentication auth = SecurityContextHolder

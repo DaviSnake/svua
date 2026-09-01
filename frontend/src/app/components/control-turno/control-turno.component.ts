@@ -54,6 +54,12 @@ export class ControlTurnoComponent implements OnInit {
   editandoPunto = false;
   puntoEditandoId: number | null = null;
 
+  paginaPuntos = 0;
+  sizePuntos = 10;
+  totalPagesPuntos = 0;
+  totalElementsPuntos = 0;
+  filtroNombrePunto = '';
+
   // ---------- Registro de lectura ----------
   lecturaForm!: FormGroup;
   puntosActivos: PuntoControl[] = [];
@@ -100,7 +106,16 @@ export class ControlTurnoComponent implements OnInit {
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
     this.esAdminCatalogo = this.esSuperAdmin || this.esAdminEmpresa;
-    this.puedeImportarExcel = this.esAdminCatalogo || this.authService.getUserRole() === 'JEFE_MANTENIMIENTO';
+
+    // 🔒 SUPER_ADMIN bypasea el flag de empresa (mismo criterio que
+    // codigoQrHabilitado/controlTurnoHabilitado): el resto solo ve el
+    // botón si, además del rol, su empresa tiene el Excel habilitado
+    // (Empresa.hojaControlHabilitado) -- el parser es específico al
+    // layout de una planilla real de una empresa puntual, no genérico.
+    const tieneRolParaImportar =
+      this.esAdminCatalogo || this.authService.getUserRole() === 'JEFE_MANTENIMIENTO';
+    this.puedeImportarExcel =
+      this.esSuperAdmin || (tieneRolParaImportar && !!this.authService.getHojaControlHabilitado());
 
     this.initPuntoForm();
     this.initLecturaForm();
@@ -171,8 +186,35 @@ export class ControlTurnoComponent implements OnInit {
 
   cargarPuntos(): void {
     this.controlTurnoService
-      .getPuntos(0, 50, this.esSuperAdmin ? null : this.authService.getEmpresaId())
-      .subscribe(res => this.puntos = res.content);
+      .getPuntos(
+        this.paginaPuntos,
+        this.sizePuntos,
+        this.esSuperAdmin ? null : this.authService.getEmpresaId(),
+        this.filtroNombrePunto || undefined
+      )
+      .subscribe(res => {
+        this.puntos = res.content;
+        this.paginaPuntos = res.page.number;
+        this.totalPagesPuntos = res.page.totalPages;
+        this.totalElementsPuntos = res.page.totalElements;
+      });
+  }
+
+  onFiltroNombrePuntoChange(): void {
+    this.paginaPuntos = 0;
+    this.cargarPuntos();
+  }
+
+  cambiarPaginaPuntos(p: number): void {
+    if (p < 0 || p >= this.totalPagesPuntos) {
+      return;
+    }
+    this.paginaPuntos = p;
+    this.cargarPuntos();
+  }
+
+  paginasVisiblesPuntos(): number[] {
+    return calcularPaginasVisibles(this.paginaPuntos, this.totalPagesPuntos);
   }
 
   guardarPunto(): void {
@@ -194,6 +236,7 @@ export class ControlTurnoComponent implements OnInit {
         this.nuevoPunto();
         this.cargarPuntos();
         this.cargarPuntosActivos();
+        this.cargarDashboard();
       },
       error: (err) => {
         Swal.fire('Error', err.error?.error || 'No se pudo guardar el punto de control', 'error');
@@ -234,6 +277,25 @@ export class ControlTurnoComponent implements OnInit {
         this.controlTurnoService.eliminarPunto(id).subscribe(() => {
           this.cargarPuntos();
           this.cargarPuntosActivos();
+          this.cargarDashboard();
+        });
+      }
+    });
+  }
+
+  habilitarPunto(id: number): void {
+    Swal.fire({
+      title: '¿Habilitar punto de control?',
+      text: 'Volverá a estar disponible para registrar lecturas.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, habilitar'
+    }).then(result => {
+      if (result.isConfirmed) {
+        this.controlTurnoService.habilitarPunto(id).subscribe(() => {
+          this.cargarPuntos();
+          this.cargarPuntosActivos();
+          this.cargarDashboard();
         });
       }
     });

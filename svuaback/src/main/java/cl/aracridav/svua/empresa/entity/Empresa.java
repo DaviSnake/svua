@@ -89,4 +89,12 @@ public class Empresa {
     // por empresa (ver V33, sidebar.component.ts, SecurityUtils).
     @Column(name = "control_turno_habilitado", nullable = false)
     private Boolean controlTurnoHabilitado;
+
+    // 🔹 Habilita, por empresa, el boton "Importar Excel (HOJA DE
+    // CONTROL)" dentro de Control de Turno (ver
+    // HojaControlImportServiceImpl): el parser es especifico al layout
+    // de una planilla real de una empresa puntual, no generico. Mismo
+    // patron que controlTurnoHabilitado.
+    @Column(name = "hoja_control_habilitado", nullable = false)
+    private Boolean hojaControlHabilitado;
 }
