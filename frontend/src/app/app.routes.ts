@@ -30,6 +30,7 @@ import { VerLogsComponent } from './components/ver-logs/ver-logs.component';
 import { InformeMantencionesComponent } from './components/informe-mantenciones/informe-mantenciones.component';
 import { EscanearComponent } from './components/escanear/escanear.component';
 import { ControlTurnoComponent } from './components/control-turno/control-turno.component';
+import { DepreciacionAceleradaComponent } from './components/depreciacion-acelerada/depreciacion-acelerada.component';
 
 // 🔐 Roles que SI ven cada seccion "de gestion" segun el sidebar hoy
 // (sidebar.component.html: *ngIf="!esTecnico" en esos items -- TECNICO es
@@ -205,6 +206,11 @@ export const routes: Routes = [
                 path: 'escanear',
                 component: EscanearComponent,
                 canActivate: [escanearAccesoGuard]
+            },
+            {
+                path: 'depreciacionAcelerada',
+                component: DepreciacionAceleradaComponent,
+                data: { roles: ['SUPER_ADMIN', 'ADMIN_EMPRESA'] }
             }
         ]
     },

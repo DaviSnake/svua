@@ -25,6 +25,13 @@ public class Depreciacion extends BaseEntity {
     @Column(nullable = false)
     private MetodoDepreciacion metodo;
 
+    // NORMAL (vida útil real, para contabilidad financiera) o ACELERADA
+    // (1/3 de la vida útil, solo para el cálculo del impuesto a la
+    // renta). Mismo método de cálculo (línea recta) en ambos casos.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoDepreciacion tipo;
+
     @Column(
         name = "valor_inicial",
         nullable = false,

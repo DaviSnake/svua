@@ -110,4 +110,22 @@ public interface ActivoRepository extends JpaRepository<Activo, Long> {
         @Param("busqueda") String busqueda,
         Pageable pageable
     );
+
+    // 🔎 Activos de la empresa que aún no tienen su cronograma de
+    // depreciación ACELERADA calculado: creados antes de que existiera
+    // ese cronograma, o cargados por importación masiva (que solo
+    // genera la depreciación NORMAL). Base para el backfill de
+    // DepreciacionServiceImpl.generarDepreciacionAceleradaFaltante().
+    @Query("""
+        SELECT a
+        FROM Activo a
+        WHERE a.empresa.id = :empresaId
+        AND NOT EXISTS (
+            SELECT 1
+            FROM DepreciacionMensual d
+            WHERE d.activo = a
+            AND d.tipo = cl.aracridav.svua.depreciacion.entity.TipoDepreciacion.ACELERADA
+        )
+    """)
+    List<Activo> findActivosSinDepreciacionAcelerada(@Param("empresaId") Long empresaId);
 }

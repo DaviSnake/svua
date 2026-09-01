@@ -172,7 +172,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     if (
       url.includes('/activo') ||
       url.includes('/tipoActivo') ||
-      url.includes('/repuesto')
+      url.includes('/repuesto') ||
+      url.includes('/depreciacionAcelerada')
     ) {
       this.openMenus.gestion = true;
     }

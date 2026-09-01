@@ -7,6 +7,8 @@ import cl.aracridav.svua.inventario.activo.entity.Activo;
 import cl.aracridav.svua.shared.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,6 +34,13 @@ public class DepreciacionMensual extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activo_id", nullable = false)
     private Activo activo;
+
+    // NORMAL o ACELERADA (ver Depreciacion.tipo) — ambos cronogramas
+    // conviven en esta misma tabla, cada uno con su propia numeración
+    // de mes (1..vidaUtilMeses del cronograma correspondiente).
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoDepreciacion tipo;
 
     @Column(nullable = false)
     private int mes;

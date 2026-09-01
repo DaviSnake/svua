@@ -10,66 +10,52 @@ import org.springframework.data.jpa.repository.Query;
 
 import cl.aracridav.svua.depreciacion.dto.DepreciacionDTO;
 import cl.aracridav.svua.depreciacion.entity.DepreciacionMensual;
+import cl.aracridav.svua.depreciacion.entity.TipoDepreciacion;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
 
 public interface DepreciacionMensualRepository extends JpaRepository<DepreciacionMensual, Long> {
-    List<DepreciacionMensual> findByActivoOrderByMesAsc(Activo activo);
 
-    
+    // 🔒 Filtrado por tipo: desde que existe el cronograma ACELERADA
+    // (ver TipoDepreciacion), cada activo tiene DOS cuotas por mes en
+    // esta misma tabla. Sin filtrar por tipo, cualquier consulta que
+    // liste o sume `DepreciacionMensual` mezclaria ambos cronogramas.
+    List<DepreciacionMensual> findByActivoAndTipoOrderByMesAsc(Activo activo, TipoDepreciacion tipo);
+
+    // 🔎 Idempotencia del backfill de depreciación acelerada: evita
+    // recalcular (y duplicar) el cronograma de un activo que ya lo tiene.
+    boolean existsByActivoIdAndTipo(Long activoId, TipoDepreciacion tipo);
+
+    // 🔒 Todas las agregaciones para reportes financieros/dashboard se
+    // acotan a tipo = NORMAL: la depreciacion ACELERADA es un calculo
+    // puramente tributario (para el impuesto a la renta), no debe
+    // sumarse junto a la contable ni mostrarse en esos KPIs.
     @Query("""
-        SELECT d.depreciacionMensual
-        FROM DepreciacionMensual d
-        WHERE d.empresa.id = :empresaId
-        ORDER BY d.mes DESC
-    """)
-    List<BigDecimal> obtenerUltimosMeses(Long empresaId, Pageable pageable);
-
-    @Query("""
-        SELECT new cl.aracridav.svua.depreciacion.dto.DepreciacionDTO(
-            d.mes,
-            SUM(d.depreciacionMensual)
-        )
-        FROM DepreciacionMensual d
-        WHERE d.empresa.id = :empresaId
-        GROUP BY d.mes
-        ORDER BY d.mes DESC
-    """)
-    List<DepreciacionDTO> obtenerUltimos(Long empresaId, Pageable pageable);
-
-        // 🔒 La clave es YEAR*100+MONTH (no solo MONTH) para que el
-        // llamador pueda calzar cada fila con su mes calendario exacto
-        // (año incluido) en vez de solo por posición: si a algun mes del
-        // rango no le corresponde ninguna fila (activo creado a mitad de
-        // año, por ejemplo), la lista quedaba mas corta y el resto de los
-        // meses se corria de lugar contra las etiquetas del grafico.
-        @Query("""
         SELECT new cl.aracridav.svua.depreciacion.dto.DepreciacionDTO(
             YEAR(d.fecha) * 100 + MONTH(d.fecha),
             SUM(d.depreciacionMensual)
         )
         FROM DepreciacionMensual d
         WHERE d.empresa.id = :empresaId
+        AND d.tipo = cl.aracridav.svua.depreciacion.entity.TipoDepreciacion.NORMAL
         AND d.fecha >= :fechaInicio
         GROUP BY YEAR(d.fecha), MONTH(d.fecha)
         ORDER BY YEAR(d.fecha), MONTH(d.fecha)
     """)
     List<DepreciacionDTO> obtenerUltimos6Meses(Long empresaId, LocalDate fechaInicio, Pageable pageable);
 
-    // 🔒 Depreciación acumulada REAL a la fecha: para cada activo, toma
+    // Depreciación acumulada REAL a la fecha: para cada activo, toma
     // solo su cuota mensual más reciente cuya fecha ya venció (<=
-    // :fecha) y suma su depreciacionAcumulada. Antes el dashboard sumaba
-    // (valorInicial - valorResidual) desde la tabla `Depreciacion`, que
-    // es la base depreciable TOTAL de cada activo durante toda su vida
-    // util, no lo depreciado hasta hoy: un activo recien comprado
-    // aparecia depreciado al 100% desde el primer dia.
+    // :fecha) y suma su depreciacionAcumulada.
     @Query("""
         SELECT COALESCE(SUM(d.depreciacionAcumulada), 0)
         FROM DepreciacionMensual d
         WHERE d.empresa.id = :empresaId
+        AND d.tipo = cl.aracridav.svua.depreciacion.entity.TipoDepreciacion.NORMAL
         AND d.fecha = (
             SELECT MAX(d2.fecha)
             FROM DepreciacionMensual d2
             WHERE d2.activo = d.activo
+            AND d2.tipo = cl.aracridav.svua.depreciacion.entity.TipoDepreciacion.NORMAL
             AND d2.fecha <= :fecha
         )
     """)

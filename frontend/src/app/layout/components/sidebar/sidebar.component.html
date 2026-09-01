@@ -33,6 +33,9 @@
         <li routerLinkActive="active"><a routerLink="/inicio/activo">Activos</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/tipoActivo">Tipos</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/repuesto">Repuestos o Fungibles</a></li>
+        <li routerLinkActive="active" *ngIf="esAdmin || esAdminEmpresa">
+          <a routerLink="/inicio/depreciacionAcelerada">Depreciación Acelerada</a>
+        </li>
       </ul>
 
       <span class="tooltip">Gestión Activos</span>

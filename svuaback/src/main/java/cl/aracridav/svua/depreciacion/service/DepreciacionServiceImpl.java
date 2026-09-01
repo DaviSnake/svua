@@ -12,11 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import cl.aracridav.svua.depreciacion.entity.Depreciacion;
 import cl.aracridav.svua.depreciacion.entity.DepreciacionMensual;
 import cl.aracridav.svua.depreciacion.entity.MetodoDepreciacion;
+import cl.aracridav.svua.depreciacion.entity.TipoDepreciacion;
 import cl.aracridav.svua.depreciacion.repository.DepreciacionMensualRepository;
 import cl.aracridav.svua.depreciacion.repository.DepreciacionRepository;
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.inventario.activo.entity.Activo;
+import cl.aracridav.svua.inventario.activo.repository.ActivoRepository;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +28,16 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class DepreciacionServiceImpl implements DepreciacionService {
 
+    // 🔒 SII (Art. 31 N°5 LIR): la vida útil acelerada, para efectos
+    // tributarios, no puede ser inferior a 1 año — si el activo ya
+    // tiene una vida útil normal de 12 meses o menos, no hay nada que
+    // acelerar (usar la misma vida útil).
+    private static final int VIDA_UTIL_ACELERADA_MINIMA_MESES = 12;
+
     private final DepreciacionRepository depreciacionRepository;
     private final DepreciacionMensualRepository mensualRepository;
     private final EmpresaRepository empresaRepository;
+    private final ActivoRepository activoRepository;
 
     /*
      * =========================================
@@ -51,21 +60,53 @@ public class DepreciacionServiceImpl implements DepreciacionService {
     @Override
     public void guardarDepreciacion(Activo activo) {
 
-        Depreciacion dep = new Depreciacion();
-        dep.setActivo(activo);
-        dep.setEmpresa(activo.getEmpresa());
-        dep.setFechaInicio(activo.getFechaAdquisicion());
-        dep.setMetodo(MetodoDepreciacion.LINEA_RECTA);
-        dep.setValorInicial(activo.getValorAdquisicion());
-        dep.setValorResidual(activo.getValorResidual());
-        dep.setVidaUtilMeses(activo.getVidaUtilMeses());
+        Integer vidaNormal = activo.getVidaUtilMeses();
+        Integer vidaAcelerada = calcularVidaUtilAcelerada(vidaNormal);
 
-        depreciacionRepository.save(dep);
+        depreciacionRepository.save(
+                construirDepreciacionHeader(activo, TipoDepreciacion.NORMAL, vidaNormal));
+
+        depreciacionRepository.save(
+                construirDepreciacionHeader(activo, TipoDepreciacion.ACELERADA, vidaAcelerada));
     }
 
     @Override
     public List<DepreciacionMensual> obtenerDepreciacionesPorActivo(Activo activo) {
-        return mensualRepository.findByActivoOrderByMesAsc(activo);
+        return obtenerDepreciacionesPorActivo(activo, TipoDepreciacion.NORMAL);
+    }
+
+    @Override
+    public List<DepreciacionMensual> obtenerDepreciacionesPorActivo(Activo activo, TipoDepreciacion tipo) {
+        return mensualRepository.findByActivoAndTipoOrderByMesAsc(activo, tipo);
+    }
+
+    @Override
+    public int generarDepreciacionAceleradaFaltante() {
+
+        Empresa empresa = obtenerEmpresaActual();
+
+        List<Activo> activos = activoRepository.findActivosSinDepreciacionAcelerada(empresa.getId());
+
+        for (Activo activo : activos) {
+            generarDepreciacionAcelerada(activo, empresa);
+        }
+
+        return activos.size();
+    }
+
+    @Override
+    public void generarDepreciacionAceleradaPorActivo(Long activoId) {
+
+        Activo activo = activoRepository.findById(activoId)
+                .orElseThrow(() -> new BusinessException("Activo no encontrado"));
+
+        // 🔒 Idempotencia: sin esto, llamar dos veces al mismo activo
+        // duplicaría su cabecera y su cronograma ACELERADA.
+        if (mensualRepository.existsByActivoIdAndTipo(activoId, TipoDepreciacion.ACELERADA)) {
+            throw new BusinessException("El activo ya tiene depreciación acelerada calculada");
+        }
+
+        generarDepreciacionAcelerada(activo, activo.getEmpresa());
     }
 
     /*
@@ -75,11 +116,35 @@ public class DepreciacionServiceImpl implements DepreciacionService {
      */
 
     private void guardarDepreciaciones(Activo activo, Empresa empresa) {
-        List<DepreciacionMensual> lista = calcularDepreciaciones(activo, empresa);
+
+        Integer vidaNormal = activo.getVidaUtilMeses();
+        Integer vidaAcelerada = calcularVidaUtilAcelerada(vidaNormal);
+
+        List<DepreciacionMensual> lista = new ArrayList<>();
+        lista.addAll(calcularDepreciaciones(activo, empresa, vidaNormal, TipoDepreciacion.NORMAL));
+        lista.addAll(calcularDepreciaciones(activo, empresa, vidaAcelerada, TipoDepreciacion.ACELERADA));
+
         mensualRepository.saveAll(lista);
     }
 
-    private List<DepreciacionMensual> calcularDepreciaciones(Activo activo, Empresa empresa) {
+    // 🔁 Compartido por el alta de un activo nuevo (guardarDepreciacion)
+    // y por el backfill de activos existentes (generarDepreciacion*):
+    // arma la cabecera + el cronograma mensual ACELERADA y los guarda.
+    private void generarDepreciacionAcelerada(Activo activo, Empresa empresa) {
+
+        Integer vidaAcelerada = calcularVidaUtilAcelerada(activo.getVidaUtilMeses());
+
+        depreciacionRepository.save(
+                construirDepreciacionHeader(activo, TipoDepreciacion.ACELERADA, vidaAcelerada));
+
+        List<DepreciacionMensual> lista =
+                calcularDepreciaciones(activo, empresa, vidaAcelerada, TipoDepreciacion.ACELERADA);
+
+        mensualRepository.saveAll(lista);
+    }
+
+    private List<DepreciacionMensual> calcularDepreciaciones(
+            Activo activo, Empresa empresa, Integer vidaUtilMesesInput, TipoDepreciacion tipo) {
 
         List<DepreciacionMensual> lista = new ArrayList<>();
 
@@ -94,7 +159,7 @@ public class DepreciacionServiceImpl implements DepreciacionService {
         // esa validación, o vía otro flujo que llame directamente a este
         // método) rompía el cálculo con un NullPointerException o una
         // ArithmeticException ("/ by zero").
-        Integer vidaUtilMeses = activo.getVidaUtilMeses();
+        Integer vidaUtilMeses = vidaUtilMesesInput;
 
         if (vidaUtilMeses == null || vidaUtilMeses <= 0) {
             vidaUtilMeses = 1;
@@ -126,7 +191,7 @@ public class DepreciacionServiceImpl implements DepreciacionService {
             BigDecimal valorContable = costo.subtract(acumulada);
 
             lista.add(construirDepreciacionMensual(
-                    activo, empresa, mes, fechaBase.plusMonths(mes - 1),
+                    activo, empresa, tipo, mes, fechaBase.plusMonths(mes - 1),
                     cuota, acumulada, valorContable
             ));
         }
@@ -144,6 +209,24 @@ public class DepreciacionServiceImpl implements DepreciacionService {
         return totalDepreciable.divide(BigDecimal.valueOf(vida), RoundingMode.HALF_UP);
     }
 
+    // SII (Art. 31 N°5 LIR): 1/3 de la vida útil normal, con un piso de
+    // 1 año. Si la vida útil normal ya es de 1 año o menos, no hay
+    // margen para acelerar: se usa la misma vida útil normal.
+    private Integer calcularVidaUtilAcelerada(Integer vidaUtilMesesNormal) {
+
+        if (vidaUtilMesesNormal == null || vidaUtilMesesNormal <= 0) {
+            return vidaUtilMesesNormal;
+        }
+
+        if (vidaUtilMesesNormal <= VIDA_UTIL_ACELERADA_MINIMA_MESES) {
+            return vidaUtilMesesNormal;
+        }
+
+        int tercio = (int) Math.round(vidaUtilMesesNormal / 3.0);
+
+        return Math.max(VIDA_UTIL_ACELERADA_MINIMA_MESES, tercio);
+    }
+
     private LocalDate obtenerFechaBase(Activo activo) {
         return activo.getFechaAdquisicion().withDayOfMonth(1);
     }
@@ -154,9 +237,25 @@ public class DepreciacionServiceImpl implements DepreciacionService {
      * =========================================
      */
 
+    private Depreciacion construirDepreciacionHeader(Activo activo, TipoDepreciacion tipo, Integer vidaUtilMeses) {
+
+        Depreciacion dep = new Depreciacion();
+        dep.setActivo(activo);
+        dep.setEmpresa(activo.getEmpresa());
+        dep.setFechaInicio(activo.getFechaAdquisicion());
+        dep.setMetodo(MetodoDepreciacion.LINEA_RECTA);
+        dep.setTipo(tipo);
+        dep.setValorInicial(activo.getValorAdquisicion());
+        dep.setValorResidual(activo.getValorResidual());
+        dep.setVidaUtilMeses(vidaUtilMeses);
+
+        return dep;
+    }
+
     private DepreciacionMensual construirDepreciacionMensual(
             Activo activo,
             Empresa empresa,
+            TipoDepreciacion tipo,
             int mes,
             LocalDate fecha,
             BigDecimal depMensual,
@@ -167,6 +266,7 @@ public class DepreciacionServiceImpl implements DepreciacionService {
 
         d.setActivo(activo);
         d.setEmpresa(empresa);
+        d.setTipo(tipo);
         d.setMes(mes);
         d.setFecha(fecha);
         d.setDepreciacionMensual(depMensual);
