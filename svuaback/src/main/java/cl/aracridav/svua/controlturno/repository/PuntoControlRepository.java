@@ -1,6 +1,7 @@
 package cl.aracridav.svua.controlturno.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,11 @@ import cl.aracridav.svua.controlturno.entity.PuntoControl;
 public interface PuntoControlRepository extends JpaRepository<PuntoControl, Long> {
 
     boolean existsByNombreIgnoreCaseAndEmpresaId(String nombre, Long empresaId);
+
+    // 🔥 Usado por HojaControlImportServiceImpl para el patron
+    // "buscar o crear" al importar el Excel: un punto de control se crea
+    // solo la primera vez que aparece en un archivo importado.
+    Optional<PuntoControl> findByNombreIgnoreCaseAndEmpresaId(String nombre, Long empresaId);
 
     List<PuntoControl> findByEmpresaIdAndActivoTrue(Long empresaId);
 

@@ -15,11 +15,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.controlturno.dto.request.LecturaControlRequest;
+import cl.aracridav.svua.controlturno.dto.response.ImportHojaControlResponse;
 import cl.aracridav.svua.controlturno.dto.response.LecturaControlResponse;
 import cl.aracridav.svua.controlturno.dto.response.PuntoControlDashboardResponse;
 import cl.aracridav.svua.controlturno.enums.TurnoTrabajo;
+import cl.aracridav.svua.controlturno.service.HojaControlImportService;
 import cl.aracridav.svua.controlturno.service.LecturaControlService;
 import lombok.RequiredArgsConstructor;
 
@@ -32,11 +35,24 @@ import lombok.RequiredArgsConstructor;
 public class LecturaControlController {
 
     private final LecturaControlService service;
+    private final HojaControlImportService importService;
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','JEFE_MANTENIMIENTO','TECNICO')")
     @PostMapping
     public ResponseEntity<LecturaControlResponse> registrar(@RequestBody LecturaControlRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.registrar(request));
+    }
+
+    // 🔥 Carga masiva desde la planilla real "HOJA DE CONTROL": crea las
+    // lecturas de HOY para cada punto/hora que trae el archivo (ver
+    // HojaControlImportServiceImpl). Sin TECNICO: a diferencia de
+    // registrar() una sola lectura, esto puede crear puntos de control
+    // nuevos en el catalogo, lo que hoy es una accion de administracion.
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','JEFE_MANTENIMIENTO')")
+    @PostMapping("/importar-excel")
+    public ResponseEntity<ImportHojaControlResponse> importarExcel(
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(importService.importar(file));
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA','JEFE_MANTENIMIENTO','TECNICO')")

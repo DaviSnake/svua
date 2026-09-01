@@ -1,6 +1,6 @@
 <div class="container">
 
-  <h2>Control de Turno</h2>
+  <h2>Control de Turno Mantenciones</h2>
 
   <!-- ===================== CATALOGO DE PUNTOS DE CONTROL ===================== -->
   @if (esAdminCatalogo) {
@@ -130,6 +130,25 @@
     </div>
   </form>
 
+  <!-- ===================== IMPORTAR DESDE EXCEL ===================== -->
+  @if (puedeImportarExcel) {
+    <div class="importar-excel">
+      <p>
+        ¿Ya llenaste la planilla "HOJA DE CONTROL" del día? Súbela aquí para
+        cargar todas las lecturas de hoy de una sola vez, en vez de
+        registrarlas una por una.
+      </p>
+      <label class="btn-importar" [class.disabled]="importandoExcel">
+        {{ importandoExcel ? 'Importando…' : 'Importar Excel (HOJA DE CONTROL)' }}
+        <input type="file"
+               accept=".xlsx"
+               [disabled]="importandoExcel"
+               (change)="importarExcel($event)"
+               hidden>
+      </label>
+    </div>
+  }
+
   <hr />
 
   <!-- ===================== HISTORIAL ===================== -->
@@ -205,7 +224,7 @@
   <hr />
 
   <!-- ===================== DASHBOARD ===================== -->
-  <h3>Dashboard de Control de Turno</h3>
+  <h3>Dashboard de Control de Turno Mantenciones</h3>
 
   <!-- 🔥 Filtro de fecha propio del dashboard, separado del filtro de
        "Historial de Lecturas" de arriba (ver comentario en el .ts).

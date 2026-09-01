@@ -11,7 +11,7 @@ import { WebSocketService } from '../../../services/web-socket.service';
 import { Notificacion } from '../../../model/notificacion';
 import Swal from 'sweetalert2';
 
-type MenuKey = 'gestion' | 'organizacion' | 'analisis';
+type MenuKey = 'gestion' | 'organizacion' | 'analisis' | 'controlTurno';
 
 @Component({
   selector: 'app-sidebar',
@@ -38,7 +38,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   openMenus: Record<MenuKey, boolean> = {
     gestion: false,
     organizacion: false,
-    analisis: false
+    analisis: false,
+    controlTurno: false
   };
 
   // roles
@@ -166,7 +167,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.openMenus = {
       gestion: false,
       organizacion: false,
-      analisis: false
+      analisis: false,
+      controlTurno: false
     };
 
     if (
@@ -189,9 +191,14 @@ export class SidebarComponent implements OnInit, OnDestroy  {
 
     if (
       url.includes('/reportes') ||
-      url.includes('/auditorias')
+      url.includes('/auditorias') ||
+      url.includes('/informeMantenciones')
     ) {
       this.openMenus.analisis = true;
+    }
+
+    if (url.includes('/controlTurno')) {
+      this.openMenus.controlTurno = true;
     }
   }
 
@@ -200,7 +207,8 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     this.openMenus = {
       gestion: false,
       organizacion: false,
-      analisis: false
+      analisis: false,
+      controlTurno: false
     };
   }
 

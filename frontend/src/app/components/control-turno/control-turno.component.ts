@@ -39,6 +39,9 @@ export class ControlTurnoComponent implements OnInit {
   esSuperAdmin = false;
   esAdminEmpresa = false;
   esAdminCatalogo = false; // SUPER_ADMIN o ADMIN_EMPRESA: administra el catalogo de puntos
+  // 🔥 Mismos roles que el backend exige en /lecturas/importar-excel
+  // (sin TECNICO: la importacion puede crear puntos de control nuevos).
+  puedeImportarExcel = false;
 
   turnos: TurnoTrabajo[] = ['MANANA', 'TARDE', 'NOCHE'];
 
@@ -97,6 +100,7 @@ export class ControlTurnoComponent implements OnInit {
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
     this.esAdminCatalogo = this.esSuperAdmin || this.esAdminEmpresa;
+    this.puedeImportarExcel = this.esAdminCatalogo || this.authService.getUserRole() === 'JEFE_MANTENIMIENTO';
 
     this.initPuntoForm();
     this.initLecturaForm();
@@ -333,6 +337,56 @@ export class ControlTurnoComponent implements OnInit {
       },
       error: (err) => {
         Swal.fire('Error', err.error?.error || 'No se pudo registrar la lectura', 'error');
+      }
+    });
+  }
+
+  // 🔥 Carga masiva desde la planilla real "HOJA DE CONTROL" (hoja de
+  // Excel con layout fijo, ver HojaControlImportServiceImpl): crea las
+  // lecturas de HOY para cada punto/hora que trae el archivo. Se puede
+  // volver a subir el mismo archivo sin duplicar (el backend omite las
+  // lecturas que ya existen para ese punto+hora).
+  importandoExcel = false;
+
+  importarExcel(event: Event): void {
+
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+
+    if (!archivo) {
+      return;
+    }
+
+    this.importandoExcel = true;
+
+    this.controlTurnoService.importarExcel(archivo).subscribe({
+      next: (resultado) => {
+        this.importandoExcel = false;
+        input.value = '';
+
+        const puntosNuevos = resultado.puntosNuevosCreados.length
+          ? `<br><br>Puntos de control nuevos creados: ${resultado.puntosNuevosCreados.join(', ')}`
+          : '';
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Importación completada',
+          html: `${resultado.lecturasCreadas} lectura(s) creada(s), `
+              + `${resultado.lecturasOmitidas} ya existían y se omitieron.${puntosNuevos}`
+        });
+
+        this.cargarPuntosActivos();
+        this.cargarLecturas();
+        this.cargarDashboard();
+      },
+      error: (err) => {
+        this.importandoExcel = false;
+        input.value = '';
+
+        Swal.fire({
+          icon: 'error',
+          title: err.error?.error || 'No fue posible importar el archivo'
+        });
       }
     });
   }

@@ -62,6 +62,44 @@ form {
   margin-bottom: 25px;
 }
 
+/* 🔥 Bloque "Importar Excel (HOJA DE CONTROL)": mismo look de tarjeta
+   que .form-container/form, pero sin el grid de campos (es solo un
+   párrafo + un botón de subida). */
+.importar-excel {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.importar-excel p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 14px;
+}
+
+.btn-importar {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 6px;
+  background: #27ae60;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-importar:hover {
+  background: #219150;
+}
+
+.btn-importar.disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
 .card-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

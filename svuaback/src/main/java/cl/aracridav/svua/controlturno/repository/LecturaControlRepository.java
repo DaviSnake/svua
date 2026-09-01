@@ -1,5 +1,7 @@
 package cl.aracridav.svua.controlturno.repository;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -16,4 +18,9 @@ import cl.aracridav.svua.controlturno.entity.LecturaControl;
 // el problema de raiz en vez de parchar el sintoma.
 public interface LecturaControlRepository
         extends JpaRepository<LecturaControl, Long>, JpaSpecificationExecutor<LecturaControl> {
+
+    // 🔥 Idempotencia de HojaControlImportServiceImpl: permite volver a
+    // importar el mismo archivo (o uno del mismo dia) sin duplicar las
+    // lecturas ya cargadas para un punto+hora exactos.
+    boolean existsByPuntoControlIdAndFechaHora(Long puntoControlId, LocalDateTime fechaHora);
 }

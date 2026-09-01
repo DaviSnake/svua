@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 
 // 🔥 Informe de Mantenciones: comprobante por orden de mantención
-// completada, visible solo para SUPER_ADMIN. A diferencia de
+// completada, visible para SUPER_ADMIN y ADMIN_EMPRESA. A diferencia de
 // OrdenMantenimientoResponse (que solo trae IDs), este DTO resuelve los
 // nombres (activo, empresa, usuario, proveedor) para mostrarlos
 // directamente en el informe sin llamadas adicionales.
@@ -26,6 +26,7 @@ public class OrdenMantenimientoReporteResponse {
     private TipoMantenimiento tipoMantenimiento;
     private LocalDateTime fechaProgramada;
     private LocalDateTime fechaEjecucion;
+    private LocalDateTime fechaFinEjecucion;
     private Long duracionSegundos;
 
     private String activoNombre;
@@ -36,6 +37,12 @@ public class OrdenMantenimientoReporteResponse {
     private BigDecimal valorHoraProveedor;
     private BigDecimal costoManoObraProveedor;
     private BigDecimal costoTotal;
+
+    // 🔥 No se expone rutaArchivo (path en disco): solo si existe o no,
+    // igual que OrdenMantenimientoResponse.tieneChecklist (GeneralMapper).
+    // El detalle del informe usa esto para mostrar el botón "Ver
+    // checklist" o el aviso de que no se cargó ninguno.
+    private boolean tieneChecklist;
 
     private List<OrdenRepuestoResponse> repuestos;
 

@@ -104,6 +104,7 @@
                 <div><strong>Tipo de mantención:</strong> {{ orden.tipoMantenimiento }}</div>
                 <div><strong>Fecha programada:</strong> {{ orden.fechaProgramada | date:'dd/MM/yyyy HH:mm' }}</div>
                 <div><strong>Fecha ejecución:</strong> {{ orden.fechaEjecucion | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div><strong>Fecha fin ejecución:</strong> {{ orden.fechaFinEjecucion | date:'dd/MM/yyyy HH:mm' }}</div>
                 <div><strong>Duración:</strong> {{ formatearDuracion(orden.duracionSegundos) }}</div>
                 <div><strong>Activo:</strong> {{ orden.activoNombre }}</div>
                 <div><strong>Empresa:</strong> {{ orden.empresaNombre }}</div>
@@ -126,6 +127,26 @@
                 <ng-template #sinRepuestos>
                   <p class="sin-datos-inline">No se utilizaron repuestos en esta orden.</p>
                 </ng-template>
+              </div>
+
+              <div class="comprobante-checklist">
+                <strong>Checklist:</strong>
+
+                <button *ngIf="orden.tieneChecklist"
+                        class="btn-detalle"
+                        (click)="verChecklist(orden.id)">
+                  Ver checklist
+                </button>
+
+                <p *ngIf="!orden.tieneChecklist && orden.estado === 'COMPLETADA'"
+                   class="sin-datos-inline checklist-faltante">
+                  No se cargó checklist para esta orden.
+                </p>
+
+                <p *ngIf="!orden.tieneChecklist && orden.estado !== 'COMPLETADA'"
+                   class="sin-datos-inline">
+                  No se ha cargado checklist para esta orden.
+                </p>
               </div>
 
             </div>

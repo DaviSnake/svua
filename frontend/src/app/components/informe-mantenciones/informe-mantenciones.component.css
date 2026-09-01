@@ -195,6 +195,24 @@
   color: #6b7280;
 }
 
+.comprobante-checklist {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.comprobante-checklist .btn-detalle {
+  margin-left: 10px;
+}
+
+/* 🔥 Orden completada sin checklist adjunto: se resalta en rojo y
+   negrita porque, a diferencia de una orden aún no finalizada, ahí sí
+   corresponde tener el checklist cargado. */
+.checklist-faltante {
+  color: #dc2626;
+  font-weight: 700;
+}
+
 /* PAGINACIÓN */
 .paginacion {
   display: flex;

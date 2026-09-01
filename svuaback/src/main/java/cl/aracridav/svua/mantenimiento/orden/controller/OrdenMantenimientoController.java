@@ -199,8 +199,13 @@ public class OrdenMantenimientoController {
     }
 
     // 🔥 Informe de Mantenciones: historial paginado y filtrable de
-    // ordenes completadas, visible solo para SUPER_ADMIN.
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    // ordenes completadas, visible para SUPER_ADMIN y ADMIN_EMPRESA. El
+    // aislamiento por empresa para ADMIN_EMPRESA no depende de este
+    // filtro: lo garantiza Row Level Security de Postgres (ver
+    // V27__enable_row_level_security_por_empresa.sql), que restringe
+    // automaticamente cualquier query sobre orden_mantenimiento a la
+    // empresa del usuario autenticado salvo que sea SUPER_ADMIN.
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @GetMapping("/informe")
     public Page<OrdenMantenimientoReporteResponse> obtenerInformeMantenciones(
             @RequestParam(required = false) String usuario,

@@ -1,8 +1,8 @@
 // 🔥 Informe de Mantenciones: comprobante por orden de mantención
-// completada, visible solo para SUPER_ADMIN. Refleja el DTO del backend
-// OrdenMantenimientoReporteResponse, que ya resuelve los nombres
-// (activo, empresa, usuario, proveedor) para mostrarlos directamente en
-// el informe sin llamadas adicionales.
+// completada, visible para SUPER_ADMIN y ADMIN_EMPRESA. Refleja el DTO
+// del backend OrdenMantenimientoReporteResponse, que ya resuelve los
+// nombres (activo, empresa, usuario, proveedor) para mostrarlos
+// directamente en el informe sin llamadas adicionales.
 export interface OrdenRepuestoReporte {
   id?: number;
   ordenId?: number;
@@ -21,6 +21,7 @@ export interface OrdenMantenimientoReporte {
   tipoMantenimiento?: string;
   fechaProgramada?: string;
   fechaEjecucion?: string;
+  fechaFinEjecucion?: string;
   duracionSegundos?: number;
   activoNombre?: string;
   empresaNombre?: string;
@@ -29,5 +30,6 @@ export interface OrdenMantenimientoReporte {
   valorHoraProveedor?: number;
   costoManoObraProveedor?: number;
   costoTotal?: number;
+  tieneChecklist?: boolean;
   repuestos?: OrdenRepuestoReporte[];
 }

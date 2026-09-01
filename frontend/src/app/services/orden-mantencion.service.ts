@@ -98,7 +98,7 @@ export class OrdenMantencionService {
 
   // 🔥 Informe de Mantenciones: historial paginado y filtrable de
   // órdenes COMPLETADAS, con el detalle de repuestos utilizados para el
-  // comprobante (solo SUPER_ADMIN puede consultarlo).
+  // comprobante (SUPER_ADMIN y ADMIN_EMPRESA pueden consultarlo).
   obtenerInformeMantenciones(
     page: number,
     size: number,

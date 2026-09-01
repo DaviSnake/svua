@@ -1465,6 +1465,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             .tipoMantenimiento(o.getTipoMantenimiento())
             .fechaProgramada(o.getFechaProgramada())
             .fechaEjecucion(o.getFechaEjecucion())
+            .fechaFinEjecucion(o.getFechaFinEjecucion())
             .duracionSegundos(o.getDuracionSegundos())
             .activoNombre(o.getActivo().getNombre())
             .empresaNombre(o.getEmpresa().getNombre())
@@ -1479,6 +1480,7 @@ public class OrdenMantenimientoServiceImpl implements OrdenMantenimientoService 
             .valorHoraProveedor(o.getValorHoraProveedor())
             .costoManoObraProveedor(o.getCostoManoObraProveedor())
             .costoTotal(o.getCostoTotal())
+            .tieneChecklist(o.getRutaArchivo() != null && !o.getRutaArchivo().isBlank())
             .repuestos(repuestos)
             .build();
     }

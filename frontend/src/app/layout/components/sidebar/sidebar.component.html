@@ -70,9 +70,27 @@
       <ul class="submenu" [class.open]="openMenus.analisis && !isCollapsed">
         <li routerLinkActive="active"><a routerLink="/inicio/reportes">Reportes</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/auditorias">Auditoría</a></li>
+        <li routerLinkActive="active" *ngIf="esAdmin || esAdminEmpresa">
+          <a routerLink="/inicio/informeMantenciones">Informe de Mantenciones</a>
+        </li>
       </ul>
 
       <span class="tooltip">Análisis</span>
+    </li>
+
+    <!-- CONTROL DE TURNO (SUPER_ADMIN, ADMIN_EMPRESA, JEFE_MANTENIMIENTO, TECNICO) -->
+    <li class="menu-item" *ngIf="mostrarControlTurno">
+      <div class="menu-parent" (click)="toggleMenu('controlTurno')">
+        <i class="bx bx-line-chart"></i>
+        <span *ngIf="!isCollapsed">Control de Turno</span>
+        <i class="bx bx-chevron-down arrow" [class.rotate]="openMenus.controlTurno"></i>
+      </div>
+
+      <ul class="submenu" [class.open]="openMenus.controlTurno && !isCollapsed">
+        <li routerLinkActive="active"><a routerLink="/inicio/controlTurno">Control de Turno Mantenciones</a></li>
+      </ul>
+
+      <span class="tooltip">Control de Turno</span>
     </li>
 
     <!-- CALENDARIO -->
@@ -82,15 +100,6 @@
         <span *ngIf="!isCollapsed">Calendario Mantenciones</span>
       </a>
       <span class="tooltip">Calendario Mantenciones</span>
-    </li>
-
-    <!-- CONTROL DE TURNO (SUPER_ADMIN, ADMIN_EMPRESA, JEFE_MANTENIMIENTO, TECNICO) -->
-    <li class="menu-item" routerLinkActive="active" *ngIf="mostrarControlTurno">
-      <a routerLink="/inicio/controlTurno" (click)="closeAllMenus(); $event.stopPropagation()">
-        <i class="bx bx-line-chart"></i>
-        <span *ngIf="!isCollapsed">Control de Turno</span>
-      </a>
-      <span class="tooltip">Control de Turno</span>
     </li>
 
     <!-- ESCANEAR ACTIVO (solo SUPER_ADMIN y empresa demo) -->
@@ -132,15 +141,6 @@
         <span *ngIf="!isCollapsed">Informe de Conexiones</span>
       </a>
       <span class="tooltip">Informe de Conexiones</span>
-    </li>
-
-    <!-- INFORME DE MANTENCIONES (solo SUPER_ADMIN) -->
-    <li class="menu-item" routerLinkActive="active" *ngIf="esAdmin">
-      <a routerLink="/inicio/informeMantenciones" (click)="closeAllMenus(); $event.stopPropagation()">
-        <i class='bx bx-wrench'></i>
-        <span *ngIf="!isCollapsed">Informe de Mantenciones</span>
-      </a>
-      <span class="tooltip">Informe de Mantenciones</span>
     </li>
 
     <!-- VER LOGS (solo SUPER_ADMIN) -->

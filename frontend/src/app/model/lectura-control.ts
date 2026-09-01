@@ -26,3 +26,11 @@ export interface PuntoControlDashboard {
   lecturasDentroRango: number;
   lecturasFueraRango: number;
 }
+
+// 🔥 Resultado de importar la planilla "HOJA DE CONTROL" (ver
+// HojaControlImportServiceImpl en el backend).
+export interface ImportHojaControlResponse {
+  lecturasCreadas: number;
+  lecturasOmitidas: number;
+  puntosNuevosCreados: string[];
+}

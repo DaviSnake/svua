@@ -197,7 +197,7 @@ export const routes: Routes = [
             {
                 path: 'informeMantenciones',
                 component: InformeMantencionesComponent,
-                data: { roles: ['SUPER_ADMIN'] }
+                data: { roles: ['SUPER_ADMIN', 'ADMIN_EMPRESA'] }
             },
             {
                 // ⚠️ Caso especial: el sidebar usa esAdmin || codigoQrHabilitado

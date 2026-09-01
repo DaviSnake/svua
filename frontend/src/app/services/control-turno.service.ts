@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Page } from '../shared/page';
 import { PuntoControl } from '../model/punto-control';
-import { LecturaControl, PuntoControlDashboard, TurnoTrabajo } from '../model/lectura-control';
+import { ImportHojaControlResponse, LecturaControl, PuntoControlDashboard, TurnoTrabajo } from '../model/lectura-control';
 import { environment } from '../../environments/environment';
 
 // 🔥 Modulo "Control de Turno": puntos de control (temperatura,
@@ -56,6 +56,19 @@ export class ControlTurnoService {
 
   registrarLectura(lectura: Partial<LecturaControl>): Observable<LecturaControl> {
     return this.http.post<LecturaControl>(`${this.apiUrl}/lecturas`, lectura);
+  }
+
+  // 🔥 Carga masiva desde la planilla real "HOJA DE CONTROL": crea las
+  // lecturas de HOY para cada punto/hora que trae el archivo.
+  importarExcel(archivo: File): Observable<ImportHojaControlResponse> {
+
+    const formData = new FormData();
+    formData.append('file', archivo);
+
+    return this.http.post<ImportHojaControlResponse>(
+      `${this.apiUrl}/lecturas/importar-excel`,
+      formData
+    );
   }
 
   getLecturas(

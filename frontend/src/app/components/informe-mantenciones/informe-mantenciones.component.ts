@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import Swal from 'sweetalert2';
 import { OrdenMantencionService } from '../../services/orden-mantencion.service';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
@@ -191,6 +192,43 @@ export class InformeMantencionesComponent implements OnInit {
 
   trackByRepuestoId(index: number, repuesto: any): any {
     return repuesto?.id ?? repuesto?.repuestoId ?? index;
+  }
+
+  // 🔥 Igual patrón que "Ver Logs": se abre la pestaña de forma
+  // sincrónica dentro del click (para que el navegador no la bloquee
+  // como popup) y una vez llega el archivo se navega esa misma pestaña
+  // al blob. No se llama si la orden no tiene checklist (ver
+  // orden.tieneChecklist en el template).
+  verChecklist(ordenId: number | undefined): void {
+
+    if (ordenId == null) {
+      return;
+    }
+
+    const nuevaPestana = window.open('', '_blank');
+
+    this.ordenMantencionService.verArchivo(ordenId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+
+        if (nuevaPestana) {
+          nuevaPestana.location.href = url;
+        } else {
+          window.open(url, '_blank');
+        }
+      },
+      error: (err) => {
+
+        if (nuevaPestana) {
+          nuevaPestana.close();
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: err.error?.error || 'No fue posible cargar el checklist'
+        });
+      }
+    });
   }
 
 }
