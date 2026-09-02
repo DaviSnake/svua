@@ -40,6 +40,52 @@
   color: #0f172a;
 }
 
+/* 🎨 SEMAFORO: Cumplimiento Preventivo/Correctivo y Disponibilidad
+   tienen una meta implicita, asi que su numero cambia de color segun
+   el valor (ver claseEstado() en el .ts). El color nunca va solo: el
+   icono-estado que lo acompaña es quien realmente marca "bueno/alerta/
+   critico" para quien no distingue el color. Los tonos de alerta se
+   oscurecieron un poco respecto al ambar "puro" (#fab219) porque ese
+   tono no da contraste suficiente para texto sobre fondo blanco. */
+.valor .icono-estado {
+  margin-right: 4px;
+}
+
+.valor.estado-bueno {
+  color: #0ca30c;
+}
+
+.valor.estado-alerta {
+  color: #b45309;
+}
+
+.valor.estado-critico {
+  color: #d03b3b;
+}
+
+/* 🎨 Conteos de ordenes: color por ROL dentro del flujo, no por gusto.
+   Total y Pre Completada usan el azul de acento de la app (agregado /
+   en curso); Completadas en verde; Pendientes en ambar (necesita
+   accion); Canceladas en gris apagado (fuera del flujo activo, no es
+   "malo"). MTTR/MTBF quedan neutros a proposito -- son magnitudes de
+   tiempo sin una meta visible en esta pantalla. */
+.dashboard-card.total-ordenes .valor,
+.dashboard-card.pre-completada .valor {
+  color: #3b82f6;
+}
+
+.dashboard-card.completadas .valor {
+  color: #0ca30c;
+}
+
+.dashboard-card.pendientes .valor {
+  color: #b45309;
+}
+
+.dashboard-card.canceladas .valor {
+  color: #94a3b8;
+}
+
 .chart-section{
   margin-top: 4rem;
 }

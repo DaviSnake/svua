@@ -727,15 +727,19 @@ export class ControlTurnoComponent implements OnInit {
   // lectura individual satura el eje X (cientos de puntos, horas
   // repetidas e ilegibles) -- se agrega a promedio diario en su lugar.
   // Para ver el detalle hora a hora hay que acotar el filtro a un dia.
+  // 🔥 forzarDetalle=true se usa para el modal "Ver detalle" (abrirModalChart):
+  // rearma el mismo grafico sin agregar por dia, aunque el rango sea
+  // amplio, para mostrar cada lectura individual en una vista mas grande.
   private armarLineChart(
     titulo: string,
     unidad: string,
-    series: { etiqueta: string; punto: PuntoControlDashboard; color: string }[]
+    series: { etiqueta: string; punto: PuntoControlDashboard; color: string }[],
+    forzarDetalle = false
   ): any {
 
     const fechasUnicas = Array.from(new Set(series.flatMap(s => s.punto.fechas))).sort();
     const diasUnicos = new Set(fechasUnicas.map(f => new Date(f).toDateString()));
-    const agregarPorDia = diasUnicos.size > 1;
+    const agregarPorDia = !forzarDetalle && diasUnicos.size > 1;
 
     let labels: string[];
     let datasets: any[];
@@ -780,11 +784,16 @@ export class ControlTurnoComponent implements OnInit {
     } else {
 
       // 🔥 Eje X = hora de la lectura (HH:mm), como en la planilla
-      // original ("HORA DE MEDICION") -- un solo dia de datos, sin
-      // necesidad de agregar nada.
-      labels = fechasUnicas.map(f =>
-        new Date(f).toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' })
-      );
+      // original ("HORA DE MEDICION"). Si igual hay mas de un dia
+      // (forzarDetalle=true desde el modal "Ver detalle" con un rango
+      // amplio), se antepone la fecha para no repetir la misma hora sin
+      // poder distinguir a que dia pertenece cada una.
+      labels = fechasUnicas.map(f => {
+        const fecha = new Date(f);
+        return diasUnicos.size > 1
+          ? fecha.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : fecha.toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' });
+      });
 
       datasets = series.map(s => {
         const valorPorFecha = new Map(s.punto.fechas.map((f, i) => [f, s.punto.valores[i]]));
@@ -815,7 +824,35 @@ export class ControlTurnoComponent implements OnInit {
           },
           y: { title: { display: true, text: unidad } }
         }
-      }
+      },
+      // 🔥 Metadata propia (Chart.js/ng2-charts la ignora, solo lee
+      // type/data/options): agregadoPorDia habilita el "Ver detalle" en
+      // el template, y _titulo/_unidad/_series permiten rearmar este
+      // mismo grafico sin agregar (ver abrirModalChart).
+      agregadoPorDia: agregarPorDia,
+      _titulo: titulo,
+      _unidad: unidad,
+      _series: series
     };
+  }
+
+  // ===================== MODAL "VER DETALLE" =====================
+
+  modalChart: any = null;
+
+  // 🔥 Solo tiene sentido para gráficos agregados por día (rango
+  // amplio): rearma el mismo grafico en detalle horario completo
+  // (forzarDetalle=true), para verlo mas grande sin perder informacion.
+  abrirModalChart(chart: any): void {
+
+    if (!chart.agregadoPorDia) {
+      return;
+    }
+
+    this.modalChart = this.armarLineChart(chart._titulo, chart._unidad, chart._series, true);
+  }
+
+  cerrarModalChart(): void {
+    this.modalChart = null;
   }
 }

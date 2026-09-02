@@ -107,6 +107,32 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  // 🎨 Semáforo para los indicadores con meta (Cumplimiento Preventivo/
+  // Correctivo, Disponibilidad): ≥80% bueno, 50-79% alerta, <50% crítico.
+  // El color nunca va solo -- siempre acompañado del ícono de
+  // iconoEstado() (ver template), no solo el número coloreado.
+  claseEstado(valor: number | undefined | null): string {
+
+    if (valor == null) {
+      return '';
+    }
+
+    if (valor >= 80) return 'estado-bueno';
+    if (valor >= 50) return 'estado-alerta';
+    return 'estado-critico';
+  }
+
+  iconoEstado(valor: number | undefined | null): string {
+
+    if (valor == null) {
+      return '';
+    }
+
+    if (valor >= 80) return '✓';
+    if (valor >= 50) return '⚠';
+    return '✕';
+  }
+
   cargarEmpresas(): void {
     this.empresaService.getAll().subscribe(data => {
       this.empresas = data;

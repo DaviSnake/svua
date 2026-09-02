@@ -36,17 +36,26 @@
 
   <div class="dashboard-card" matTooltip="Porcentaje de ordenes preventivas completadas sobre el total de ordenes preventivas, sin contar las canceladas.">
     <span class="titulo">Cumplimiento Preventivo</span>
-    <span class="valor">{{ data?.cumplimientoPreventivo }}%</span>
+    <span class="valor" [ngClass]="claseEstado(data?.cumplimientoPreventivo)">
+      <span class="icono-estado">{{ iconoEstado(data?.cumplimientoPreventivo) }}</span>
+      {{ data?.cumplimientoPreventivo }}%
+    </span>
   </div>
 
   <div class="dashboard-card" matTooltip="Porcentaje de ordenes correctivas completadas sobre el total de ordenes correctivas, sin contar las canceladas.">
     <span class="titulo">Cumplimiento Correctivo</span>
-    <span class="valor">{{ data?.cumplimientoCorrectivo }}%</span>
+    <span class="valor" [ngClass]="claseEstado(data?.cumplimientoCorrectivo)">
+      <span class="icono-estado">{{ iconoEstado(data?.cumplimientoCorrectivo) }}</span>
+      {{ data?.cumplimientoCorrectivo }}%
+    </span>
   </div>
 
   <div class="dashboard-card" matTooltip="Porcentaje de horas disponibles en el mes (horas de calendario por activo) descontando las horas reales de detencion de las ordenes ya completadas.">
     <span class="titulo">Disponibilidad</span>
-    <span class="valor">{{ data?.disponibilidad }}%</span>
+    <span class="valor" [ngClass]="claseEstado(data?.disponibilidad)">
+      <span class="icono-estado">{{ iconoEstado(data?.disponibilidad) }}</span>
+      {{ data?.disponibilidad }}%
+    </span>
   </div>
 
   <div class="dashboard-card" matTooltip="Tiempo medio de reparacion: promedio de duracion de las ordenes correctivas ya completadas.">
@@ -59,17 +68,17 @@
     <span class="valor">{{ data?.mtbfHoras }} h</span>
   </div>
 
-  <div class="dashboard-card" matTooltip="Cantidad total de ordenes de la empresa, sin contar las canceladas.">
+  <div class="dashboard-card total-ordenes" matTooltip="Cantidad total de ordenes de la empresa, sin contar las canceladas.">
     <span class="titulo">Total Órdenes</span>
     <span class="valor">{{ data?.programadas }}</span>
   </div>
 
-  <div class="dashboard-card" matTooltip="Ordenes ya ejecutadas que quedaron a la espera de que el supervisor las de por completadas.">
+  <div class="dashboard-card pre-completada" matTooltip="Ordenes ya ejecutadas que quedaron a la espera de que el supervisor las de por completadas.">
     <span class="titulo">Pre Completada</span>
     <span class="valor">{{ data?.preCompletadas }}</span>
   </div>
 
-  <div class="dashboard-card" matTooltip="Ordenes que ya fueron finalizadas.">
+  <div class="dashboard-card completadas" matTooltip="Ordenes que ya fueron finalizadas.">
     <span class="titulo">Completadas</span>
     <span class="valor">{{ data?.completadas }}</span>
   </div>

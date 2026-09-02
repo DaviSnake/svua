@@ -172,6 +172,13 @@ input[placeholder="Buscar..."] {
   border: 1px solid #ccc;
 }
 
+.total-encontrados {
+  display: block;
+  margin: -10px 0 15px 4px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
 /* TABLA */
 table {
   width: 100%;
@@ -371,6 +378,12 @@ td button.btn-pdf:disabled {
   .filtro {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .total-encontrados {
+    display: block;
+    margin-top: 6px;
+    color: #6b7280;
   }
 
   /* TABLA -> CARDS */

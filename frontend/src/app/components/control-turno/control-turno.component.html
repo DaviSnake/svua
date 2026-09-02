@@ -53,14 +53,17 @@
       </div>
     </form>
 
-    <div class="filtro-grilla">
-      <div class="form-group">
-        <label>Buscar por nombre</label>
-        <input type="text"
-               placeholder="Ej. Proofer 1, Cámara..."
-               [(ngModel)]="filtroNombrePunto"
-               (ngModelChange)="onFiltroNombrePuntoChange()">
+    <div class="toolbar-grilla">
+      <div class="filtro-grilla">
+        <div class="form-group form-group--acotado">
+          <label>Buscar por nombre</label>
+          <input type="text"
+                 placeholder="Ej. Proofer 1, Cámara..."
+                 [(ngModel)]="filtroNombrePunto"
+                 (ngModelChange)="onFiltroNombrePuntoChange()">
+        </div>
       </div>
+      <small class="total-al-lado">{{ totalElementsPuntos }} puntos de control encontrados</small>
     </div>
 
     <div class="table-wrapper">
@@ -205,6 +208,7 @@
       <label>Hasta</label>
       <input type="datetime-local" [(ngModel)]="filtroHasta" [ngModelOptions]="{standalone: true}" (change)="aplicarFiltros()" />
     </div>
+    <small class="total-al-lado">{{ totalElements }} lecturas encontradas</small>
   </div>
 
   <div class="table-wrapper">
@@ -267,8 +271,14 @@
   </div>
 
   <div class="charts-grid">
-    <div class="chart-card" *ngFor="let chart of lineCharts">
-      <p class="section-subtitle">{{ chart.punto.nombre }} — Evolución ({{ chart.punto.unidad }})</p>
+    <div class="chart-card"
+         *ngFor="let chart of lineCharts"
+         [class.clickeable]="chart.agregadoPorDia"
+         (click)="abrirModalChart(chart)">
+      <p class="section-subtitle">
+        {{ chart.punto.nombre }} — Evolución ({{ chart.punto.unidad }})
+        <span *ngIf="chart.agregadoPorDia" class="hint-detalle">🔍 Ver detalle por hora</span>
+      </p>
       <div class="chart-container">
         <canvas baseChart [data]="chart.data" [type]="chart.type" [options]="chart.options"></canvas>
       </div>
@@ -284,6 +294,20 @@
     <p *ngIf="!lineCharts.length" class="section-subtitle">
       No hay lecturas registradas en el rango de fechas seleccionado.
     </p>
+  </div>
+
+  <!-- 🔍 Modal "Ver detalle": rango amplio (agregado por dia) -> mismo
+       grafico rearmado con cada lectura individual, mas grande. -->
+  <div class="modal-backdrop" *ngIf="modalChart" (click)="cerrarModalChart()">
+    <div class="modal-detalle" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalChart.punto.nombre }} — Detalle por hora ({{ modalChart.punto.unidad }})</h3>
+        <button class="btn-cerrar" (click)="cerrarModalChart()">✕</button>
+      </div>
+      <div class="modal-body">
+        <canvas baseChart [data]="modalChart.data" [type]="modalChart.type" [options]="modalChart.options"></canvas>
+      </div>
+    </div>
   </div>
 
 </div>
