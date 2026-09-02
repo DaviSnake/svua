@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { CommonModule } from '@angular/common';
 import { NgChartsModule } from 'ng2-charts';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { SesionUsuarioService } from '../../services/sesion-usuario.service';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
@@ -26,6 +27,10 @@ export class DashboardComponent implements OnInit {
 
   doughnutData: any;
   doughnutOptions: any;
+  // 🔥 Plugin de datalabels: se pasa SOLO a la dona de "Estado Activos"
+  // (via [plugins] en el .html) para mostrar el número de cada
+  // porción, no se registra global.
+  doughnutPlugins = [ChartDataLabels];
   lineData: any;
   lineOptions: any;
   barData: any;
@@ -135,6 +140,14 @@ export class DashboardComponent implements OnInit {
               return `${context.label}: ${valor} (${porcentaje.toFixed(1)}%)`;
             }
           }
+        },
+        // 🔥 Número de activos encima de cada porción, además del
+        // tooltip al pasar el mouse. Se oculta el "0" para no ensuciar
+        // la dona con un cero flotando sobre una porción de tamaño 0.
+        datalabels: {
+          color: '#fff',
+          font: { weight: 'bold', size: 13 },
+          formatter: (value: number) => value > 0 ? value : null
         }
       }
     };

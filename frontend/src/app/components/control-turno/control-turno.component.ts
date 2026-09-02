@@ -601,11 +601,31 @@ export class ControlTurnoComponent implements OnInit {
       ])
     );
 
-    this.lineCharts = [...chartsAgrupados, ...chartsIndividuales];
+    // 🔥 La dona por hora solo tiene sentido para el turno/dia actual
+    // (18 porciones como maximo, una por hora): con mas de un dia de
+    // datos filtrados se volveria una dona con cientos de porciones,
+    // asi que estos 5 puntos pasan a graficarse como linea (con
+    // promedio diario, ver armarLineChart) igual que el resto.
+    const diasUnicosGlobal = new Set(
+      this.dashboard.flatMap(p => p.fechas.map(f => new Date(f).toDateString()))
+    );
+    const esRangoAmplio = diasUnicosGlobal.size > 1;
 
-    const donaPorHoraCharts = individualesDonaPorHora
-      .filter(p => p.fechas.length > 0)
-      .map(punto => this.armarDonaPorHora(punto));
+    const donaPorHoraCharts = esRangoAmplio
+      ? []
+      : individualesDonaPorHora
+          .filter(p => p.fechas.length > 0)
+          .map(punto => this.armarDonaPorHora(punto));
+
+    const lineChartsDonaPorHora = esRangoAmplio
+      ? individualesDonaPorHora.map(punto =>
+          this.armarLineChart(punto.nombre, punto.unidad, [
+            { etiqueta: punto.nombre, punto, color: COLORES[0] }
+          ])
+        )
+      : [];
+
+    this.lineCharts = [...chartsAgrupados, ...chartsIndividuales, ...lineChartsDonaPorHora];
 
     // 🔥 Dona "% dentro de rango": se arma para cualquier punto con
     // valorMin/valorMax definido y al menos una lectura (no incluye
@@ -702,6 +722,11 @@ export class ControlTurnoComponent implements OnInit {
   // grupo, y cada serie se alinea a ese eje dejando "null" donde no
   // tiene lectura en ese instante exacto (spanGaps une la linea igual,
   // en vez de cortarla).
+  //
+  // 🔥 Con mas de un dia de datos en el rango filtrado, graficar cada
+  // lectura individual satura el eje X (cientos de puntos, horas
+  // repetidas e ilegibles) -- se agrega a promedio diario en su lugar.
+  // Para ver el detalle hora a hora hay que acotar el filtro a un dia.
   private armarLineChart(
     titulo: string,
     unidad: string,
@@ -709,33 +734,71 @@ export class ControlTurnoComponent implements OnInit {
   ): any {
 
     const fechasUnicas = Array.from(new Set(series.flatMap(s => s.punto.fechas))).sort();
-
-    // 🔥 Eje X = hora de la lectura (HH:mm), como en la planilla
-    // original ("HORA DE MEDICION"). Si el rango filtrado abarca mas
-    // de un dia, se antepone la fecha para no mostrar horas repetidas
-    // sin poder distinguir a que dia pertenece cada una.
     const diasUnicos = new Set(fechasUnicas.map(f => new Date(f).toDateString()));
-    const incluirFecha = diasUnicos.size > 1;
+    const agregarPorDia = diasUnicos.size > 1;
 
-    const labels = fechasUnicas.map(f => {
-      const fecha = new Date(f);
-      return incluirFecha
-        ? fecha.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-        : fecha.toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' });
-    });
+    let labels: string[];
+    let datasets: any[];
 
-    const datasets = series.map(s => {
-      const valorPorFecha = new Map(s.punto.fechas.map((f, i) => [f, s.punto.valores[i]]));
-      return {
-        data: fechasUnicas.map(f => valorPorFecha.has(f) ? valorPorFecha.get(f) : null),
-        label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
-        fill: false,
-        spanGaps: true,
-        tension: 0.4,
-        borderColor: s.color,
-        backgroundColor: s.color
-      };
-    });
+    if (agregarPorDia) {
+
+      const diasOrdenados = Array.from(diasUnicos)
+        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+      labels = diasOrdenados.map(dia =>
+        new Date(dia).toLocaleString('es-CL', { day: '2-digit', month: '2-digit' })
+      );
+
+      datasets = series.map(s => {
+
+        const totalesPorDia = new Map<string, { suma: number; cantidad: number }>();
+
+        s.punto.fechas.forEach((f, i) => {
+          const dia = new Date(f).toDateString();
+          const acumulado = totalesPorDia.get(dia) ?? { suma: 0, cantidad: 0 };
+          acumulado.suma += s.punto.valores[i];
+          acumulado.cantidad += 1;
+          totalesPorDia.set(dia, acumulado);
+        });
+
+        return {
+          data: diasOrdenados.map(dia => {
+            const acumulado = totalesPorDia.get(dia);
+            return acumulado
+              ? Math.round((acumulado.suma / acumulado.cantidad) * 100) / 100
+              : null;
+          }),
+          label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
+          fill: false,
+          spanGaps: true,
+          tension: 0.4,
+          borderColor: s.color,
+          backgroundColor: s.color
+        };
+      });
+
+    } else {
+
+      // 🔥 Eje X = hora de la lectura (HH:mm), como en la planilla
+      // original ("HORA DE MEDICION") -- un solo dia de datos, sin
+      // necesidad de agregar nada.
+      labels = fechasUnicas.map(f =>
+        new Date(f).toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' })
+      );
+
+      datasets = series.map(s => {
+        const valorPorFecha = new Map(s.punto.fechas.map((f, i) => [f, s.punto.valores[i]]));
+        return {
+          data: fechasUnicas.map(f => valorPorFecha.has(f) ? valorPorFecha.get(f) : null),
+          label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
+          fill: false,
+          spanGaps: true,
+          tension: 0.4,
+          borderColor: s.color,
+          backgroundColor: s.color
+        };
+      });
+    }
 
     return {
       punto: { nombre: titulo, unidad },
@@ -746,7 +809,10 @@ export class ControlTurnoComponent implements OnInit {
         maintainAspectRatio: false,
         plugins: { legend: { display: true } },
         scales: {
-          x: { title: { display: true, text: 'Hora' } },
+          x: {
+            title: { display: true, text: agregarPorDia ? 'Día (promedio)' : 'Hora' },
+            ticks: { autoSkip: true, maxRotation: 0 }
+          },
           y: { title: { display: true, text: unidad } }
         }
       }

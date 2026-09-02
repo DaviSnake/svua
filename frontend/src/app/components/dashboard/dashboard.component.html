@@ -77,7 +77,7 @@
 
     <div class="card">
       <h3>Estado Activos</h3>
-      <canvas baseChart [data]="doughnutData" [type]="'doughnut'" [options]="doughnutOptions"
+      <canvas baseChart [data]="doughnutData" [type]="'doughnut'" [options]="doughnutOptions" [plugins]="doughnutPlugins"
               matTooltip="Distribución de los activos de la empresa por estado: Operativos, Fuera de Servicio y De Baja."></canvas>
     </div>
 
