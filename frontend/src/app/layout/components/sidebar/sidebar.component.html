@@ -201,6 +201,17 @@
         <span class="tooltip">Configuración</span>
       </li>
 
+      <!-- 🔒 Respaldo de TODA la base (todas las empresas). Solo
+           descarga -- la restauracion queda como script de linea de
+           comandos, nunca expuesta desde la app (ver RespaldoGeneralService). -->
+      <li class="menu-item" *ngIf="esAdmin">
+        <a href="javascript:void(0)" (click)="descargarRespaldoGeneral(); closeAllMenus()">
+          <i class="bx bx-cloud-download"></i>
+          <span *ngIf="!isCollapsed">{{ generandoRespaldoGeneral ? 'Generando...' : 'Respaldo General' }}</span>
+        </a>
+        <span class="tooltip">Respaldo General</span>
+      </li>
+
     </ul>
 
     <!-- USER -->

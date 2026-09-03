@@ -2,30 +2,27 @@ package cl.aracridav.svua.empresa.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.zip.ZipEntry;
+import java.util.Map;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.multitenancy.RlsContextService;
 import cl.aracridav.svua.shared.exception.BusinessException;
+import cl.aracridav.svua.shared.util.CsvZipExporter;
 import lombok.RequiredArgsConstructor;
 
 // 🔒 Respaldo de UNA sola empresa (tenant): un .zip con un .csv por
 // tabla, pensado para archivo/auditoria puntual (ej. antes de
 // desactivar o eliminar una empresa), NO como mecanismo de
 // restauracion en caliente. Complementa al backup completo de toda la
-// base (scripts/backup-postgres.sh) y al equivalente por linea de
-// comando (scripts/backup-empresa.sh).
+// base (scripts/backup-postgres.sh, y su equivalente de UI
+// RespaldoGeneralService) y al equivalente por linea de comando
+// (scripts/backup-empresa.sh).
 //
 // Reusa la misma Row Level Security que ya protege la app en tiempo
 // real (V27__enable_row_level_security_por_empresa.sql): en vez de
@@ -60,6 +57,7 @@ public class EmpresaBackupService {
     private final JdbcTemplate jdbcTemplate;
     private final EmpresaRepository empresaRepository;
     private final RlsContextService rlsContextService;
+    private final CsvZipExporter csvZipExporter;
 
     // 🐛 FIX: sin @Transactional, RlsContextService.aplicarEmpresa()
     // fija el "SET" en la conexion que Hibernate toma prestada del pool
@@ -94,7 +92,7 @@ public class EmpresaBackupService {
 
             List<String> tablas = jdbcTemplate.queryForList(SQL_TABLAS_CON_EMPRESA_ID, String.class);
             for (String tabla : tablas) {
-                exportarComoCsv(zip, tabla, "SELECT * FROM \"" + tabla + "\"");
+                csvZipExporter.exportarComoCsv(zip, tabla, "SELECT * FROM \"" + tabla + "\"");
             }
 
         } catch (IOException ex) {
@@ -112,7 +110,7 @@ public class EmpresaBackupService {
     // dumpear: SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE
     // rolname = current_user.
     private void verificarRolNoBypassRls() {
-        java.util.Map<String, Object> rol = jdbcTemplate.queryForMap(
+        Map<String, Object> rol = jdbcTemplate.queryForMap(
                 "SELECT current_user AS nombre, (rolsuper OR rolbypassrls) AS bypass "
                         + "FROM pg_roles WHERE rolname = current_user");
 
@@ -124,56 +122,5 @@ public class EmpresaBackupService {
                             + "un rol normal para la conexion (ver V27__enable_row_level_security_por_empresa.sql, "
                             + "seccion \"IMPORTANTE\").");
         }
-    }
-
-    private void exportarComoCsv(ZipOutputStream zip, String nombreArchivo, String sql)
-            throws IOException {
-
-        StringBuilder csv = new StringBuilder();
-        boolean[] encabezadoEscrito = { false };
-
-        RowCallbackHandler handler = rs -> {
-            if (!encabezadoEscrito[0]) {
-                escribirEncabezado(csv, rs.getMetaData());
-                encabezadoEscrito[0] = true;
-            }
-            escribirFila(csv, rs);
-        };
-
-        try {
-            jdbcTemplate.query(sql, handler);
-        } catch (org.springframework.dao.DataAccessException ex) {
-            throw new BusinessException("No fue posible exportar la tabla " + nombreArchivo, ex);
-        }
-
-        zip.putNextEntry(new ZipEntry(nombreArchivo + ".csv"));
-        zip.write(csv.toString().getBytes(StandardCharsets.UTF_8));
-        zip.closeEntry();
-    }
-
-    private void escribirEncabezado(StringBuilder csv, ResultSetMetaData meta) throws SQLException {
-        int columnas = meta.getColumnCount();
-        for (int i = 1; i <= columnas; i++) {
-            if (i > 1) csv.append(',');
-            csv.append(escaparCsv(meta.getColumnName(i)));
-        }
-        csv.append('\n');
-    }
-
-    private void escribirFila(StringBuilder csv, ResultSet rs) throws SQLException {
-        int columnas = rs.getMetaData().getColumnCount();
-        for (int i = 1; i <= columnas; i++) {
-            if (i > 1) csv.append(',');
-            csv.append(escaparCsv(rs.getString(i)));
-        }
-        csv.append('\n');
-    }
-
-    private String escaparCsv(String valor) {
-        if (valor == null) return "";
-        boolean necesitaComillas = valor.contains(",") || valor.contains("\"")
-                || valor.contains("\n") || valor.contains("\r");
-        String escapado = valor.replace("\"", "\"\"");
-        return necesitaComillas ? "\"" + escapado + "\"" : escapado;
     }
 }

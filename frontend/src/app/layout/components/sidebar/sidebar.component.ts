@@ -9,6 +9,7 @@ import { NotificacionStateService } from '../../../services/notificacion-state.s
 import { SesionUsuarioService } from '../../../services/sesion-usuario.service';
 import { WebSocketService } from '../../../services/web-socket.service';
 import { EmpresaService } from '../../../services/empresa.service';
+import { RespaldoService } from '../../../services/respaldo.service';
 import { Notificacion } from '../../../model/notificacion';
 import Swal from 'sweetalert2';
 
@@ -29,7 +30,11 @@ export class SidebarComponent implements OnInit, OnDestroy  {
   sesionUsuarioService = inject(SesionUsuarioService);
   webSocketService = inject(WebSocketService);
   empresaService = inject(EmpresaService);
+  respaldoService = inject(RespaldoService);
   router = inject(Router);
+
+  // 🔒 Respaldo general (todas las empresas), solo SUPER_ADMIN.
+  generandoRespaldoGeneral = false;
 
   usuario: any;
 
@@ -280,5 +285,39 @@ export class SidebarComponent implements OnInit, OnDestroy  {
     });
 
     this.intervaloNotificaciones?.unsubscribe();
+  }
+
+  // 💾 Respaldo de toda la base (todas las empresas): solo descarga,
+  // ver RespaldoGeneralService en el backend. La restauracion queda
+  // deliberadamente fuera de la app (script de linea de comandos).
+  descargarRespaldoGeneral(): void {
+
+    if (this.generandoRespaldoGeneral) {
+      return;
+    }
+
+    this.generandoRespaldoGeneral = true;
+
+    this.respaldoService.descargarBackupGeneral().subscribe({
+      next: (blob) => {
+        this.generandoRespaldoGeneral = false;
+
+        const fecha = new Date().toISOString().slice(0, 10);
+        const url = window.URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `respaldo_general_${fecha}.zip`;
+        enlace.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.generandoRespaldoGeneral = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo generar el respaldo general'
+        });
+      }
+    });
   }
 }
