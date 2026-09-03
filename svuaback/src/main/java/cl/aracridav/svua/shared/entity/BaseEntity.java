@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -35,6 +37,16 @@ import lombok.experimental.SuperBuilder;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
+    // 🐛 FIX: sin @Audited aca, Hibernate Envers excluye esta relacion en
+    // silencio de TODAS las tablas "*_aud" (Empresa no esta @Audited, y
+    // sin indicar targetAuditMode Envers no sabe que hacer con la
+    // relacion hacia una entidad no versionada) -- el INSERT a la fila
+    // de auditoria quedaba sin empresa_id (NULL). Con RLS realmente
+    // activo, ese NULL hace que el INSERT viole el WITH CHECK de la
+    // policy ("new row violates row-level security policy"). Antes no
+    // se notaba con una conexion superuser. NOT_AUDITED = guardar solo
+    // el id de la referencia, sin necesitar que Empresa este versionada.
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empresa_id", nullable = false, updatable = false)
     private Empresa empresa;
