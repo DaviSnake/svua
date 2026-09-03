@@ -93,6 +93,7 @@ services:
     volumes:
       - ./backups/postgres:/backups
       - ./scripts/backup-postgres.sh:/backup-postgres.sh:ro
+      - ./scripts/backup-empresa.sh:/backup-empresa.sh:ro
     networks:
       - internal
     entrypoint: >

@@ -33,6 +33,7 @@ import cl.aracridav.svua.config.security.JwtService;
 import cl.aracridav.svua.config.security.UsuarioPrincipal;
 import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
+import cl.aracridav.svua.multitenancy.RlsContextService;
 import cl.aracridav.svua.shared.constants.AppConstants;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.exception.InvalidRefreshTokenException;
@@ -59,6 +60,7 @@ public class AuthController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmpresaRepository empresaRepository;
+    private final RlsContextService rlsContextService;
 
     @Value("${app.frontend.url}")
     private String frontendUrl; // 👈 AQUÍ, fuera del método
@@ -72,6 +74,7 @@ public class AuthController {
     // que ve el cliente se unifico.
     private static final String CREDENCIALES_INVALIDAS = "Credenciales inválidas";
 
+    @Transactional
     @PostMapping("/login")
     public AuthLoginResponse login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
 
@@ -80,6 +83,12 @@ public class AuthController {
         String tokenJti = UUID.randomUUID().toString();
 
         String ip = obtenerIp(httpRequest);
+
+        // 🔒 Todavia no se sabe a que empresa pertenece este email (es
+        // justo lo que esta consulta busca averiguar): sin bypass, Row
+        // Level Security la bloquearia por completo (0 filas), aunque
+        // el email exista.
+        rlsContextService.aplicarBypass();
 
         Usuario usuario = usuarioRepository
             .findByEmailWithEmpresa(request.getEmail())
@@ -176,6 +185,11 @@ public class AuthController {
          HttpServletRequest httpRequest
     ) {
 
+        // 🔒 Mismo motivo que en login(): el refresh token llega como un
+        // string crudo, sin saber a que empresa pertenece hasta despues
+        // de encontrarlo.
+        rlsContextService.aplicarBypass();
+
         RefreshToken oldToken = refreshTokenRepository
             .findByToken(request.getRefreshToken())
             .map(refreshTokenService::verifyExpiration)
@@ -241,6 +255,7 @@ public class AuthController {
         usuarioRepository.save(usuario);
     }
 
+    @Transactional
     @PostMapping("/request-reset")
     public ResponseEntity<?> requestReset(@RequestBody EmailResetRequest request,
                                         HttpServletRequest httpRequest) {
@@ -250,6 +265,11 @@ public class AuthController {
         // cuentas existentes. Ahora la respuesta es SIEMPRE la misma
         // (200, mismo mensaje genérico), exista o no el email; el envío
         // real del correo solo ocurre si el usuario existe.
+        //
+        // 🔒 Mismo motivo que en login(): todavia no se sabe a que
+        // empresa pertenece este email.
+        rlsContextService.aplicarBypass();
+
         usuarioRepository.findByEmail(request.getEmail()).ifPresent(user -> {
                 String token = usuarioService.createToken(user);
                 String link = frontendUrl + "/reset-password?token=" + token;

@@ -282,6 +282,22 @@ td button.btn-pdf:disabled {
   transform: none;
 }
 
+/* RESPALDO POR EMPRESA (solo SUPER_ADMIN) */
+td button.btn-backup {
+  background: #8e44ad;
+  color: white;
+}
+
+td button.btn-backup:hover {
+  background: #703688;
+}
+
+td button.btn-backup:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ===================================
    RESPONSIVE TABLET
 =================================== */

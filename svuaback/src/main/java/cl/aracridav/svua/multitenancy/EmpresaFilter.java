@@ -26,13 +26,22 @@ public class EmpresaFilter {
         Authentication authentication =
             SecurityContextHolder.getContext().getAuthentication();
 
-        // Si no hay autenticación
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return;
-        }
-
-        // Si es usuario anónimo
-        if (authentication.getPrincipal().equals("anonymousUser")) {
+        // 🔒 Sin autenticación (login, refresh-token, request-reset,
+        // validate-token, reset-password...): a esta altura del pipeline
+        // TODAVIA no se sabe a que empresa pertenece el usuario -- es
+        // literalmente lo que esas consultas necesitan averiguar (buscar
+        // por email o por un token crudo, cruzando TODAS las empresas).
+        // Antes esto quedaba sin fijar nada (dejaba lo que hubiera
+        // quedado pegado en la conexion reciclada del pool), lo que
+        // nunca se notaba con una conexion superuser -- pero con RLS
+        // realmente activo bloqueaba estas consultas anonimas por
+        // completo. El mismo bypass que ya se usa para SUPER_ADMIN
+        // aplica aca por la misma razon: son consultas que necesitan
+        // cruzar empresas a proposito, no una fuga.
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            rlsContextService.aplicarBypass();
             return;
         }
 

@@ -4,6 +4,7 @@ import { Activo } from '../../model/activo';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EmpresaService } from '../../services/empresa.service';
 import { ActivoService } from '../../services/activo.service';
+import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormUtils } from '../../shared/form-utils';
 import Swal from 'sweetalert2';
@@ -22,11 +23,17 @@ export class EmpresaComponent implements OnInit {
 
   empresaService = inject(EmpresaService);
   activoService = inject(ActivoService);
+  authService = inject(AuthService);
   fb = inject(FormBuilder);
 
   // 🖨️ PDF imprimible de codigos QR/EAN13 por empresa (solo si la empresa
   // tiene alguno de los dos habilitado). Ver generarPdfCodigos().
   generandoPdfId: number | null = null;
+
+  // 🔒 Respaldo puntual de una sola empresa (solo SUPER_ADMIN, ver
+  // EmpresaBackupService/descargarBackup()).
+  esSuperAdmin = false;
+  descargandoBackupId: number | null = null;
 
   // 🎨 Logo propio de la empresa que se está editando (null = sin logo
   // o creando una empresa nueva, ver editar()/subirLogo()).
@@ -61,6 +68,7 @@ export class EmpresaComponent implements OnInit {
   
 
   ngOnInit(): void {
+    this.esSuperAdmin = this.authService.isAdmin();
     this.initForm();
     this.cargarEmpresas();
   }
@@ -488,6 +496,40 @@ export class EmpresaComponent implements OnInit {
       fontSize: 12
     });
     return canvas.toDataURL('image/png');
+  }
+
+  // 💾 Respaldo puntual de solo esta empresa (CSV por tabla, dentro de
+  // un .zip): pensado para archivo/auditoria antes de desactivar o
+  // eliminar una empresa, ver EmpresaBackupService en el backend.
+  descargarBackup(empresa: Empresa): void {
+
+    if (!empresa.id || this.descargandoBackupId) {
+      return;
+    }
+
+    this.descargandoBackupId = empresa.id;
+
+    this.empresaService.descargarBackup(empresa.id).subscribe({
+      next: (blob) => {
+        this.descargandoBackupId = null;
+
+        const fecha = new Date().toISOString().slice(0, 10);
+        const url = window.URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `empresa_${empresa.id}_backup_${fecha}.zip`;
+        enlace.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.descargandoBackupId = null;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo generar el respaldo de la empresa'
+        });
+      }
+    });
   }
 
   private slug(texto: string | undefined): string {

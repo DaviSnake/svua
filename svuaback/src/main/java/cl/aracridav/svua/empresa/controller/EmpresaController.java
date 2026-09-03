@@ -24,6 +24,7 @@ import cl.aracridav.svua.empresa.dto.request.CreateEmpresaWithAdminRequest;
 import cl.aracridav.svua.empresa.dto.request.UpdateEmpresaRequest;
 import cl.aracridav.svua.empresa.dto.request.UpdatePlanEmpresaRequest;
 import cl.aracridav.svua.empresa.dto.response.EmpresaResponse;
+import cl.aracridav.svua.empresa.service.EmpresaBackupService;
 import cl.aracridav.svua.empresa.service.EmpresaService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class EmpresaController {
 
     private final EmpresaService empresaService;
+    private final EmpresaBackupService empresaBackupService;
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")
     @PostMapping
@@ -131,6 +133,23 @@ public class EmpresaController {
                     ? MediaType.parseMediaType(contentType)
                     : MediaType.APPLICATION_OCTET_STREAM)
                 .body(logo);
+    }
+
+    // 🔒 Respaldo puntual de una sola empresa (ver EmpresaBackupService):
+    // solo SUPER_ADMIN, ninguna empresa deberia poder descargar sus
+    // propios datos "en crudo" por esta via.
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @GetMapping("/{empresaId}/backup")
+    public ResponseEntity<byte[]> backup(@PathVariable Long empresaId) {
+
+        byte[] zip = empresaBackupService.generarBackup(empresaId);
+        String nombreArchivo = "empresa_" + empresaId + "_backup_"
+                + java.time.LocalDate.now() + ".zip";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
+                .body(zip);
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")

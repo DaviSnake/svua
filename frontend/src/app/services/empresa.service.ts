@@ -39,6 +39,13 @@ export class EmpresaService {
     return this.http.post<Empresa>(`${this.apiUrl}/public/empresas/${id}/logo`, formData);
   }
 
+  // 🔒 Respaldo puntual de una sola empresa (solo SUPER_ADMIN, ver
+  // EmpresaBackupService): .zip con un .csv por tabla filtrado a esa
+  // empresa.
+  descargarBackup(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/public/empresas/${id}/backup`, { responseType: 'blob' });
+  }
+
   // 🔥 No requiere autenticación (GET público, ver EmpresaController):
   // se puede usar directo en un <img [src]>. Se le agrega un query
   // param con el timestamp de subida (o Date.now() como fallback) para

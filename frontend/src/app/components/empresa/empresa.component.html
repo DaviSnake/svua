@@ -168,6 +168,15 @@
             >
               {{ generandoPdfId === e.id ? 'Generando...' : '🖨️ Códigos' }}
             </button>
+            <!-- 🔒 Respaldo puntual de solo esta empresa (ver EmpresaBackupService) -->
+            <button
+              *ngIf="esSuperAdmin"
+              class="btn-backup"
+              [disabled]="descargandoBackupId === e.id"
+              (click)="descargarBackup(e)"
+            >
+              {{ descargandoBackupId === e.id ? 'Generando...' : '💾 Respaldo' }}
+            </button>
           </td>
         </tr>
       </tbody>
