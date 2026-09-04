@@ -17,3 +17,6 @@ log/
 backups/
 # Archivos temporales de parcheo (scripts de patch, verificaciones, locks)
 _to_delete/
+
+# Config local de Claude Code (launch.json del dev server, etc.)
+.claude/
