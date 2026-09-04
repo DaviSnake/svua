@@ -27,11 +27,12 @@ import { FormUtils } from '../../shared/form-utils';
 import { DomSanitizer, SafeResourceUrl, SafeUrl } from '@angular/platform-browser';
 import { EmpresaService } from '../../services/empresa.service';
 import { Empresa } from '../../model/empresa';
+import { ResumenSemanaComponent } from '../resumen-semana/resumen-semana.component';
 
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule],
+  imports: [FullCalendarModule, CommonModule, ReactiveFormsModule, MatAutocompleteModule, ResumenSemanaComponent],
   templateUrl: './calendario.component.html',
   styleUrls: ['./calendario.component.css']
 })
@@ -105,6 +106,53 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
   @ViewChild(MatAutocompleteTrigger) trigger!: MatAutocompleteTrigger;
 
+  // 📅 RESUMEN POR DÍA: vista de aterrizaje en escritorio (ver
+  // ResumenSemanaComponent, que tiene toda la logica de la franja de
+  // semana + detalle). Este componente solo le pasa las ordenes y
+  // reacciona a sus dos salidas: abrir una orden (reusa onEventClick
+  // tal cual, que solo lee propiedades planas del "event") y "ver dia
+  // completo" (cambia a FullCalendar, con arrastrar/crear, que el
+  // resumen no ofrece). Mobile/tablet no la usan -- siguen con
+  // listWeek/timeGridDay, que ya son razonables en pantallas chicas.
+  vistaResumen = true;
+  ordenesResumen: any[] = [];
+
+  private esDesktopParaResumen(): boolean {
+    return window.innerWidth >= 1024;
+  }
+
+  verDiaCompletoDesdeResumen(fecha: Date): void {
+    this.vistaResumen = false;
+
+    setTimeout(() => {
+      this.calendarComponent?.getApi()?.changeView('timeGridDay', fecha);
+    });
+  }
+
+  // 🔥 el resumen solo conoce el DIA elegido (sin hora, ver "semana" en
+  // ResumenSemanaComponent), asi que se completa una hora por defecto
+  // antes de reusar el mismo flujo de creacion que el click/arrastre en
+  // FullCalendar (handleDateInteraction se encarga de validar 24h atras
+  // y abrir el modal). El usuario puede ajustar la hora dentro del modal.
+  crearOrdenDesdeResumen(dia: Date): void {
+    const ahora = new Date();
+    const fecha = new Date(dia);
+
+    if (this.mismoDiaCalendario(fecha, ahora)) {
+      fecha.setHours(ahora.getHours(), ahora.getMinutes(), 0, 0);
+    } else {
+      fecha.setHours(9, 0, 0, 0);
+    }
+
+    this.handleDateInteraction(fecha);
+  }
+
+  private mismoDiaCalendario(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate();
+  }
+
   ngAfterViewInit() {
     setTimeout(() => {
       // 🔥 getApi() puede devolver null si el calendario todavía no terminó
@@ -131,11 +179,19 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     if (width < 768) return 'listWeek';      // 📱 mobile
     if (width < 1024) return 'timeGridDay';  // 📲 tablet
 
-    return 'timeGridWeek';                   // 💻 desktop
+    return 'timeGridWeek';                   // 💻 desktop (calendario completo, ver vistaResumen)
   }
 
   @HostListener('window:resize')
   onResize() {
+
+    // 🔥 Resumen: si se achica a mobile/tablet, se sale del resumen
+    // (que solo tiene sentido en escritorio) y se pasa al FullCalendar
+    // de siempre. Va ANTES del "no api" de abajo porque <full-calendar>
+    // puede no estar ni montado todavia mientras vistaResumen=true.
+    if (this.vistaResumen && !this.esDesktopParaResumen()) {
+      this.vistaResumen = false;
+    }
 
     const api = this.calendarComponent?.getApi();
     if (!api) return;
@@ -243,9 +299,18 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     // solo se podía ver semana o día, cambiando automático según el
     // ancho de pantalla, sin opción de ver el mes completo).
     headerToolbar: {
-      left: 'prev,next today',
+      left: 'prev,next today resumen',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    // 🔥 Vuelve a la franja "Resumen" (ver vistaResumen) desde el
+    // calendario completo -- el boton normal de FullCalendar no sirve
+    // para esto porque no es una vista suya, es un componente propio.
+    customButtons: {
+      resumen: {
+        text: 'Resumen',
+        click: () => { this.vistaResumen = true; }
+      }
     },
     editable: true,
     selectable: true,   // 🔥 CLAVE
@@ -254,6 +319,25 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     height: 'auto',   // 🔥 IMPORTANTE
     expandRows: true, // 🔥 IMPORTANTE
     contentHeight: 'auto',
+
+    // 🔥 "Resumen día": en la vista de mes, no listar mas de 3 ordenes
+    // por celda -- el resto queda resumido en el link nativo "+N más"
+    // de FullCalendar (evita que un dia muy cargado desborde la celda).
+    dayMaxEvents: 3,
+
+    // 🔥 Al hacer clic en "+N más" de un dia con muchas ordenes, en vez
+    // del popover nativo (que se queda en la misma vista de mes, chica),
+    // se entra directo al detalle de ESE dia (timeGridDay) -- ahi cada
+    // orden ya tiene mas espacio horizontal para leerse bien.
+    moreLinkClick: () => 'timeGridDay',
+
+    // 🔥 Clic en el numero del dia (el link que dibuja FullCalendar con
+    // navLinks:true): mismo destino que "+N más", para cualquier dia
+    // aunque no este sobrecargado. Al definir este callback, FullCalendar
+    // deja de navegar solo -- por eso se llama changeView() a mano.
+    navLinkDayClick: (date: Date) => {
+      this.calendarComponent?.getApi()?.changeView('timeGridDay', date);
+    },
     // 🔴 Línea horizontal que marca la hora exacta en tiempo real (solo se
     // dibuja en las vistas timeGridDay / timeGridWeek; FullCalendar la
     // actualiza sola mientras la vista esté montada).
@@ -395,6 +479,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     this.usuarioSub = this.authService.user$.subscribe(user => {
       this.usuario = user;
     });
+
+    // 🔥 Resumen (ver ResumenSemanaComponent): solo escritorio. En
+    // mobile/tablet siguen las vistas de FullCalendar de siempre
+    // (listWeek/timeGridDay), que ya funcionan bien en pantallas chicas.
+    this.vistaResumen = this.esDesktopParaResumen();
 
     this.esSuperAdmin = this.authService.isAdmin();
     this.esAdminEmpresa = this.authService.isAdminEmpresa();
@@ -787,6 +876,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
       } else {
         this.calendarOptions.events = eventosMapeados;
       }
+
+      // 🔥 mismos datos para ResumenSemanaComponent (ver [ordenes] en
+      // el html); su propio ngOnChanges recalcula el detalle del dia
+      // elegido cuando este array cambia.
+      this.ordenesResumen = eventosMapeados;
     });
 
   }

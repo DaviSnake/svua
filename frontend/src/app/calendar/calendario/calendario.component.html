@@ -33,8 +33,17 @@
     <div class="item"><span class="dot cancelada"></span> CANCELADA</div>
   </div>
   
+  <!-- 📅 RESUMEN POR DÍA (franja de semana + detalle) -->
+  <app-resumen-semana
+    *ngIf="vistaResumen"
+    [ordenes]="ordenesResumen"
+    (ordenSeleccionada)="onEventClick({ event: $event })"
+    (verDiaCompleto)="verDiaCompletoDesdeResumen($event)"
+    (crearOrden)="crearOrdenDesdeResumen($event)">
+  </app-resumen-semana>
+
   <!-- 🔹 Calendario -->
-  <div class="calendar-container">
+  <div class="calendar-container" *ngIf="!vistaResumen">
     <full-calendar
       #calendar
       [options]="calendarOptions"

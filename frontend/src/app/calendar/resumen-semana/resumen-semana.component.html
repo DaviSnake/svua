@@ -1,0 +1,63 @@
+<div class="resumen-container">
+
+  <div class="resumen-toolbar">
+    <div class="resumen-nav">
+      <button type="button" (click)="semanaAnterior()">‹ Semana anterior</button>
+      <button type="button" (click)="hoy()">Hoy</button>
+      <button type="button" (click)="semanaSiguiente()">Semana siguiente ›</button>
+    </div>
+    <div class="resumen-titulo">{{ tituloSemana }}</div>
+    <button type="button" class="resumen-ver-calendario" (click)="pedirDiaCompleto()">
+      Ver calendario completo →
+    </button>
+  </div>
+
+  <div class="resumen-semana">
+    <div class="resumen-dia"
+         *ngFor="let dia of semana"
+         [class.seleccionado]="esSeleccionado(dia)"
+         (click)="seleccionarDia(dia)">
+      <div class="resumen-dia-letra">{{ dia | date:'EEEEE':'':'es' }}</div>
+      <div class="resumen-dia-numero" [class.hoy]="esHoy(dia)">{{ dia | date:'d' }}</div>
+
+      <ng-container *ngIf="usaInsignia(dia); else barritasTpl">
+        <div class="resumen-insignia">{{ ordenesDeDia(dia).length }}</div>
+      </ng-container>
+      <ng-template #barritasTpl>
+        <div class="resumen-barra" *ngFor="let b of barritas(dia)"></div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="resumen-hint" *ngIf="diaSeleccionado">
+    ↓ clic en el día para ver el detalle
+  </div>
+
+  <div class="resumen-detalle" *ngIf="diaSeleccionado">
+    <div class="resumen-detalle-header">
+      <span>{{ diaSeleccionado | date:'EEEE d':'':'es' }} · {{ ordenesDelDia.length }} orden{{ ordenesDelDia.length === 1 ? '' : 'es' }}</span>
+      <button type="button" class="resumen-nueva-orden" (click)="pedirCrearOrden()">
+        + Nueva orden
+      </button>
+    </div>
+
+    <div class="resumen-detalle-vacio" *ngIf="ordenesDelDia.length === 0">
+      Sin órdenes programadas este día.
+    </div>
+
+    <div class="resumen-detalle-fila"
+         *ngFor="let orden of ordenesDelDia"
+         (click)="abrirOrden(orden)">
+      <div class="resumen-detalle-hora">{{ orden.start | date:'HH:mm' }}</div>
+      <div class="resumen-detalle-barra" [style.background]="orden.backgroundColor"></div>
+      <div class="resumen-detalle-titulo">{{ orden.title }}</div>
+
+      <div class="resumen-detalle-tooltip">
+        <strong>{{ orden.title }}</strong><br>
+        {{ orden.start | date:'HH:mm' }}<ng-container *ngIf="orden.end">&nbsp;–&nbsp;{{ orden.end | date:'HH:mm' }}</ng-container>
+        <ng-container *ngIf="orden.extendedProps?.tipoMantenimiento">&nbsp;·&nbsp;{{ orden.extendedProps.tipoMantenimiento }}</ng-container>
+        <ng-container *ngIf="orden.extendedProps?.estado"><br>Estado: {{ orden.extendedProps.estado.replace('_', ' ') }}</ng-container>
+      </div>
+    </div>
+  </div>
+</div>
