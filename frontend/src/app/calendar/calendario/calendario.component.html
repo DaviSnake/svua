@@ -37,6 +37,7 @@
   <app-resumen-semana
     *ngIf="vistaResumen"
     [ordenes]="ordenesResumen"
+    [fechaInicial]="resumenFechaFoco"
     (ordenSeleccionada)="onEventClick({ event: $event })"
     (verDiaCompleto)="verDiaCompletoDesdeResumen($event)"
     (crearOrden)="crearOrdenDesdeResumen($event)">

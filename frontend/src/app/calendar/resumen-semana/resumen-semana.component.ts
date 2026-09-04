@@ -20,6 +20,9 @@ export class ResumenSemanaComponent implements OnChanges {
   private static readonly UMBRAL_INSIGNIA = 3;
 
   @Input() ordenes: any[] = [];
+  // 🔥 semana en la que aterrizar al activarse (ver resumenFechaFoco en
+  // CalendarioComponent) -- null/undefined significa "semana actual".
+  @Input() fechaInicial: Date | null = null;
 
   @Output() ordenSeleccionada = new EventEmitter<any>();
   @Output() verDiaCompleto = new EventEmitter<Date>();
@@ -47,7 +50,7 @@ export class ResumenSemanaComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.semana.length) {
-      this.semana = this.calcularSemana(new Date());
+      this.semana = this.calcularSemana(this.fechaInicial ?? new Date());
     }
 
     if (changes['ordenes']) {

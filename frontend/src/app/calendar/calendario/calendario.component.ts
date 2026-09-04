@@ -116,6 +116,11 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   // listWeek/timeGridDay, que ya son razonables en pantallas chicas.
   vistaResumen = true;
   ordenesResumen: any[] = [];
+  // 🔥 semana en la que debe aterrizar el resumen al activarse desde el
+  // boton "Resumen" del calendario completo (ver customButtons mas
+  // abajo) -- null significa "semana actual" (aterrizaje inicial de la
+  // pagina, ver ngOnInit).
+  resumenFechaFoco: Date | null = null;
 
   private esDesktopParaResumen(): boolean {
     return window.innerWidth >= 1024;
@@ -315,10 +320,16 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     // 🔥 Vuelve a la franja "Resumen" (ver vistaResumen) desde el
     // calendario completo -- el boton normal de FullCalendar no sirve
     // para esto porque no es una vista suya, es un componente propio.
+    // Se guarda la fecha que el calendario tenia enfocada (getDate())
+    // para que el resumen aterrice en ESA semana, no siempre en la
+    // semana actual (ver resumenFechaFoco / [fechaInicial] en el html).
     customButtons: {
       resumen: {
         text: 'Resumen',
-        click: () => { this.vistaResumen = true; }
+        click: () => {
+          this.resumenFechaFoco = this.calendarComponent?.getApi()?.getDate() ?? null;
+          this.vistaResumen = true;
+        }
       }
     },
     editable: true,
