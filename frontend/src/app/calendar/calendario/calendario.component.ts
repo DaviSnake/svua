@@ -124,8 +124,13 @@ export class CalendarioComponent implements OnInit, OnDestroy {
   verDiaCompletoDesdeResumen(fecha: Date): void {
     this.vistaResumen = false;
 
+    // 🔥 antes quedaba fijo en 'timeGridDay' sin importar el
+    // dispositivo -- si alguien entraba a resumen en mobile/tablet
+    // (por ejemplo, resumen ya estaba activo y giro la pantalla) y
+    // volvia con "Ver calendario completo", el calendario quedaba en
+    // una vista que no es la correcta para su ancho de pantalla.
     setTimeout(() => {
-      this.calendarComponent?.getApi()?.changeView('timeGridDay', fecha);
+      this.calendarComponent?.getApi()?.changeView(this.getCalendarView(), fecha);
     });
   }
 
@@ -298,8 +303,12 @@ export class CalendarioComponent implements OnInit, OnDestroy {
     // 🔥 botones para elegir Mes / Semana / Día manualmente (antes
     // solo se podía ver semana o día, cambiando automático según el
     // ancho de pantalla, sin opción de ver el mes completo).
+    // 🔥 el boton "resumen" solo tiene sentido en escritorio (ver
+    // vistaResumen mas abajo) -- en mobile/tablet ni se muestra, para
+    // no dejar entrar a una vista que despues no sabe volver a la
+    // forma correcta del dispositivo (listWeek/timeGridDay).
     headerToolbar: {
-      left: 'prev,next today resumen',
+      left: this.esDesktopParaResumen() ? 'prev,next today resumen' : 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
