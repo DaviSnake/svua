@@ -1,0 +1,125 @@
+<div class="container">
+  <h2>{{ editando ? 'Editar Dispositivo' : 'Registrar Dispositivo' }}</h2>
+  <form [formGroup]="dispositivoForm" (ngSubmit)="guardar()" class="form-container">
+    <div class="card-section">
+      <div class="form-grid">
+        <div class="form-group">
+          <input type="text" placeholder="Código del dispositivo (ej. INS-877)" formControlName="codigoDispositivo" />
+          <small class="error" *ngIf="dispositivoForm.get('codigoDispositivo')?.touched && dispositivoForm.get('codigoDispositivo')?.errors?.['required']">
+            El código del dispositivo es obligatorio
+          </small>
+        </div>
+        <div class="form-group">
+          <input type="text" placeholder="Descripción (opcional)" formControlName="descripcion" />
+        </div>
+        <div class="form-group">
+          <div class="form-group--combo">
+            <input type="text"
+                   placeholder="Empresa"
+                   [matAutocomplete]="autoEmpresa"
+                   [formControl]="empresaControl"
+                   (focus)="onFocusEmpresa()">
+            <mat-autocomplete #autoEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+              <mat-option *ngFor="let empresa of empresasFiltradas" [value]="empresa">
+                {{ empresa.nombre }}
+              </mat-option>
+            </mat-autocomplete>
+          </div>
+          <small class="error" *ngIf="dispositivoForm.get('empresaId')?.touched && dispositivoForm.get('empresaId')?.errors?.['required']">
+            Debe seleccionar una empresa
+          </small>
+        </div>
+      </div>
+    </div>
+    <div class="acciones">
+      <button type="submit">
+        {{ editando ? 'Actualizar' : 'Guardar' }}
+      </button>
+      @if (mostrarNuevo) {
+        <button type="button" (click)="nuevo()">
+          Nuevo
+        </button>
+      }
+    </div>
+  </form>
+
+  <hr />
+
+  <h2>Dispositivos registrados</h2>
+
+  <div class="toolbar-grilla">
+    <div class="filtro-grilla">
+      <label>Filtrar por empresa</label>
+      <div class="form-group form-group--combo">
+        <input type="text"
+               placeholder="Todas las empresas"
+               [matAutocomplete]="autoFiltroEmpresa"
+               [formControl]="filtroEmpresaControl"
+               (focus)="onFocusFiltroEmpresa()">
+        <mat-autocomplete #autoFiltroEmpresa="matAutocomplete" [displayWith]="displayEmpresa">
+          <mat-option *ngFor="let empresa of empresasFiltroFiltradas" [value]="empresa">
+            {{ empresa.nombre }}
+          </mat-option>
+        </mat-autocomplete>
+      </div>
+    </div>
+
+    <div class="filtro-grilla">
+      <label>Buscar</label>
+      <div class="form-group">
+        <input type="text"
+               placeholder="Código o descripción"
+               [formControl]="busquedaControl">
+      </div>
+      <small>{{ totalElements }} dispositivos encontrados</small>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Empresa</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dispositivo of dispositivos; trackBy: trackByDispositivoId">
+          <td>{{ dispositivo.codigoDispositivo }}</td>
+          <td>{{ dispositivo.descripcion || '—' }}</td>
+          <td>{{ dispositivo.empresaNombre }}</td>
+          <td>{{ dispositivo.activo ? 'Activo' : 'Inactivo' }}</td>
+          <td>
+            <button class="btn-editar" (click)="editar(dispositivo)">Editar</button>
+            <button *ngIf="dispositivo.activo" class="btn-eliminar" (click)="eliminar(dispositivo.id!)">Deshabilitar</button>
+            <button *ngIf="!dispositivo.activo" class="btn-habilitar" (click)="habilitar(dispositivo.id!)">Habilitar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="paginacion">
+    <button (click)="cambiarPagina(page - 1)" [disabled]="page === 0">
+      ⬅ Anterior
+    </button>
+
+    <ng-container *ngFor="let p of paginasVisibles()">
+      <span *ngIf="p === -1" class="paginacion-puntos">…</span>
+      <button
+        *ngIf="p !== -1"
+        (click)="cambiarPagina(p)"
+        [class.activa]="p === page">
+        {{ p + 1 }}
+      </button>
+    </ng-container>
+
+    <button (click)="cambiarPagina(page + 1)"
+            [disabled]="page + 1 >= totalPages">
+      Siguiente ➡
+    </button>
+  </div>
+</div>

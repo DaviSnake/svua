@@ -10,6 +10,7 @@ import { LayoutComponent } from './layout/layout.component';
 import { ActivoComponent } from './components/activo/activo.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { EmpresaComponent } from './components/empresa/empresa.component';
+import { DispositivoEmpresaComponent } from './components/dispositivo-empresa/dispositivo-empresa.component';
 import { UsuarioComponent } from './components/usuario/usuario.component';
 import { UbicacionComponent } from './components/ubicacion/ubicacion.component';
 import { TipoActivoComponent } from './components/tipo-activo/tipo-activo.component';
@@ -109,6 +110,13 @@ export const routes: Routes = [
             {
                 path: 'empresa',
                 component: EmpresaComponent,
+                data: { roles: ['SUPER_ADMIN'] }
+            },
+            {
+                // 🔒 Que dispositivo fisico de monitoreo alimenta a que
+                // empresa (ver CorreoLecturaImportador/DispositivoEmpresa).
+                path: 'dispositivos',
+                component: DispositivoEmpresaComponent,
                 data: { roles: ['SUPER_ADMIN'] }
             },
             {

@@ -52,6 +52,7 @@
 
       <ul class="submenu" [class.open]="openMenus.organizacion && !isCollapsed">
         <li routerLinkActive="active" *ngIf="esAdmin"><a routerLink="/inicio/empresa">Empresa</a></li>
+        <li routerLinkActive="active" *ngIf="esAdmin"><a routerLink="/inicio/dispositivos">Dispositivos</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/ubicacion">Ubicaciones</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/bodega">Bodegas</a></li>
         <li routerLinkActive="active"><a routerLink="/inicio/proveedor">Proveedores</a></li>

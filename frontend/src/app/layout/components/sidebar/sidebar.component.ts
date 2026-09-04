@@ -218,6 +218,7 @@ export class SidebarComponent implements OnInit, OnDestroy  {
 
     if (
       url.includes('/empresa') ||
+      url.includes('/dispositivos') ||
       url.includes('/ubicacion') ||
       url.includes('/bodega') ||
       url.includes('/proveedor')
