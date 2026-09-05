@@ -32,8 +32,11 @@ export class ForgotPasswordComponent {
       email: this.email
     };
 
+    this.loading = true;
+
     this.authService.forgotPassword(data).subscribe({
       next: (res: any) => {
+        this.loading = false;
         this.message = res.message || 'Revisa tu correo 📩';
         this.errorMessage = '';
 
@@ -44,6 +47,7 @@ export class ForgotPasswordComponent {
         }, 3000);
       },
       error: (err) => {
+        this.loading = false;
         this.errorMessage = err.error?.error || 'Error al enviar correo';
         this.message = '';
 

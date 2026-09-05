@@ -22,6 +22,7 @@ export class ResetPasswordComponent implements OnInit{
   confirmPassword = '';
 
   showPassword = false;
+  loading = false;
 
   successMessage = '';
   errorMessage = '';
@@ -61,8 +62,11 @@ export class ResetPasswordComponent implements OnInit{
       return;
     }
 
+    this.loading = true;
+
     this.authService.resetPassword(this.token, this.password).subscribe({
       next: () => {
+        this.loading = false;
         this.successMessage = 'Contraseña actualizada 🎉';
         this.errorMessage = '';
 
@@ -71,6 +75,7 @@ export class ResetPasswordComponent implements OnInit{
         }, 3000);
       },
       error: () => {
+        this.loading = false;
         this.errorMessage = 'Error al cambiar contraseña';
       }
     });
