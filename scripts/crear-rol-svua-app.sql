@@ -27,11 +27,17 @@
 --      "svua_user" NO se toca -- sigue existiendo, sigue siendo
 --      superuser, simplemente el backend deja de usarlo para las
 --      conexiones normales.
---   4) Reiniciar el backend de ese ambiente.
---   5) Verificar:
+--   4) Correr transferir-ownership-tablas-a-svua.sql (mismo directorio):
+--      los GRANT de arriba dan permisos DML sobre lo existente, pero
+--      "svua" sigue sin ser DUEÑO de esas tablas -- y cualquier
+--      migracion de Flyway que despues haga ALTER TABLE sobre una
+--      tabla creada antes de este cambio va a fallar con "must be
+--      owner of table X" hasta correr ese script.
+--   5) Reiniciar el backend de ese ambiente.
+--   6) Verificar:
 --        SELECT rolname, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = 'svua';
 --      Debe dar rolsuper=false y rolbypassrls=false.
---   6) Probar de inmediato: login, refresh de sesion, reset de
+--   7) Probar de inmediato: login, refresh de sesion, reset de
 --      contraseña, y una operacion normal de la app -- es la primera
 --      vez que RLS se aplica de verdad en este ambiente.
 -- =====================================================================
