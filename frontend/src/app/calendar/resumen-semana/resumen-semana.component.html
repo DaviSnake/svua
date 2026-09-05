@@ -17,7 +17,7 @@
          *ngFor="let dia of semana"
          [class.seleccionado]="esSeleccionado(dia)"
          (click)="seleccionarDia(dia)">
-      <div class="resumen-dia-letra">{{ dia | date:'EEEEE':'':'es' }}</div>
+      <div class="resumen-dia-letra">{{ letraDia(dia) }}</div>
       <div class="resumen-dia-numero" [class.hoy]="esHoy(dia)">{{ dia | date:'d' }}</div>
 
       <ng-container *ngIf="usaInsignia(dia); else barritasTpl">

@@ -19,6 +19,12 @@ export class ResumenSemanaComponent implements OnChanges {
 
   private static readonly UMBRAL_INSIGNIA = 3;
 
+  // 🔥 Letra de cada dia (Lunes primero, igual que calcularSemana): a
+  // mano en vez de con el pipe date:'EEEEE' de Angular, que para el
+  // locale es usa "X" en Miercoles (convencion L-M-X-J-V-S-D, para no
+  // repetir "M" con Martes) -- aca se prefiere "M" para ambos.
+  private static readonly LETRAS_DIA = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
   @Input() ordenes: any[] = [];
   // 🔥 semana en la que aterrizar al activarse (ver resumenFechaFoco en
   // CalendarioComponent) -- null/undefined significa "semana actual".
@@ -105,6 +111,12 @@ export class ResumenSemanaComponent implements OnChanges {
 
   esHoy(fecha: Date): boolean {
     return this.mismoDia(fecha, new Date());
+  }
+
+  letraDia(fecha: Date): string {
+    const diaSemana = fecha.getDay(); // 0=domingo..6=sabado
+    const indiceLunesPrimero = diaSemana === 0 ? 6 : diaSemana - 1;
+    return ResumenSemanaComponent.LETRAS_DIA[indiceLunesPrimero];
   }
 
   esSeleccionado(fecha: Date): boolean {
