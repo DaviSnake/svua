@@ -2,8 +2,13 @@ package cl.aracridav.svua.empresa.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -95,6 +100,12 @@ public class EmpresaBackupService {
                 csvZipExporter.exportarComoCsv(zip, tabla, "SELECT * FROM \"" + tabla + "\"");
             }
 
+            // 🔥 los adjuntos (logo, archivos de checklist de ordenes) viven
+            // en disco, no en la base -- sin esto el respaldo por empresa
+            // quedaba incompleto para restaurar/auditar de verdad.
+            agregarLogoEmpresa(zip, empresaId);
+            agregarAdjuntosMantenimientos(zip, empresaId);
+
         } catch (IOException ex) {
             throw new BusinessException("No fue posible generar el respaldo de la empresa", ex);
         } finally {
@@ -104,6 +115,81 @@ public class EmpresaBackupService {
         }
 
         return buffer.toByteArray();
+    }
+
+    // 🔥 Logo de la empresa (ver EmpresaServiceImpl.guardarLogoSeguro):
+    // se guarda como "uploads/logos/<empresaId>.<ext>", nombre fijo sin
+    // timestamp (una sola subida vigente por empresa a la vez).
+    private void agregarLogoEmpresa(ZipOutputStream zip, Long empresaId) throws IOException {
+
+        Path carpetaLogos = Paths.get("uploads/logos");
+        if (!Files.isDirectory(carpetaLogos)) {
+            return;
+        }
+
+        String idComoTexto = String.valueOf(empresaId);
+
+        try (DirectoryStream<Path> archivos = Files.newDirectoryStream(carpetaLogos)) {
+            for (Path archivo : archivos) {
+
+                if (!Files.isRegularFile(archivo)) {
+                    continue;
+                }
+
+                String nombre = archivo.getFileName().toString();
+                String nombreSinExtension = nombre.contains(".")
+                        ? nombre.substring(0, nombre.lastIndexOf('.'))
+                        : nombre;
+
+                if (nombreSinExtension.equals(idComoTexto)) {
+                    copiarArchivoAZip(zip, archivo, "adjuntos/logo/" + nombre);
+                }
+            }
+        }
+    }
+
+    // 🔥 Adjuntos de checklist de ordenes de mantenimiento (ver
+    // OrdenMantenimientoServiceImpl.guardarArchivoSeguro): cada empresa
+    // tiene su propia subcarpeta "uploads/mantenimientos/<empresaId>_<nombre>",
+    // sin mas anidamiento (los archivos quedan directo adentro).
+    private void agregarAdjuntosMantenimientos(ZipOutputStream zip, Long empresaId) throws IOException {
+
+        Path carpetaBase = Paths.get("uploads/mantenimientos");
+        if (!Files.isDirectory(carpetaBase)) {
+            return;
+        }
+
+        String idComoTexto = String.valueOf(empresaId);
+        String prefijo = idComoTexto + "_";
+
+        try (DirectoryStream<Path> carpetas = Files.newDirectoryStream(carpetaBase)) {
+            for (Path carpetaEmpresa : carpetas) {
+
+                if (!Files.isDirectory(carpetaEmpresa)) {
+                    continue;
+                }
+
+                String nombreCarpeta = carpetaEmpresa.getFileName().toString();
+                if (!nombreCarpeta.equals(idComoTexto) && !nombreCarpeta.startsWith(prefijo)) {
+                    continue;
+                }
+
+                try (DirectoryStream<Path> archivos = Files.newDirectoryStream(carpetaEmpresa)) {
+                    for (Path archivo : archivos) {
+                        if (Files.isRegularFile(archivo)) {
+                            copiarArchivoAZip(zip, archivo,
+                                    "adjuntos/mantenimientos/" + nombreCarpeta + "/" + archivo.getFileName());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void copiarArchivoAZip(ZipOutputStream zip, Path archivo, String nombreEnZip) throws IOException {
+        zip.putNextEntry(new ZipEntry(nombreEnZip));
+        Files.copy(archivo, zip);
+        zip.closeEntry();
     }
 
     // Mismo chequeo que ya hace scripts/backup-empresa.sh antes de
