@@ -16,5 +16,11 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.authService.init(); // 🔥 aquí
+
+    // 🔥 detecta si se desplego una version nueva del frontend MIENTRAS
+    // la pestaña ya estaba abierta (no solo al iniciar sesion, ver
+    // AuthService.verificarVersionYRecargarSiCorresponde) y avisa con un
+    // toast en vez de recargar solo.
+    this.authService.iniciarChequeoPeriodicoDeVersion();
   }
 }

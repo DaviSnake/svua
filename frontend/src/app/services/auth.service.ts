@@ -448,6 +448,88 @@ export class AuthService {
    */
   async verificarVersionYRecargarSiCorresponde(destino: string): Promise<boolean> {
 
+    const versionNueva = await this.obtenerVersionServidorSiCambio();
+
+    if (!versionNueva) {
+      return false;
+    }
+
+    sessionStorage.setItem('svua_version_conocida', versionNueva);
+    window.location.href = destino;
+    return true;
+  }
+
+  // 🔥 Mismo version.json de arriba, pero consultado periodicamente
+  // MIENTRAS la pestaña ya esta abierta y en uso (no solo al iniciar
+  // sesion): si alguien deja la app abierta durante un deploy, nunca mas
+  // pasa por login para que verificarVersionYRecargarSiCorresponde lo
+  // detecte. A diferencia de esa, esta NO recarga sola -- solo avisa,
+  // para no perder algo que el usuario este llenando a medio camino (ver
+  // AppComponent.ngOnInit, que la arranca).
+  private chequeoVersionInterval?: ReturnType<typeof setInterval>;
+  private avisoVersionNuevaMostrado = false;
+
+  iniciarChequeoPeriodicoDeVersion(): void {
+
+    if (this.chequeoVersionInterval) {
+      return; // ya esta corriendo (ej. AppComponent se reinicializo)
+    }
+
+    this.chequeoVersionInterval = setInterval(async () => {
+
+      if (this.avisoVersionNuevaMostrado) {
+        return;
+      }
+
+      const versionNueva = await this.obtenerVersionServidorSiCambio();
+
+      if (versionNueva) {
+        this.avisoVersionNuevaMostrado = true;
+        this.avisarNuevaVersionDisponible(versionNueva);
+      }
+
+    }, 10 * 60 * 1000); // cada 10 minutos
+  }
+
+  private avisarNuevaVersionDisponible(versionNueva: string): void {
+
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+      title: 'Hay una nueva versión disponible',
+      text: 'Recarga la página para actualizar.',
+      showConfirmButton: true,
+      confirmButtonText: 'Recargar ahora',
+      showCloseButton: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // 🔥 sin esto, sessionStorage se queda con la version VIEJA y el
+        // chequeo periodico de la pestaña recien recargada detectaria
+        // "cambio" otra vez de inmediato contra el mismo version.json que
+        // ya se acaba de aplicar, reabriendo el mismo aviso en bucle.
+        sessionStorage.setItem('svua_version_conocida', versionNueva);
+        window.location.reload();
+      }
+      // 🔥 si lo cierra sin recargar, no se vuelve a mostrar en esta
+      // pestaña (avisoVersionNuevaMostrado queda en true a proposito):
+      // molestarlo cada 10 min con el mismo aviso seria peor que dejarlo
+      // usando la version vieja hasta que el mismo decida recargar.
+    });
+  }
+
+  // Fetch compartido por ambos chequeos de arriba: compara version.json
+  // (regenerado en cada build, ver scripts/generar-version.js) pedido con
+  // `cache: 'no-store'` -- asi el navegador SIEMPRE va a la red a
+  // buscarlo, sin importar que tan agresivo sea su cache -- contra la
+  // ultima version que esta pestaña habia visto. Devuelve la version
+  // nueva del servidor si cambio, o null si no hay cambio (o si la
+  // consulta fallo, ej. "ng serve" en desarrollo, donde este archivo no
+  // existe).
+  private async obtenerVersionServidorSiCambio(): Promise<string | null> {
+
     try {
 
       const resp = await fetch(`/assets/version.json?t=${Date.now()}`, {
@@ -455,14 +537,14 @@ export class AuthService {
       });
 
       if (!resp.ok) {
-        return false;
+        return null;
       }
 
       const data = await resp.json();
       const versionServidor = data?.version;
 
       if (!versionServidor) {
-        return false;
+        return null;
       }
 
       const versionConocida = sessionStorage.getItem('svua_version_conocida');
@@ -471,21 +553,13 @@ export class AuthService {
       // referencia, nada que comparar todavía.
       if (!versionConocida) {
         sessionStorage.setItem('svua_version_conocida', versionServidor);
-        return false;
+        return null;
       }
 
-      if (versionConocida !== versionServidor) {
-        sessionStorage.setItem('svua_version_conocida', versionServidor);
-        window.location.href = destino;
-        return true;
-      }
-
-      return false;
+      return versionConocida !== versionServidor ? versionServidor : null;
 
     } catch {
-      // Sin red, version.json no existe (ej. entorno de desarrollo con
-      // "ng serve"), etc.: no bloquea el login por esto.
-      return false;
+      return null;
     }
   }
 
