@@ -388,6 +388,49 @@ td button {
   color: #1f2937;
 }
 
+/* 🔄 Carrusel de dias dentro del modal "Ver detalle" */
+.modal-carrusel-dia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: .8rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.modal-dia-actual {
+  min-width: 200px;
+  text-align: center;
+  font-weight: 600;
+  color: #1f2937;
+  text-transform: capitalize;
+}
+
+.btn-dia {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-dia:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.btn-dia:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
 .modal-body {
   position: relative;
   padding: 1.5rem;

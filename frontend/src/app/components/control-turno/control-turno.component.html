@@ -297,13 +297,22 @@
   </div>
 
   <!-- 🔍 Modal "Ver detalle": rango amplio (agregado por dia) -> mismo
-       grafico rearmado con cada lectura individual, mas grande. -->
+       grafico rearmado con cada lectura individual, mas grande, y
+       navegable dia por dia (carrusel) en vez de mostrar todo el
+       rango junto en un solo grafico. -->
   <div class="modal-backdrop" *ngIf="modalChart" (click)="cerrarModalChart()">
     <div class="modal-detalle" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>{{ modalChart.punto.nombre }} — Detalle por hora ({{ modalChart.punto.unidad }})</h3>
         <button class="btn-cerrar" (click)="cerrarModalChart()">✕</button>
       </div>
+
+      <div class="modal-carrusel-dia" *ngIf="modalDiasDisponibles.length > 1">
+        <button type="button" class="btn-dia" (click)="modalMoverDia(-1)" [disabled]="modalDiaIndex === 0" aria-label="Día anterior">‹</button>
+        <span class="modal-dia-actual">{{ modalDiaLabel }}</span>
+        <button type="button" class="btn-dia" (click)="modalMoverDia(1)" [disabled]="modalDiaIndex === modalDiasDisponibles.length - 1" aria-label="Día siguiente">›</button>
+      </div>
+
       <div class="modal-body">
         <canvas baseChart [data]="modalChart.data" [type]="modalChart.type" [options]="modalChart.options"></canvas>
       </div>

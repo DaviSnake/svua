@@ -730,14 +730,33 @@ export class ControlTurnoComponent implements OnInit {
   // 🔥 forzarDetalle=true se usa para el modal "Ver detalle" (abrirModalChart):
   // rearma el mismo grafico sin agregar por dia, aunque el rango sea
   // amplio, para mostrar cada lectura individual en una vista mas grande.
+  // 🔥 soloDia (toDateString()) acota ademas esa vista de detalle a UN
+  // solo dia -- el carrusel del modal reconstruye el grafico dia por
+  // dia en vez de mostrar todo el rango junto (ver modalMoverDia).
   private armarLineChart(
     titulo: string,
     unidad: string,
     series: { etiqueta: string; punto: PuntoControlDashboard; color: string }[],
-    forzarDetalle = false
+    forzarDetalle = false,
+    soloDia?: string
   ): any {
 
-    const fechasUnicas = Array.from(new Set(series.flatMap(s => s.punto.fechas))).sort();
+    const seriesFiltradas = !soloDia ? series : series.map(s => {
+      const indices = s.punto.fechas
+        .map((f, i) => i)
+        .filter(i => new Date(s.punto.fechas[i]).toDateString() === soloDia);
+
+      return {
+        ...s,
+        punto: {
+          ...s.punto,
+          fechas: indices.map(i => s.punto.fechas[i]),
+          valores: indices.map(i => s.punto.valores[i])
+        }
+      };
+    });
+
+    const fechasUnicas = Array.from(new Set(seriesFiltradas.flatMap(s => s.punto.fechas))).sort();
     const diasUnicos = new Set(fechasUnicas.map(f => new Date(f).toDateString()));
     const agregarPorDia = !forzarDetalle && diasUnicos.size > 1;
 
@@ -753,7 +772,7 @@ export class ControlTurnoComponent implements OnInit {
         new Date(dia).toLocaleString('es-CL', { day: '2-digit', month: '2-digit' })
       );
 
-      datasets = series.map(s => {
+      datasets = seriesFiltradas.map(s => {
 
         const totalesPorDia = new Map<string, { suma: number; cantidad: number }>();
 
@@ -772,7 +791,7 @@ export class ControlTurnoComponent implements OnInit {
               ? Math.round((acumulado.suma / acumulado.cantidad) * 100) / 100
               : null;
           }),
-          label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
+          label: seriesFiltradas.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
           fill: false,
           spanGaps: true,
           tension: 0.4,
@@ -795,11 +814,11 @@ export class ControlTurnoComponent implements OnInit {
           : fecha.toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' });
       });
 
-      datasets = series.map(s => {
+      datasets = seriesFiltradas.map(s => {
         const valorPorFecha = new Map(s.punto.fechas.map((f, i) => [f, s.punto.valores[i]]));
         return {
           data: fechasUnicas.map(f => valorPorFecha.has(f) ? valorPorFecha.get(f) : null),
-          label: series.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
+          label: seriesFiltradas.length > 1 ? s.etiqueta : `${s.etiqueta} (${unidad})`,
           fill: false,
           spanGaps: true,
           tension: 0.4,
@@ -840,19 +859,80 @@ export class ControlTurnoComponent implements OnInit {
 
   modalChart: any = null;
 
+  // 🔥 Carrusel de dias dentro del modal: en vez de mostrar TODAS las
+  // lecturas del rango amplio amuchadas en un solo grafico (ilegible
+  // con varios dias), se navega dia por dia -- estos 4 campos guardan
+  // el "molde" (titulo/unidad/series completas) y en que dia esta
+  // parado el carrusel para poder rearmar el grafico de cada dia.
+  private modalTitulo = '';
+  private modalUnidad = '';
+  private modalSeries: { etiqueta: string; punto: PuntoControlDashboard; color: string }[] = [];
+  modalDiasDisponibles: string[] = [];
+  modalDiaIndex = 0;
+
   // 🔥 Solo tiene sentido para gráficos agregados por día (rango
   // amplio): rearma el mismo grafico en detalle horario completo
   // (forzarDetalle=true), para verlo mas grande sin perder informacion.
+  // Con mas de un dia de datos, en vez de un solo grafico con todo
+  // junto, arranca el carrusel dia por dia (ver modalMoverDia) --
+  // parado por defecto en el dia MAS RECIENTE del rango.
   abrirModalChart(chart: any): void {
 
     if (!chart.agregadoPorDia) {
       return;
     }
 
-    this.modalChart = this.armarLineChart(chart._titulo, chart._unidad, chart._series, true);
+    this.modalTitulo = chart._titulo;
+    this.modalUnidad = chart._unidad;
+    this.modalSeries = chart._series;
+
+    const fechasUnicas = Array.from(new Set(
+      (chart._series as { punto: PuntoControlDashboard }[]).flatMap(s => s.punto.fechas)
+    ));
+
+    this.modalDiasDisponibles = Array.from(new Set(fechasUnicas.map(f => new Date(f).toDateString())))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    this.modalDiaIndex = this.modalDiasDisponibles.length - 1;
+
+    this.actualizarModalChart();
+  }
+
+  private actualizarModalChart(): void {
+    const dia = this.modalDiasDisponibles[this.modalDiaIndex];
+    this.modalChart = this.armarLineChart(this.modalTitulo, this.modalUnidad, this.modalSeries, true, dia);
+  }
+
+  modalMoverDia(direccion: 1 | -1): void {
+
+    const nuevoIndex = this.modalDiaIndex + direccion;
+
+    if (nuevoIndex < 0 || nuevoIndex >= this.modalDiasDisponibles.length) {
+      return;
+    }
+
+    this.modalDiaIndex = nuevoIndex;
+    this.actualizarModalChart();
+  }
+
+  get modalDiaLabel(): string {
+
+    const dia = this.modalDiasDisponibles[this.modalDiaIndex];
+
+    if (!dia) {
+      return '';
+    }
+
+    const etiqueta = new Date(dia).toLocaleDateString('es-CL', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+
+    return etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1);
   }
 
   cerrarModalChart(): void {
     this.modalChart = null;
+    this.modalDiasDisponibles = [];
+    this.modalDiaIndex = 0;
   }
 }
