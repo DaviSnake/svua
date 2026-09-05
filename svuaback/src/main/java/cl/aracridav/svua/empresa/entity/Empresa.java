@@ -101,9 +101,12 @@ public class Empresa {
     // 🔹 Habilita, por empresa, el "Informe de Mantenciones" (ver
     // OrdenMantenimientoController.obtenerInformeMantenciones). Mismo
     // patron que controlTurnoHabilitado/hojaControlHabilitado: opt-in
-    // (FALSE por defecto). V37 lo agrego en TRUE (para no quitarselo a
-    // nadie de un dia para otro); V38 corrigio el default y los datos
-    // existentes a FALSE.
+    // (FALSE por defecto para empresas nuevas, ver
+    // construirEmpresaBase). V37 agrego la columna en DEFAULT TRUE a
+    // proposito, para no quitarsela de un dia para otro a empresas que
+    // ya la tenian sin restriccion -- esos datos existentes NO se
+    // tocan. V40 corrigio el DEFAULT de la columna a FALSE (para
+    // empresas nuevas de ahi en adelante).
     @Column(name = "informe_mantenciones_habilitado", nullable = false)
     private Boolean informeMantencionesHabilitado;
 
