@@ -875,7 +875,8 @@ export class ControlTurnoComponent implements OnInit {
   // (forzarDetalle=true), para verlo mas grande sin perder informacion.
   // Con mas de un dia de datos, en vez de un solo grafico con todo
   // junto, arranca el carrusel dia por dia (ver modalMoverDia) --
-  // parado por defecto en el dia MAS RECIENTE del rango.
+  // parado por defecto en HOY si el rango filtrado incluye el dia de
+  // hoy, o si no en el dia mas reciente del rango.
   abrirModalChart(chart: any): void {
 
     if (!chart.agregadoPorDia) {
@@ -893,7 +894,10 @@ export class ControlTurnoComponent implements OnInit {
     this.modalDiasDisponibles = Array.from(new Set(fechasUnicas.map(f => new Date(f).toDateString())))
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    this.modalDiaIndex = this.modalDiasDisponibles.length - 1;
+    const hoy = new Date().toDateString();
+    const indiceHoy = this.modalDiasDisponibles.indexOf(hoy);
+
+    this.modalDiaIndex = indiceHoy !== -1 ? indiceHoy : this.modalDiasDisponibles.length - 1;
 
     this.actualizarModalChart();
   }
