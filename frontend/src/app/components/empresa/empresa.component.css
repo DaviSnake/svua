@@ -163,6 +163,14 @@ button[type="button"]:hover {
   background: #7f8c8d;
 }
 
+/* 🐛 FIX: faltaba separacion entre los botones de .acciones (quedaban
+   pegados porque Angular colapsa el espacio en blanco entre elementos). */
+.acciones {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 /* INPUT FILTRO */
 /* 🐛 FIX: este selector nunca matcheaba el input real (su placeholder
    es "🔍 Buscar empresa...", no "Buscar..."), asi que en escritorio el

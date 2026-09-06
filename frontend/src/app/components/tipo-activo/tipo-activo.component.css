@@ -231,6 +231,14 @@ td button:hover {
   box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
 
+/* 🐛 FIX: faltaba separacion entre los botones de .acciones (quedaban
+   pegados porque Angular colapsa el espacio en blanco entre elementos). */
+.acciones {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .acciones button {
   padding: 10px 20px;
   font-size: 14px;
