@@ -161,12 +161,17 @@ button[type="button"]:hover {
 }
 
 /* INPUT FILTRO */
-input[placeholder="Buscar..."] {
+/* 🐛 FIX: el selector era input[placeholder="Buscar..."], que nunca
+   matcheaba el placeholder real de este input -- no causaba overlap
+   visual aca porque el toolbar (.filtro-grilla) es flex con gap, pero
+   igual quedaba sin efecto. Ver mismo bug en empresa.component.css. */
+.filtro {
   width: 100%;
   margin-bottom: 15px;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 /* TABLA */

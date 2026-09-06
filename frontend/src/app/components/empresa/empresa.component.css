@@ -164,17 +164,23 @@ button[type="button"]:hover {
 }
 
 /* INPUT FILTRO */
-input[placeholder="Buscar..."] {
+/* 🐛 FIX: este selector nunca matcheaba el input real (su placeholder
+   es "🔍 Buscar empresa...", no "Buscar..."), asi que en escritorio el
+   campo se quedaba sin el padding/margin-bottom pensados para el, y
+   el margin-top negativo de .total-encontrados de abajo terminaba
+   montandose sobre su borde inferior. */
+.filtro {
   width: 100%;
   margin-bottom: 15px;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 .total-encontrados {
   display: block;
-  margin: -10px 0 15px 4px;
+  margin: 4px 0 15px 4px;
   color: #6b7280;
   font-size: 13px;
 }
