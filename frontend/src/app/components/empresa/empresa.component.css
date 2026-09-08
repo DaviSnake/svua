@@ -541,15 +541,29 @@ td button.btn-backup:disabled {
   }
 
   td button {
-    width: 100%;
-    margin-top: 6px;
     min-height: 44px;
+  }
+
+  /* 🎨 Editar/Eliminar son iconos cuadrados (touch-friendly, 44x44) en
+     una misma fila; los botones de texto (Códigos/Respaldo) siguen
+     ocupando su propia fila completa, como antes. */
+  td button.btn-editar,
+  td button.btn-eliminar {
+    width: 44px;
+    height: 44px;
+    flex: none;
+  }
+
+  td button.btn-pdf,
+  td button.btn-backup {
+    width: 100%;
+    flex: 1 1 100%;
   }
 
   td:last-child {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
