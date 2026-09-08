@@ -169,28 +169,31 @@ button[type="button"]:hover {
   height: auto;
 }
 
-.btn-editar {
-  background: #2ecc71;
+/* EDITAR / DESHABILITAR / HABILITAR (grilla): iconos "fantasma" (fondo
+   transparente, borde sutil), cuadrados, cada uno con su propio color
+   de acento al pasar el mouse. */
+.btn-editar,
+.btn-eliminar,
+.btn-habilitar {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #7f8c8d;
 }
 
 .btn-editar:hover {
-  background: #27ae60;
-}
-
-.btn-eliminar {
-  background: #e74c3c;
+  border-color: #2ecc71;
+  color: #2ecc71;
 }
 
 .btn-eliminar:hover {
-  background: #c0392b;
-}
-
-.btn-habilitar {
-  background: #3498db;
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 .btn-habilitar:hover {
-  background: #2980b9;
+  border-color: #3498db;
+  color: #3498db;
 }
 
 /* FILTROS */
@@ -262,13 +265,21 @@ tbody tr:hover {
 td:last-child {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  justify-content: flex-end;
 }
 
+/* 🎨 Botones de acción de la grilla como iconos (en vez de texto),
+   cuadrados. */
 td button {
-  padding: 8px 14px;
-  font-size: 13px;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   white-space: nowrap;
 }
 

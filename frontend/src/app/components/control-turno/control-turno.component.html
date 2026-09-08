@@ -84,9 +84,9 @@
             <td>{{ (punto.valorMin != null && punto.valorMax != null) ? (punto.valorMin + ' - ' + punto.valorMax) : '—' }}</td>
             <td>{{ punto.activo ? 'Activo' : 'Deshabilitado' }}</td>
             <td>
-              <button class="btn-editar" (click)="editarPunto(punto)">Editar</button>
-              <button *ngIf="punto.activo" class="btn-eliminar" (click)="eliminarPunto(punto.id!)">Deshabilitar</button>
-              <button *ngIf="!punto.activo" class="btn-habilitar" (click)="habilitarPunto(punto.id!)">Habilitar</button>
+              <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editarPunto(punto)"><i class="bx bx-pencil"></i></button>
+              <button *ngIf="punto.activo" class="btn-eliminar" aria-label="Deshabilitar" data-tooltip="Deshabilitar" (click)="eliminarPunto(punto.id!)"><i class="bx bx-trash"></i></button>
+              <button *ngIf="!punto.activo" class="btn-habilitar" aria-label="Habilitar" data-tooltip="Habilitar" (click)="habilitarPunto(punto.id!)"><i class="bx bx-check"></i></button>
             </td>
           </tr>
         </tbody>
