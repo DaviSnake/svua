@@ -113,6 +113,13 @@ export class ActivoComponent implements OnInit {
   drawerOpen = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Activo" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar). Independiente de mostrarNuevo (que solo controla el
+  // botón interno para volver de "editando" a "creando" sin cerrar
+  // el formulario).
+  mostrarFormulario = false;
   mostrarModalActivo = false;
   activoEditandoId: number | null = null;
   activoSeleccionado: any = null;
@@ -366,6 +373,17 @@ export class ActivoComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   resetForm() {
     this.activoForm.reset();
     // 🔒 El codigo interno solo se puede escribir al CREAR; en edicion
@@ -472,6 +490,7 @@ export class ActivoComponent implements OnInit {
       this.mostrarNuevo = true;
     }
 
+    this.mostrarFormulario = true;
   }
 
   guardar() {
@@ -532,6 +551,7 @@ export class ActivoComponent implements OnInit {
 
               this.cargarActivos(); // 🔄 refrescar tabla
               this.resetForm();
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -550,6 +570,7 @@ export class ActivoComponent implements OnInit {
       this.activoService.create(body).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarActivos();
 
           Swal.fire({

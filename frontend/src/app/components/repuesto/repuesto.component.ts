@@ -58,6 +58,11 @@ export class RepuestoComponent implements OnInit {
   esAdminEmpresa = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Repuesto" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   repuestoEditandoId: number | null = null;
   repuestoSeleccionado: any = null;
 
@@ -253,6 +258,7 @@ export class RepuestoComponent implements OnInit {
 
               this.cargarRepuestos(); // 🔄 refrescar tabla
               this.nuevo();
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -271,6 +277,7 @@ export class RepuestoComponent implements OnInit {
         next: () => {
 
           this.nuevo();
+          this.mostrarFormulario = false;
           this.cargarRepuestos();
 
           Swal.fire({
@@ -307,6 +314,17 @@ export class RepuestoComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(repuesto: Repuesto) {
     this.editando = true;
     this.esSuperAdmin = this.authService.isAdmin();
@@ -333,6 +351,8 @@ export class RepuestoComponent implements OnInit {
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
     }
+
+    this.mostrarFormulario = true;
   }
 
   eliminar(id: number) {

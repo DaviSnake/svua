@@ -51,6 +51,11 @@ export class UbicacionComponent implements OnInit {
   esAdminEmpresa = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nueva
+  // Ubicación" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   ubicacionEditandoId: number | null = null;
   ubicacionSeleccionado: any = null;
 
@@ -225,6 +230,7 @@ export class UbicacionComponent implements OnInit {
               });
 
               this.cargarUbicaciones(); // 🔄 refrescar tabla
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -242,6 +248,7 @@ export class UbicacionComponent implements OnInit {
       this.ubicacionService.create(ubicacion).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarUbicaciones();
 
           Swal.fire({
@@ -273,7 +280,18 @@ export class UbicacionComponent implements OnInit {
     this.resetForm();
     this.mostrarNuevo = false;
   }
-  
+
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(ubicacion: Ubicacion) {
     this.editando = true;
     this.esSuperAdmin = this.authService.isAdmin();
@@ -295,6 +313,8 @@ export class UbicacionComponent implements OnInit {
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
     }
+
+    this.mostrarFormulario = true;
   }
 
   eliminar(id: number) {

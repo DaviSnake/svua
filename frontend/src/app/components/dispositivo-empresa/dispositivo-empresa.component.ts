@@ -47,6 +47,13 @@ export class DispositivoEmpresaComponent implements OnInit {
 
   editando = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Dispositivo" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar). Independiente de mostrarNuevo (que solo controla el
+  // botón interno para volver de "editando" a "creando" sin cerrar
+  // el formulario).
+  mostrarFormulario = false;
   dispositivoEditandoId: number | null = null;
 
   page = 0;
@@ -197,6 +204,7 @@ export class DispositivoEmpresaComponent implements OnInit {
 
               this.cargarDispositivos();
               this.nuevo();
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               Swal.fire({
@@ -212,6 +220,7 @@ export class DispositivoEmpresaComponent implements OnInit {
       this.dispositivoService.create(dispositivo).subscribe({
         next: () => {
           this.nuevo();
+          this.mostrarFormulario = false;
           this.cargarDispositivos();
 
           Swal.fire({
@@ -244,6 +253,17 @@ export class DispositivoEmpresaComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(dispositivo: DispositivoEmpresa) {
     this.editando = true;
     this.dispositivoEditandoId = dispositivo.id!;
@@ -256,6 +276,8 @@ export class DispositivoEmpresaComponent implements OnInit {
     });
 
     this.setEmpresaSeleccionada(dispositivo.empresaId!);
+
+    this.mostrarFormulario = true;
   }
 
   eliminar(id: number) {

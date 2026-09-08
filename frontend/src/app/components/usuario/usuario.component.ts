@@ -53,6 +53,11 @@ export class UsuarioComponent implements OnInit {
   esSuperAdmin = false;
   esAdminEmpresa = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Usuario" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   mostrarModalPassword = false;
   usuarioSeleccionado: any = null;
 
@@ -268,6 +273,7 @@ export class UsuarioComponent implements OnInit {
               });
 
               this.cargarUsuarios(); // 🔄 refrescar tabla
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -286,6 +292,7 @@ export class UsuarioComponent implements OnInit {
       this.usuarioService.create(usuario).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarUsuarios();
 
           Swal.fire({
@@ -315,6 +322,17 @@ export class UsuarioComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(usuario: Usuario) {
     this.editando = true;
     this.esSuperAdmin = this.authService.isAdmin();
@@ -335,6 +353,8 @@ export class UsuarioComponent implements OnInit {
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
     }
+
+    this.mostrarFormulario = true;
   }
 
   confirmarEliminar(id: number) {

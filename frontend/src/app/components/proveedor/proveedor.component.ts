@@ -59,6 +59,11 @@ export class ProveedorComponent implements OnInit {
   esAdminEmpresa = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Proveedor" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   proveedorEditandoId: number | null = null;
   proveedorSeleccionado: any = null;
 
@@ -261,6 +266,7 @@ export class ProveedorComponent implements OnInit {
               });
 
               this.cargarProveedores(); // 🔄 refrescar tabla
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -280,6 +286,7 @@ export class ProveedorComponent implements OnInit {
       this.proveedorService.create(proveedor).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarProveedores();
 
           Swal.fire({
@@ -315,6 +322,17 @@ export class ProveedorComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(proveedor: Proveedor) {
     this.editando = true;
     this.esSuperAdmin = this.authService.isAdmin();
@@ -340,6 +358,7 @@ export class ProveedorComponent implements OnInit {
       this.mostrarNuevo = true;
     }
 
+    this.mostrarFormulario = true;
   }
 
   eliminar(id: number) {

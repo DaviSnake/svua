@@ -57,7 +57,12 @@ export class EmpresaComponent implements OnInit {
   mensaje = '';
   loading = false;
   mostrarAdmin = false;
-  
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nueva
+  // Empresa" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
+
   page = 0;
   size = 10;
 
@@ -157,6 +162,7 @@ export class EmpresaComponent implements OnInit {
               this.mostrarAdmin = false
               this.cargarEmpresas(); // 🔄 refrescar tabla
               this.resetForm();
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -174,6 +180,7 @@ export class EmpresaComponent implements OnInit {
       this.empresaService.create(empresa, this.flag).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarEmpresas();
 
           Swal.fire({
@@ -202,6 +209,17 @@ export class EmpresaComponent implements OnInit {
     this.desactivarSeccionAdmin(); // 🐛 FIX: ver comentario en el metodo
     this.empresaForm.patchValue(emp);
     this.logoPreviewUrl = emp.tieneLogo ? this.empresaService.getLogoUrl(emp.id!) : null;
+    this.mostrarFormulario = true;
+  }
+
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarFormulario = false;
   }
 
   // 🎨 Sube el logo de la empresa que se está editando ahora mismo (el

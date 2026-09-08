@@ -1,5 +1,5 @@
 <div class="container">
-  @if (esSuperAdmin || esAdminEmpresa) {
+  @if ((esSuperAdmin || esAdminEmpresa) && mostrarFormulario) {
     <h2>{{ editando ? 'Editar Bodega' : 'Crear Bodega' }}</h2>
     <form [formGroup]="bodegaForm" (ngSubmit)="guardar()" class="form-container">
       <div class="card-section">
@@ -44,6 +44,9 @@
             Nuevo
           </button>
         }
+        <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
+          Cancelar
+        </button>
       </div>
     </form>
   }
@@ -82,6 +85,14 @@
       </div>
       <small>{{ totalElements }} bodegas encontradas</small>
     </div>
+
+    <button type="button"
+            class="btn-nuevo"
+            *ngIf="(esSuperAdmin || esAdminEmpresa) && !mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nueva Bodega
+    </button>
   </div>
   <div class="table-wrapper">
     <table>
@@ -101,8 +112,8 @@
           <td>{{ bodega.ubicacionFisica }}</td>
           <td>{{ bodega.empresa.nombre }}</td>
           <td>
-            <button class="btn-editar" (click)="editar(bodega)">Editar</button>
-            <button *ngIf="bodega.activo" class="btn-eliminar" (click)="eliminar(bodega.id!)">Eliminar</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(bodega)"><i class="bx bx-pencil"></i></button>
+            <button *ngIf="bodega.activo" class="btn-eliminar" aria-label="Eliminar" data-tooltip="Eliminar" (click)="eliminar(bodega.id!)"><i class="bx bx-trash"></i></button>
           </td>
         </tr>
       </tbody>

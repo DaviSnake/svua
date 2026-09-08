@@ -1,4 +1,5 @@
 <div class="container">
+  @if (mostrarFormulario) {
   <h2>{{ editando ? 'Editar Dispositivo' : 'Registrar Dispositivo' }}</h2>
   <form [formGroup]="dispositivoForm" (ngSubmit)="guardar()" class="form-container">
     <div class="card-section">
@@ -40,9 +41,12 @@
           Nuevo
         </button>
       }
+      <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
+        Cancelar
+      </button>
     </div>
   </form>
-
+  }
   <hr />
 
   <h2>Dispositivos registrados</h2>
@@ -73,6 +77,14 @@
       </div>
       <small>{{ totalElements }} dispositivos encontrados</small>
     </div>
+
+    <button type="button"
+            class="btn-nuevo"
+            *ngIf="!mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nuevo Dispositivo
+    </button>
   </div>
 
   <div class="table-wrapper">
@@ -93,9 +105,9 @@
           <td>{{ dispositivo.empresaNombre }}</td>
           <td>{{ dispositivo.activo ? 'Activo' : 'Inactivo' }}</td>
           <td>
-            <button class="btn-editar" (click)="editar(dispositivo)">Editar</button>
-            <button *ngIf="dispositivo.activo" class="btn-eliminar" (click)="eliminar(dispositivo.id!)">Deshabilitar</button>
-            <button *ngIf="!dispositivo.activo" class="btn-habilitar" (click)="habilitar(dispositivo.id!)">Habilitar</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(dispositivo)"><i class="bx bx-pencil"></i></button>
+            <button *ngIf="dispositivo.activo" class="btn-eliminar" aria-label="Deshabilitar" data-tooltip="Deshabilitar" (click)="eliminar(dispositivo.id!)"><i class="bx bx-trash"></i></button>
+            <button *ngIf="!dispositivo.activo" class="btn-habilitar" aria-label="Habilitar" data-tooltip="Habilitar" (click)="habilitar(dispositivo.id!)"><i class="bx bx-check"></i></button>
           </td>
         </tr>
       </tbody>

@@ -1,5 +1,5 @@
 <div class="container">
-  @if (esSuperAdmin || esAdminEmpresa) {
+  @if ((esSuperAdmin || esAdminEmpresa) && mostrarFormulario) {
     <h2>{{ editando ? 'Editar Activo' : 'Crear Activo' }}</h2>
     <form [formGroup]="activoForm" (ngSubmit)="guardar()" class="form-container">
       <div class="card-section">
@@ -156,6 +156,9 @@
             Nuevo
           </button>
         }
+        <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
+          Cancelar
+        </button>
       </div>
     </form>
   }
@@ -193,6 +196,14 @@
       </div>
       <small>{{ totalElements }} activos encontrados</small>
     </div>
+
+    <button type="button"
+            class="btn-nuevo-activo"
+            *ngIf="(esSuperAdmin || esAdminEmpresa) && !mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nuevo Activo
+    </button>
   </div>
 
   <div class="table-wrapper">
@@ -223,9 +234,9 @@
           <td>{{ activo.proveedor.nombre }}</td>
           <td>{{ activo.empresa.nombre }}</td>
           <td>
-            <button class="btn-editar" (click)="editar(activo)">Editar</button>
-            <button *ngIf="activo.estadoActual !== 'BAJA'" class="btn-eliminar" (click)="darDeBaja(activo.id!)">Dar Baja</button>
-            <button class="btn-ver" (click)="abrirModalActivo(activo)">Ver</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(activo)"><i class="bx bx-pencil"></i></button>
+            <button *ngIf="activo.estadoActual !== 'BAJA'" class="btn-eliminar" aria-label="Dar de Baja" data-tooltip="Dar de Baja" (click)="darDeBaja(activo.id!)"><i class="bx bx-trash"></i></button>
+            <button class="btn-ver" aria-label="Ver" data-tooltip="Ver" (click)="abrirModalActivo(activo)"><i class="bx bx-show"></i></button>
           </td>
         </tr>
       </tbody>

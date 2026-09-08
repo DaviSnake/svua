@@ -1,5 +1,5 @@
 <div class="container">
-  @if (esSuperAdmin || esAdminEmpresa) {
+  @if ((esSuperAdmin || esAdminEmpresa) && mostrarFormulario) {
     <h2>{{ editando ? 'Editar Repuesto o Fungible' : 'Crear Repuesto o Fungible' }}</h2>
     <form [formGroup]="repuestoForm" (ngSubmit)="guardar()" class="form-container">
       <div class="card-section">
@@ -100,6 +100,9 @@
             Nuevo
           </button>
         }
+        <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
+          Cancelar
+        </button>
       </div>
     </form>
   }
@@ -138,6 +141,14 @@
       </div>
       <small>{{ totalElements }} repuestos encontrados</small>
     </div>
+
+    <button type="button"
+            class="btn-nuevo"
+            *ngIf="(esSuperAdmin || esAdminEmpresa) && !mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nuevo Repuesto
+    </button>
   </div>
   <div class="table-wrapper">
     <table>
@@ -165,8 +176,8 @@
           <td>{{ repuesto.tipoRepuesto }}</td>
           <td>{{ repuesto.empresa.nombre }}</td>
           <td>
-            <button class="btn-editar" (click)="editar(repuesto)">Editar</button>
-            <button *ngIf="repuesto.activo" class="btn-eliminar" (click)="eliminar(repuesto.id!)">Eliminar</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(repuesto)"><i class="bx bx-pencil"></i></button>
+            <button *ngIf="repuesto.activo" class="btn-eliminar" aria-label="Eliminar" data-tooltip="Eliminar" (click)="eliminar(repuesto.id!)"><i class="bx bx-trash"></i></button>
           </td>
         </tr>
       </tbody>

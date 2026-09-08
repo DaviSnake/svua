@@ -1,5 +1,5 @@
 <div class="container">
-  @if (esSuperAdmin || esAdminEmpresa) {
+  @if ((esSuperAdmin || esAdminEmpresa) && mostrarFormulario) {
     <h2>{{ editando ? 'Editar Proveedor' : 'Crear Proveedor' }}</h2>
     <form [formGroup]="proveedorForm" (ngSubmit)="guardar()" class="form-container">
       <div class="card-section">
@@ -85,6 +85,9 @@
             Nuevo
           </button>
         }
+        <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
+          Cancelar
+        </button>
       </div>
     </form>
   }
@@ -123,6 +126,14 @@
       </div>
       <small>{{ totalElements }} proveedores encontrados</small>
     </div>
+
+    <button type="button"
+            class="btn-nuevo"
+            *ngIf="(esSuperAdmin || esAdminEmpresa) && !mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nuevo Proveedor
+    </button>
   </div>
   <div class="table-wrapper">
     <table>
@@ -148,8 +159,8 @@
           <td>{{ proveedor.email }}</td>
           <td>{{ proveedor.empresa.nombre }}</td>
           <td>
-            <button class="btn-editar" (click)="editar(proveedor)">Editar</button>
-            <button *ngIf="proveedor.activo" class="btn-eliminar" (click)="eliminar(proveedor.id!)">Eliminar</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(proveedor)"><i class="bx bx-pencil"></i></button>
+            <button *ngIf="proveedor.activo" class="btn-eliminar" aria-label="Eliminar" data-tooltip="Eliminar" (click)="eliminar(proveedor.id!)"><i class="bx bx-trash"></i></button>
           </td>
         </tr>
       </tbody>

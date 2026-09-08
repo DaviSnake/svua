@@ -216,20 +216,29 @@ tbody tr:hover {
 td:last-child {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  justify-content: flex-end;
 }
 
+/* 🎨 Botones de acción de la grilla como iconos (en vez de texto),
+   cuadrados y "fantasma" (fondo transparente, borde sutil) — cada
+   acción se distingue por el color del ícono/borde al hacer hover. */
 td button {
-  font-size: 13px;
-  padding: 8px 14px;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  box-shadow: none;
 }
 
 td button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+  transform: none;
+  box-shadow: none;
 }
 
 .acciones {
@@ -252,34 +261,58 @@ td button:hover {
   height: auto;
 }
 
-/* EDITAR */
-.btn-editar {
-  background: #2ecc71;
+/* CANCELAR (dentro de .acciones): más específico que ".acciones button"
+   de arriba para no quedar con el mismo acento sólido que "Guardar". */
+.acciones .btn-cancelar-form {
+  background: #95a5a6;
   color: white;
+}
+
+.acciones .btn-cancelar-form:hover {
+  background: #7f8c8d;
+}
+
+/* + NUEVO ACTIVO (toolbar, arriba de la tabla) */
+button.btn-nuevo-activo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  background: #3498db;
+  color: white;
+  flex: none;
+}
+
+button.btn-nuevo-activo:hover {
+  background: #2980b9;
+}
+
+/* EDITAR / ELIMINAR / VER: mismo look "fantasma" (borde sutil, sin
+   relleno), cada uno con su propio color de acento al pasar el mouse. */
+.btn-editar,
+.btn-eliminar,
+.btn-ver {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #7f8c8d;
 }
 
 .btn-editar:hover {
-  background: #27ae60;
-}
-
-/* ELIMINAR */
-.btn-eliminar {
-  background: #e74c3c;
-  color: white;
+  border-color: #2ecc71;
+  color: #2ecc71;
 }
 
 .btn-eliminar:hover {
-  background: #c0392b;
-}
-
-/* VER */
-.btn-ver {
-  background: #3498db;
-  color: white;
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 .btn-ver:hover {
-  background: #2980b9;
+  border-color: #3498db;
+  color: #3498db;
 }
 
 @media (max-width: 992px) {

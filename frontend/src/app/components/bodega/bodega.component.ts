@@ -51,6 +51,11 @@ export class BodegaComponent implements OnInit {
   esAdminEmpresa = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nueva
+  // Bodega" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   bodegaEditandoId: number | null = null;
   bodegaSeleccionado: any = null;
 
@@ -224,6 +229,7 @@ export class BodegaComponent implements OnInit {
               });
 
               this.cargarBodegas(); // 🔄 refrescar tabla
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -241,6 +247,7 @@ export class BodegaComponent implements OnInit {
       this.bodegaService.create(bodega).subscribe({
         next: () => {
           this.nuevo();
+          this.mostrarFormulario = false;
           this.cargarBodegas();
 
           Swal.fire({
@@ -273,6 +280,17 @@ export class BodegaComponent implements OnInit {
     this.mostrarNuevo = false;
   }
 
+  abrirFormularioNuevo() {
+    this.resetForm();
+    this.mostrarFormulario = true;
+  }
+
+  cancelarFormulario() {
+    this.resetForm();
+    this.mostrarNuevo = false;
+    this.mostrarFormulario = false;
+  }
+
   editar(bodega: Bodega) {
     this.editando = true;
     this.esSuperAdmin = this.authService.isAdmin();
@@ -292,6 +310,8 @@ export class BodegaComponent implements OnInit {
     if (this.authService.isAdmin() || this.authService.isAdminEmpresa()){
       this.mostrarNuevo = true;
     }
+
+    this.mostrarFormulario = true;
   }
 
   eliminar(id: number) {

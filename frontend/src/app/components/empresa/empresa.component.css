@@ -171,6 +171,53 @@ button[type="button"]:hover {
   align-items: center;
 }
 
+/* CANCELAR (dentro de .acciones): más específico que el botón submit
+   para no quedar con el mismo acento sólido que "Crear/Actualizar". */
+.acciones .btn-cancelar-form {
+  background: #95a5a6;
+  color: white;
+}
+
+.acciones .btn-cancelar-form:hover {
+  background: #7f8c8d;
+}
+
+/* TOOLBAR: agrupa el filtro y "+ Nueva Empresa" en una misma fila */
+.toolbar-grilla {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.toolbar-grilla .filtro-grilla {
+  flex: 1;
+  min-width: 240px;
+}
+
+.filtro-grilla .filtro {
+  margin-bottom: 4px;
+}
+
+/* + NUEVA EMPRESA (toolbar, arriba de la tabla) */
+button.btn-nuevo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  background: #3498db;
+  color: white;
+  flex: none;
+}
+
+button.btn-nuevo:hover {
+  background: #2980b9;
+}
+
 /* INPUT FILTRO */
 /* 🐛 FIX: este selector nunca matcheaba el input real (su placeholder
    es "🔍 Buscar empresa...", no "Buscar..."), asi que en escritorio el
@@ -242,6 +289,7 @@ td:last-child {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 td button {
@@ -256,28 +304,42 @@ td button:hover {
   box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
 
-/* EDITAR */
-/* 🐛 FIX: antes usaba :first-child/:last-child, que se rompe apenas se
+/* EDITAR / ELIMINAR: iconos "fantasma" (fondo transparente, borde sutil),
+   cuadrados, cada uno con su propio color de acento al hacer hover.
+   🐛 FIX: antes usaba :first-child/:last-child, que se rompe apenas se
    agrega un tercer boton condicional (🖨️ Códigos) - "Eliminar" dejaba de
    ser el last-child y perdia su color rojo. Con clases explicitas el
    orden/cantidad de botones ya no importa. */
-td button.btn-editar {
-  background: #2ecc71;
-  color: white;
+td button.btn-editar,
+td button.btn-eliminar {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #7f8c8d;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+td button.btn-editar:hover,
+td button.btn-eliminar:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 td button.btn-editar:hover {
-  background: #27ae60;
-}
-
-/* ELIMINAR */
-td button.btn-eliminar {
-  background: #e74c3c;
-  color: white;
+  border-color: #2ecc71;
+  color: #2ecc71;
 }
 
 td button.btn-eliminar:hover {
-  background: #c0392b;
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 /* IMPRIMIR CÓDIGOS QR/EAN13 */

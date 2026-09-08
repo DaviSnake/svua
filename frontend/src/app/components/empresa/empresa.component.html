@@ -3,7 +3,7 @@
   <h2>🏢 Gestión de Empresas</h2>
 
   <!-- FORM -->
-  <form [formGroup]="empresaForm" (ngSubmit)="guardar()">
+  <form *ngIf="mostrarFormulario" [formGroup]="empresaForm" (ngSubmit)="guardar()">
 
     <!-- ========================= -->
     <!-- DATOS EMPRESA -->
@@ -111,7 +111,7 @@
         {{ editando ? 'Actualizar' : 'Crear' }}
       </button>
 
-      <button type="button" (click)="resetForm()" *ngIf="editando">
+      <button type="button" class="btn-cancelar-form" (click)="cancelarFormulario()">
         Cancelar
       </button>
     </div>
@@ -119,16 +119,28 @@
   </form>
 
   <!-- ========================= -->
-  <!-- FILTRO -->
+  <!-- TOOLBAR: FILTRO + NUEVO EMPRESA -->
   <!-- ========================= -->
-  <input
-    class="filtro"
-    type="text"
-    placeholder="🔍 Buscar empresa..."
-    [(ngModel)]="filtro"
-    (input)="filtrar()"
-  />
-  <small class="total-encontrados">{{ empresasFiltradas.length }} empresas encontradas</small>
+  <div class="toolbar-grilla">
+    <div class="filtro-grilla">
+      <input
+        class="filtro"
+        type="text"
+        placeholder="🔍 Buscar empresa..."
+        [(ngModel)]="filtro"
+        (input)="filtrar()"
+      />
+      <small class="total-encontrados">{{ empresasFiltradas.length }} empresas encontradas</small>
+    </div>
+
+    <button type="button"
+            class="btn-nuevo"
+            *ngIf="!mostrarFormulario"
+            (click)="abrirFormularioNuevo()">
+      <i class="bx bx-plus"></i>
+      Nueva Empresa
+    </button>
+  </div>
 
   <!-- ========================= -->
   <!-- TABLA -->
@@ -157,8 +169,8 @@
           </td>
 
           <td>
-            <button class="btn-editar" (click)="editar(e)">Editar</button>
-            <button class="btn-eliminar" (click)="eliminar(e.id!)">Eliminar</button>
+            <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(e)"><i class="bx bx-pencil"></i></button>
+            <button class="btn-eliminar" aria-label="Eliminar" data-tooltip="Eliminar" (click)="eliminar(e.id!)"><i class="bx bx-trash"></i></button>
             <!-- 🖨️ Solo si la empresa tiene QR y/o EAN13 habilitado -->
             <button
               *ngIf="e.codigoQrHabilitado || e.codigoEan13Habilitado"

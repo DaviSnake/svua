@@ -51,6 +51,11 @@ export class TipoActivoComponent implements OnInit {
   esAdminEmpresa = false;
   editando: boolean = false;
   mostrarNuevo = false;
+  // 🎨 Controla si el formulario de creación/edición está expandido o
+  // colapsado (por defecto oculto, se muestra al presionar "+ Nuevo
+  // Tipo Activo" o al editar una fila; se vuelve a ocultar al guardar o
+  // cancelar).
+  mostrarFormulario = false;
   tipoActivoEditandoId: number | null = null;
   tipoActivoSeleccionado: any = null;
 
@@ -230,6 +235,7 @@ export class TipoActivoComponent implements OnInit {
 
               this.cargarTipoActivos(); // 🔄 refrescar tabla
               this.nuevo();
+              this.mostrarFormulario = false;
             },
             error: (err) => {
               console.log(err.error); // 👈 DEBUG
@@ -247,6 +253,7 @@ export class TipoActivoComponent implements OnInit {
       this.tipoActivoService.create(tipoActivo).subscribe({
         next: () => {
           this.resetForm();
+          this.mostrarFormulario = false;
           this.cargarTipoActivos();
 
           Swal.fire({
@@ -278,7 +285,18 @@ export class TipoActivoComponent implements OnInit {
       this.resetForm();
       this.mostrarNuevo = false;
     }
-  
+
+    abrirFormularioNuevo() {
+      this.resetForm();
+      this.mostrarFormulario = true;
+    }
+
+    cancelarFormulario() {
+      this.resetForm();
+      this.mostrarNuevo = false;
+      this.mostrarFormulario = false;
+    }
+
     editar(tipoActivo: TipoActivo) {
       this.editando = true;
       this.esSuperAdmin = this.authService.isAdmin();
@@ -301,8 +319,9 @@ export class TipoActivoComponent implements OnInit {
         this.mostrarNuevo = true;
       }
 
+      this.mostrarFormulario = true;
     }
-  
+
   eliminar(id: number) {
     Swal.fire({
       title: '¿Estás seguro?',
