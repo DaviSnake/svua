@@ -175,19 +175,23 @@
             <button
               *ngIf="e.codigoQrHabilitado || e.codigoEan13Habilitado"
               class="btn-pdf"
+              aria-label="Códigos QR/EAN13"
+              [attr.data-tooltip]="generandoPdfId === e.id ? 'Generando...' : 'Códigos QR/EAN13'"
               [disabled]="generandoPdfId === e.id"
               (click)="generarPdfCodigos(e)"
             >
-              {{ generandoPdfId === e.id ? 'Generando...' : '🖨️ Códigos' }}
+              <i class="bx" [ngClass]="generandoPdfId === e.id ? 'bx-loader-alt bx-spin' : 'bx-printer'"></i>
             </button>
             <!-- 🔒 Respaldo puntual de solo esta empresa (ver EmpresaBackupService) -->
             <button
               *ngIf="esSuperAdmin"
               class="btn-backup"
+              aria-label="Respaldo"
+              [attr.data-tooltip]="descargandoBackupId === e.id ? 'Generando...' : 'Respaldo'"
               [disabled]="descargandoBackupId === e.id"
               (click)="descargarBackup(e)"
             >
-              {{ descargandoBackupId === e.id ? 'Generando...' : '💾 Respaldo' }}
+              <i class="bx" [ngClass]="descargandoBackupId === e.id ? 'bx-loader-alt bx-spin' : 'bx-archive'"></i>
             </button>
           </td>
         </tr>

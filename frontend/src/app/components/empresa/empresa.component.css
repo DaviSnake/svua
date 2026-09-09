@@ -342,32 +342,42 @@ td button.btn-eliminar:hover {
   color: #e74c3c;
 }
 
-/* IMPRIMIR CÓDIGOS QR/EAN13 */
-td button.btn-pdf {
-  background: #34495e;
-  color: white;
+/* IMPRIMIR CÓDIGOS QR/EAN13 y RESPALDO (solo SUPER_ADMIN): mismo look
+   "fantasma" cuadrado que Editar/Eliminar, cada uno con su propio color
+   de acento al pasar el mouse. */
+td button.btn-pdf,
+td button.btn-backup {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #7f8c8d;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+td button.btn-pdf:hover,
+td button.btn-backup:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 td button.btn-pdf:hover {
-  background: #2c3e50;
-}
-
-td button.btn-pdf:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* RESPALDO POR EMPRESA (solo SUPER_ADMIN) */
-td button.btn-backup {
-  background: #8e44ad;
-  color: white;
+  border-color: #34495e;
+  color: #34495e;
 }
 
 td button.btn-backup:hover {
-  background: #703688;
+  border-color: #8e44ad;
+  color: #8e44ad;
 }
 
+td button.btn-pdf:disabled,
 td button.btn-backup:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -540,30 +550,21 @@ td button.btn-backup:disabled {
     text-align: center;
   }
 
+  /* 🎨 Los botones de accion son iconos cuadrados: en vez de estirarlos
+     a 100% de ancho, quedan en una fila compacta, tamaño touch-friendly
+     (44x44). */
   td button {
-    min-height: 44px;
-  }
-
-  /* 🎨 Editar/Eliminar son iconos cuadrados (touch-friendly, 44x44) en
-     una misma fila; los botones de texto (Códigos/Respaldo) siguen
-     ocupando su propia fila completa, como antes. */
-  td button.btn-editar,
-  td button.btn-eliminar {
     width: 44px;
     height: 44px;
+    min-height: 44px;
     flex: none;
-  }
-
-  td button.btn-pdf,
-  td button.btn-backup {
-    width: 100%;
-    flex: 1 1 100%;
   }
 
   td:last-child {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: flex-start;
     gap: 8px;
   }
 
