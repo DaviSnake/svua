@@ -3,7 +3,7 @@ package cl.aracridav.svua.inventario.activo.dto.request;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import cl.aracridav.svua.shared.json.LenientLocalDateDeserializer;
 import lombok.Data;

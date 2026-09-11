@@ -1,12 +1,11 @@
 package cl.aracridav.svua.shared.json;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Deserializador tolerante para {@link LocalDate}.
@@ -25,10 +24,10 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
  * global de LocalDate para no relajar la validación en otros campos de
  * fecha del sistema.
  */
-public class LenientLocalDateDeserializer extends JsonDeserializer<LocalDate> {
+public class LenientLocalDateDeserializer extends ValueDeserializer<LocalDate> {
 
     @Override
-    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) {
 
         String texto = p.getValueAsString();
 
