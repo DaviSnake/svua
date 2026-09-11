@@ -4,22 +4,22 @@ import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import cl.aracridav.svua.config.security.UsuarioPrincipal;
 import cl.aracridav.svua.shared.util.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class EmpresaFilter {
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Autowired
-    private RlsContextService rlsContextService;
+    private final RlsContextService rlsContextService;
 
     public void activarFiltroEmpresa() {
 
