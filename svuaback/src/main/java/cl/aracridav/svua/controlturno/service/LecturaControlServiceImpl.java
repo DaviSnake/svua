@@ -83,12 +83,12 @@ public class LecturaControlServiceImpl implements LecturaControlService {
 
         Long empresaId = SecurityUtils.getEmpresaId();
 
-        Specification<LecturaControl> spec = Specification
-                .where(LecturaControlSpecs.empresaId(empresaId))
-                .and(LecturaControlSpecs.puntoControlId(puntoControlId))
-                .and(LecturaControlSpecs.desde(desde))
-                .and(LecturaControlSpecs.hasta(hasta))
-                .and(LecturaControlSpecs.turno(turno));
+        Specification<LecturaControl> spec = Specification.allOf(
+                LecturaControlSpecs.empresaId(empresaId),
+                LecturaControlSpecs.puntoControlId(puntoControlId),
+                LecturaControlSpecs.desde(desde),
+                LecturaControlSpecs.hasta(hasta),
+                LecturaControlSpecs.turno(turno));
 
         return repository.findAll(spec, pageable).map(this::mapResponse);
     }
@@ -131,12 +131,12 @@ public class LecturaControlServiceImpl implements LecturaControlService {
 
         for (PuntoControl punto : puntos) {
 
-            Specification<LecturaControl> specGrafico = Specification
-                    .where(LecturaControlSpecs.empresaId(empresaId))
-                    .and(LecturaControlSpecs.puntoControlId(punto.getId()))
-                    .and(LecturaControlSpecs.desde(desdeEfectivo))
-                    .and(LecturaControlSpecs.hasta(hastaEfectivo))
-                    .and(LecturaControlSpecs.turno(turno));
+            Specification<LecturaControl> specGrafico = Specification.allOf(
+                    LecturaControlSpecs.empresaId(empresaId),
+                    LecturaControlSpecs.puntoControlId(punto.getId()),
+                    LecturaControlSpecs.desde(desdeEfectivo),
+                    LecturaControlSpecs.hasta(hastaEfectivo),
+                    LecturaControlSpecs.turno(turno));
 
             List<LecturaControl> lecturas = repository.findAll(specGrafico, Sort.by(Sort.Direction.ASC, "fechaHora"));
 

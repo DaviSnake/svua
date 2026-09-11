@@ -9,8 +9,8 @@ import cl.aracridav.svua.controlturno.enums.TurnoTrabajo;
 
 // 🔥 Predicados dinamicos para el listado/dashboard de lecturas (ver
 // LecturaControlServiceImpl). Cada metodo devuelve null cuando el
-// filtro no aplica; Specification.where(...).and(...) ignora los specs
-// null automaticamente, asi el predicado ni siquiera se arma en el SQL
+// filtro no aplica; Specification.allOf(...) ignora los specs null
+// automaticamente, asi el predicado ni siquiera se arma en el SQL
 // final cuando el filtro viene vacio (ver LecturaControlRepository
 // para el motivo: evitar el bug de tipos de Postgres con parametros
 // LocalDateTime null en un "? IS NULL").
