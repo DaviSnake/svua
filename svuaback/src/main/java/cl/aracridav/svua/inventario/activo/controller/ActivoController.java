@@ -94,9 +94,7 @@ public class ActivoController {
         // 🔍 busqueda es opcional: filtra por codigo interno o nombre.
         Page<ActivoResponse> response = activoService.mostrarActivos(pageable, empresaId, busqueda);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize(

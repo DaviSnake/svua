@@ -59,9 +59,7 @@ public class EmpresaController {
         List<EmpresaResponse> response =
                 empresaService.obtenerEmpresa();
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize(

@@ -2,7 +2,6 @@ package cl.aracridav.svua.mantenimiento.repuesto.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,9 +50,7 @@ public class RepuestoController {
         // 🔥 busqueda es opcional: filtra por codigo o nombre.
         Page<RepuestoResponse> response = repuestoService.listarRepuestos(pegable, empresaId, busqueda);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize(
