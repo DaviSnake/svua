@@ -66,13 +66,23 @@ public class AuthController {
     private String frontendUrl; // 👈 AQUÍ, fuera del método
 
     // 🔐 Mensaje unico para TODO el flujo de login previo a autenticar con
-    // exito: antes, usuario-no-existe / usuario-inactivo / empresa-inactiva
-    // / plan-vencido / password-incorrecta devolvian mensajes DISTINTOS,
-    // lo que permitia a un atacante enumerar que emails/usuarios existen
-    // en el sistema probando uno por uno. El detalle real del motivo sigue
-    // quedando registrado server-side (comentarios/logs), solo el mensaje
-    // que ve el cliente se unifico.
+    // exito: usuario-no-existe / usuario-inactivo / password-incorrecta
+    // devuelven este mismo mensaje generico, para que un atacante no pueda
+    // enumerar que emails/usuarios existen en el sistema probando uno por
+    // uno. El detalle real del motivo sigue quedando registrado server-side
+    // (comentarios/logs), solo el mensaje que ve el cliente se unifico.
     private static final String CREDENCIALES_INVALIDAS = "Credenciales inválidas";
+
+    // 🔓 A diferencia de CREDENCIALES_INVALIDAS, estos mensajes SI son
+    // especificos -- pero solo se lanzan DESPUES de que
+    // authenticationManager.authenticate(...) ya confirmo que la
+    // contraseña es correcta (ver login()). Revelar el motivo del bloqueo
+    // en ese punto no permite enumerar cuentas: quien llega hasta ahi ya
+    // demostro conocer una contraseña real, no esta adivinando.
+    private static final String EMPRESA_BLOQUEADA =
+        "Tu empresa se encuentra bloqueada. Contacta al administrador del sistema.";
+    private static final String PLAN_VENCIDO =
+        "El plan de tu empresa ha vencido. Contacta al administrador para renovarlo.";
 
     @Transactional
     @PostMapping("/login")
@@ -106,22 +116,6 @@ public class AuthController {
 
         Empresa empresa = usuario.getEmpresa();
 
-        // 🔒 2️⃣ Empresa activa (antes: "La empresa se encuentra Inactiva",
-        // revelaba existencia de usuario/empresa)
-        if (!empresa.getActiva()) {
-                throw new BusinessException(CREDENCIALES_INVALIDAS);
-        }
-
-        // 🔒 3️⃣ Validar vencimiento de plan (antes: "El Plan de la Empresa
-        // ha vencido", revelaba existencia de usuario/empresa)
-        if (empresa.getFechaFinPlan().isBefore(LocalDate.now())) {
-
-                empresa.setActiva(false);
-                empresaRepository.save(empresa);
-
-                throw new BusinessException(CREDENCIALES_INVALIDAS);
-        }
-
         try{
                 auth = authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -154,6 +148,21 @@ public class AuthController {
                 throw new BusinessException(CREDENCIALES_INVALIDAS);
         }
 
+        // 🔓 2️⃣ Empresa activa / 3️⃣ plan vigente: se validan RECIEN ACA,
+        // despues de confirmar que la contraseña es correcta (ver
+        // EMPRESA_BLOQUEADA/PLAN_VENCIDO mas arriba para el motivo de por
+        // que esto es seguro).
+        if (!empresa.getActiva()) {
+                throw new BusinessException(EMPRESA_BLOQUEADA);
+        }
+
+        if (empresa.getFechaFinPlan().isBefore(LocalDate.now())) {
+
+                empresa.setActiva(false);
+                empresaRepository.save(empresa);
+
+                throw new BusinessException(PLAN_VENCIDO);
+        }
 
         String accessToken = jwtService.generateToken(userPrincipal, tokenJti);
 
