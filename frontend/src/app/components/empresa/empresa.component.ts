@@ -260,6 +260,55 @@ export class EmpresaComponent implements OnInit {
     });
   }
 
+  // 🔒 Bloquear/desbloquear: alterna Empresa.activa (ya usado por
+  // AuthController para negar el login a TODOS los usuarios de la
+  // empresa) sin tocar fechaFinPlan, a diferencia de eliminar() (que
+  // es una baja permanente y marca el plan como vencido). Reversible:
+  // a diferencia de "Eliminar", esta accion se puede deshacer
+  // volviendo a presionar el mismo boton.
+  toggleBloqueo(e: Empresa) {
+    const estaActiva = e.activa !== false;
+    const accion = estaActiva ? 'bloquear' : 'desbloquear';
+
+    Swal.fire({
+      title: `¿${estaActiva ? 'Bloquear' : 'Desbloquear'} "${e.nombre}"?`,
+      text: estaActiva
+        ? 'Ningún usuario de esta empresa podrá iniciar sesión hasta que la desbloquees.'
+        : 'Los usuarios de esta empresa podrán volver a iniciar sesión.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      // 🐛 FIX: hay que anular tipoPlan (null) en el payload -- si se
+      // manda el objeto "e" completo con su tipoPlan actual (no nulo),
+      // el backend interpreta que ademas se quiere renovar el plan y
+      // aplicarConfiguracionPlan() fuerza activa=true SIEMPRE,
+      // pisando el false que se acaba de setear una linea antes (ver
+      // EmpresaServiceImpl.actualizarEmpresa/aplicarConfiguracionPlan).
+      this.empresaService.update(e.id!, { ...e, activa: !estaActiva, tipoPlan: null }).subscribe({
+        next: () => {
+          this.cargarEmpresas();
+          Swal.fire({
+            icon: 'success',
+            title: estaActiva ? 'Empresa bloqueada' : 'Empresa desbloqueada',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.error || `No se pudo ${accion} la empresa`
+          });
+        }
+      });
+    });
+  }
+
   filtrar() {
     this.empresasFiltradas = this.empresas.filter(e =>
       e.nombre.toLowerCase().includes(this.filtro.toLowerCase()) ||

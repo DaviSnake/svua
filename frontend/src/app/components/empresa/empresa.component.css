@@ -311,6 +311,7 @@ td button:hover {
    ser el last-child y perdia su color rojo. Con clases explicitas el
    orden/cantidad de botones ya no importa. */
 td button.btn-editar,
+td button.btn-bloquear,
 td button.btn-eliminar {
   background: transparent;
   border: 1px solid #ccc;
@@ -327,6 +328,7 @@ td button.btn-eliminar {
 }
 
 td button.btn-editar:hover,
+td button.btn-bloquear:hover,
 td button.btn-eliminar:hover {
   transform: none;
   box-shadow: none;
@@ -337,9 +339,36 @@ td button.btn-editar:hover {
   color: #2ecc71;
 }
 
+/* 🔒 Bloquear/Desbloquear: naranja (misma familia de "advertencia" que
+   el resto de la app), sin importar el sentido de la accion. */
+td button.btn-bloquear:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
 td button.btn-eliminar:hover {
   border-color: #e74c3c;
   color: #e74c3c;
+}
+
+/* 🏷️ Badge de estado (columna "Estado"): mismo look que .badge (plan),
+   una pildora con color solido segun activa/bloqueada. */
+.badge-estado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+}
+
+.badge-estado.activa {
+  background: #2ecc71;
+}
+
+.badge-estado.bloqueada {
+  background: #e74c3c;
 }
 
 /* IMPRIMIR CÓDIGOS QR/EAN13 y RESPALDO (solo SUPER_ADMIN): mismo look
@@ -543,7 +572,8 @@ td button.btn-backup:disabled {
   td:nth-child(2)::before { content: "RUT"; }
   td:nth-child(3)::before { content: "Email"; }
   td:nth-child(4)::before { content: "Plan"; }
-  td:nth-child(5)::before {
+  td:nth-child(5)::before { content: "Estado"; }
+  td:nth-child(6)::before {
     content: "Acciones";
     display: block;
     width: 100%;

@@ -153,6 +153,7 @@
           <th>RUT</th>
           <th>Email</th>
           <th>Plan</th>
+          <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -167,9 +168,20 @@
               {{ e.tipoPlan }}
             </span>
           </td>
+          <td>
+            <span class="badge-estado" [ngClass]="e.activa === false ? 'bloqueada' : 'activa'">
+              {{ e.activa === false ? 'Bloqueada' : 'Activa' }}
+            </span>
+          </td>
 
           <td>
             <button class="btn-editar" aria-label="Editar" data-tooltip="Editar" (click)="editar(e)"><i class="bx bx-pencil"></i></button>
+            <button class="btn-bloquear"
+                    [attr.aria-label]="e.activa === false ? 'Desbloquear' : 'Bloquear'"
+                    [attr.data-tooltip]="e.activa === false ? 'Desbloquear' : 'Bloquear'"
+                    (click)="toggleBloqueo(e)">
+              <i class="bx" [ngClass]="e.activa === false ? 'bx-lock-open-alt' : 'bx-lock-alt'"></i>
+            </button>
             <button class="btn-eliminar" aria-label="Eliminar" data-tooltip="Eliminar" (click)="eliminar(e.id!)"><i class="bx bx-trash"></i></button>
             <!-- 🖨️ Solo si la empresa tiene QR y/o EAN13 habilitado -->
             <button
