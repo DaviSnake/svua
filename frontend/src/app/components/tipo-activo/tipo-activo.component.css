@@ -201,6 +201,25 @@ td {
   border-bottom: 1px solid #eee;
 }
 
+/* 🎨 Sin esto la columna Descripción se estira a lo ancho de todo el
+   texto en una sola linea (empujando el resto de la tabla), porque
+   table-layout:auto le da todo el espacio sobrante que necesite. Con
+   un max-width fijo (solo en desktop/tablet, donde la tabla es tabla
+   de verdad), el texto pasa a varias lineas en vez de ensanchar la
+   columna/tabla. En mobile la tarjeta ya maneja su propio ancho, asi
+   que no hace falta limitarlo ahi. */
+.col-descripcion {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 769px) {
+  .col-descripcion {
+    max-width: 260px;
+  }
+}
+
 tbody td {
   font-size: 14px;
   padding: 8px; /* menos espacio */

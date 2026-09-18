@@ -116,7 +116,7 @@
         <tr *ngFor="let ubicacion of ubicaciones; trackBy: trackByUbicacionId">
           <td>{{ ubicacion.id }}</td>
           <td>{{ ubicacion.nombre }}</td>
-          <td>{{ ubicacion.descripcion }}</td>
+          <td class="col-descripcion">{{ ubicacion.descripcion }}</td>
           <td>{{ ubicacion.direccion }}</td>
           <td>{{ ubicacion.empresa.nombre }}</td>
           <td>

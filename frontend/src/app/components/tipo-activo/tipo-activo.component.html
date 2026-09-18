@@ -125,7 +125,7 @@
         <tr *ngFor="let tipoActivo of tipoActivos; trackBy: trackByTipoActivoId">
           <td>{{ tipoActivo.id }}</td>
           <td>{{ tipoActivo.nombre }}</td>
-          <td>{{ tipoActivo.descripcion }}</td>
+          <td class="col-descripcion">{{ tipoActivo.descripcion }}</td>
           <td class="text-right">{{ tipoActivo.vidaUtilReferencialMeses | number:'1.0-0' }}</td>
           <td>{{ tipoActivo.empresa.nombre }}</td>
           <td>

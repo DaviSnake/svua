@@ -226,7 +226,7 @@
         <tr *ngFor="let activo of activos; trackBy: trackByActivoId">
           <td>{{ activo.codigoInterno }}</td>
           <td>{{ activo.nombre }}</td>
-          <td>{{ activo.descripcion }}</td>
+          <td class="col-descripcion">{{ activo.descripcion }}</td>
           <td>{{ activo.tipoActivo.nombre }}</td>
           <td>{{ activo.marca }}</td>
           <td>{{ activo.modelo }}</td>
