@@ -1,6 +1,8 @@
 package cl.aracridav.svua.empresa.service;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import cl.aracridav.svua.auth.dto.response.AuthResponse;
@@ -397,16 +398,45 @@ public class EmpresaServiceImpl implements EmpresaService {
             throw new BusinessException("El logo no puede superar 2MB");
         }
 
-        String contentType = archivo.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BusinessException("El logo debe ser una imagen");
+        // 🔒 El "Content-Type" que manda el cliente es solo una etiqueta
+        // que el propio atacante controla (cualquier request puede
+        // declarar "image/svg+xml" y adjuntar un SVG con <script>
+        // embebido). Este endpoint es publico y sin autenticacion
+        // (GET /public/empresas/{id}/logo, para que <img src> funcione),
+        // asi que un archivo asi quedaria serviendose con ese mismo
+        // Content-Type -- XSS almacenado. Por eso se decodifica el
+        // archivo de verdad con ImageIO: si no es un raster real
+        // (PNG/JPEG/GIF/BMP -- los formatos que el JDK trae de fabrica),
+        // se rechaza. ImageIO no tiene lector de SVG registrado, asi que
+        // esto tambien bloquea SVG sin necesitar una lista negra.
+        String formatoDetectado;
+        try (var iis = ImageIO.createImageInputStream(archivo.getInputStream())) {
+            var lectores = iis == null ? null : ImageIO.getImageReaders(iis);
+            if (iis == null || lectores == null || !lectores.hasNext()) {
+                throw new BusinessException("El logo debe ser una imagen válida (PNG, JPG, GIF o BMP)");
+            }
+            var lector = lectores.next();
+            formatoDetectado = lector.getFormatName().toLowerCase();
+            lector.setInput(iis);
+            BufferedImage imagenDecodificada = lector.read(0);
+            if (imagenDecodificada == null) {
+                throw new BusinessException("El logo debe ser una imagen válida (PNG, JPG, GIF o BMP)");
+            }
+        } catch (IOException e) {
+            throw new BusinessException("El logo debe ser una imagen válida (PNG, JPG, GIF o BMP)");
         }
 
         Empresa empresa = obtenerEmpresa(empresaId);
 
         String rutaAnterior = empresa.getLogoRutaArchivo();
 
-        String ruta = guardarLogoSeguro(archivo, empresa);
+        // 🔒 La extension del archivo guardado se fija segun el FORMATO
+        // REAL detectado por ImageIO, nunca segun el nombre de archivo
+        // que mando el cliente -- evita que alguien suba bytes validos
+        // de un formato pero con un nombre "logo.svg" (u otra extension
+        // no esperada) y quede servido despues con un Content-Type
+        // adivinado desde esa extension falsa.
+        String ruta = guardarLogoSeguro(archivo, empresa, formatoDetectado);
         empresa.setLogoRutaArchivo(ruta);
 
         Empresa guardada = empresaRepository.save(empresa);
@@ -455,7 +485,7 @@ public class EmpresaServiceImpl implements EmpresaService {
         }
     }
 
-    private String guardarLogoSeguro(MultipartFile archivo, Empresa empresa) {
+    private String guardarLogoSeguro(MultipartFile archivo, Empresa empresa, String formatoDetectado) {
 
         try {
             Path carpeta = Paths.get("uploads/logos");
@@ -464,12 +494,10 @@ public class EmpresaServiceImpl implements EmpresaService {
                 Files.createDirectories(carpeta);
             }
 
-            String nombreLimpio = StringUtils.cleanPath(
-                archivo.getOriginalFilename() != null ? archivo.getOriginalFilename() : "logo");
-
-            String extension = nombreLimpio.contains(".")
-                ? nombreLimpio.substring(nombreLimpio.lastIndexOf('.'))
-                : "";
+            // 🔒 Extension fija segun el formato REAL detectado por
+            // ImageIO (ver subirLogo), no segun el nombre de archivo del
+            // cliente. "jpeg" se normaliza a ".jpg" por consistencia.
+            String extension = "." + ("jpeg".equals(formatoDetectado) ? "jpg" : formatoDetectado);
 
             // 🔥 Nombre fijo por empresa (no se le agrega timestamp): cada
             // subida reemplaza el logo anterior, así que solo debe existir
