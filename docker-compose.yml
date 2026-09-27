@@ -90,6 +90,14 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      # 🔒 Rol de SOLO LECTURA con BYPASSRLS dedicado al backup (ver
+      # scripts/crear-rol-svua-backup.sql) -- pisa el POSTGRES_USER/
+      # POSTGRES_PASSWORD del backend que trae el env_file de arriba.
+      # NUNCA usar el rol del backend aca: ese esta a proposito SIN
+      # BYPASSRLS (defensa en profundidad de RLS), y pg_dump necesita
+      # verlo todo para que el backup sirva de algo.
+      POSTGRES_USER: ${BACKUP_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BACKUP_POSTGRES_PASSWORD}
     volumes:
       - ./backups/postgres:/backups
       - ./scripts/backup-postgres.sh:/backup-postgres.sh:ro
