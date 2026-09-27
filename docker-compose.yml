@@ -37,6 +37,11 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      # 🔒 Activa application-prod.properties cuando el .env de ese
+      # ambiente trae SPRING_PROFILES_ACTIVE=prod (excluye los seeds de
+      # demo -- ver ese archivo). Vacio en dev/local: sin perfil activo,
+      # Flyway sigue trayendo la empresa/usuarios de demo como siempre.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     expose:
       - "8080"
     networks:

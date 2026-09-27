@@ -81,6 +81,9 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
             API_URL=${{ secrets.API_URL }}
+            SPRING_PROFILES_ACTIVE=prod
+            INIT_DEMO_ADMIN_EMAIL=${{ secrets.INIT_DEMO_ADMIN_EMAIL }}
+            INIT_DEMO_ADMIN_PASSWORD=${{ secrets.INIT_DEMO_ADMIN_PASSWORD }}
             ENVEOF
 
             else
