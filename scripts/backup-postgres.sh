@@ -40,6 +40,12 @@ PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
     -Fc \
     -f "${ARCHIVO}"
 
+# 🔒 pg_dump crea el archivo con el umask por defecto (644 -- legible
+# por cualquier usuario del sistema). Es un volcado completo de la
+# base de datos de produccion: nombres, correos, todo. Sin esto,
+# cualquier cuenta local podria leerlo directamente del disco.
+chmod 600 "${ARCHIVO}"
+
 echo "[$(date -Iseconds)] Backup completo: $(du -h "${ARCHIVO}" | cut -f1)"
 
 # Retencion: borra dumps de ESTA base (POSTGRES_DB) mas viejos que
