@@ -40,3 +40,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Proxy de desarrollo usado puntualmente para tomar capturas de pantalla
+# locales (ver .claude/launch.json, config "frontend-manual"); no aplica
+# al flujo normal de desarrollo.
+/proxy.conf.manual.js
