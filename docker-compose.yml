@@ -10,14 +10,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
-    # 🔒 Solo localhost: el backend se conecta por la red interna de
-    # Docker (network "internal"), nunca necesita este puerto expuesto
-    # a la interfaz publica. Antes esto era "${POSTGRES_HOST_PORT}:5432"
-    # (bind a 0.0.0.0) -- dejaba Postgres alcanzable desde internet.
+    # 🔒 POSTGRES_HOST_PORT debe incluir el bind a localhost (ej.
+    # "127.0.0.1:5432" en .env, ver .env.example) -- el backend se
+    # conecta por la red interna de Docker, nunca necesita este puerto
+    # expuesto a la interfaz publica. Un .env con solo el numero de
+    # puerto (sin "127.0.0.1:") deja Postgres alcanzable desde internet
+    # (0.0.0.0) -- exactamente lo que tenia prod antes de este fix.
     # Para conectarse desde afuera (ej. DBeaver), usar un tunel SSH:
     #   ssh -L 5432:localhost:${POSTGRES_HOST_PORT} usuario@servidor
     ports:
-      - "127.0.0.1:${POSTGRES_HOST_PORT}:5432"
+      - "${POSTGRES_HOST_PORT}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
