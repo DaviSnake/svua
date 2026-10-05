@@ -207,6 +207,22 @@ public class AuthController {
 
         Usuario usuario = oldToken.getUsuario();
 
+        // 🔒 Mismas validaciones de estado que login(): sin esto, una sesion
+        // que sigue renovando su token nunca se entera de que el usuario fue
+        // desactivado/bloqueado, la empresa fue bloqueada o eliminada, o el
+        // plan vencio (solo se validaba al iniciar sesion). Se responde 401
+        // para que el frontend cierre la sesion. El refresh token no se
+        // borra aca: la transaccion hace rollback al lanzar la excepcion, y
+        // igual queda inutilizable porque cada intento vuelve a fallar.
+        Empresa empresa = usuario.getEmpresa();
+
+        if (!usuario.getActivo()
+                || !empresa.getActiva()
+                || empresa.getFechaFinPlan().isBefore(LocalDate.now())) {
+
+            throw new InvalidRefreshTokenException("Sesión no válida");
+        }
+
         // 🔥 Eliminar token viejo (ROTACIÓN)
         refreshTokenService.deleteToken(oldToken);
 
