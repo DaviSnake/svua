@@ -8,18 +8,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import cl.aracridav.svua.empresa.entity.Empresa;
 import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.multitenancy.RlsContextService;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.util.CsvZipExporter;
 import lombok.RequiredArgsConstructor;
+import net.lingala.zip4j.io.outputstream.ZipOutputStream;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 // 🔒 Respaldo de UNA sola empresa (tenant): un .zip con un .csv por
 // tabla, pensado para archivo/auditoria puntual (ej. antes de
@@ -85,19 +88,23 @@ public class EmpresaBackupService {
         // con datos de otras empresas en silencio.
         verificarRolNoBypassRls();
 
-        if (!empresaRepository.existsById(empresaId)) {
-            throw new BusinessException("No existe una empresa con id " + empresaId);
-        }
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new BusinessException("No existe una empresa con id " + empresaId));
+
+        // 🔒 El zip sale cifrado (AES-256): para abrirlo se pide una clave,
+        // que es el RUT de la empresa sin puntos, guion ni digito verificador.
+        char[] clave = claveDesdeRut(empresa.getRut());
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-        try (ZipOutputStream zip = new ZipOutputStream(buffer)) {
+        try (ZipOutputStream zip = new ZipOutputStream(buffer, clave)) {
 
             rlsContextService.aplicarEmpresa(empresaId);
 
             List<String> tablas = jdbcTemplate.queryForList(SQL_TABLAS_CON_EMPRESA_ID, String.class);
             for (String tabla : tablas) {
-                csvZipExporter.exportarComoCsv(zip, tabla, "SELECT * FROM \"" + tabla + "\"");
+                byte[] csv = csvZipExporter.generarCsv(tabla, "SELECT * FROM \"" + tabla + "\"");
+                agregarEntrada(zip, tabla + ".csv", csv);
             }
 
             // 🔥 los adjuntos (logo, archivos de checklist de ordenes) viven
@@ -187,9 +194,41 @@ public class EmpresaBackupService {
     }
 
     private void copiarArchivoAZip(ZipOutputStream zip, Path archivo, String nombreEnZip) throws IOException {
-        zip.putNextEntry(new ZipEntry(nombreEnZip));
+        zip.putNextEntry(parametrosCifrados(nombreEnZip));
         Files.copy(archivo, zip);
         zip.closeEntry();
+    }
+
+    private void agregarEntrada(ZipOutputStream zip, String nombreEnZip, byte[] contenido) throws IOException {
+        zip.putNextEntry(parametrosCifrados(nombreEnZip));
+        zip.write(contenido);
+        zip.closeEntry();
+    }
+
+    // AES-256: el cifrado ZIP clasico (ZipCrypto) se rompe con facilidad.
+    // Para abrir el archivo hace falta 7-Zip/WinRAR (el Explorador de
+    // Windows no soporta AES).
+    private ZipParameters parametrosCifrados(String nombreEnZip) {
+        ZipParameters parametros = new ZipParameters();
+        parametros.setFileNameInZip(nombreEnZip);
+        parametros.setEncryptFiles(true);
+        parametros.setEncryptionMethod(EncryptionMethod.AES);
+        parametros.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+        return parametros;
+    }
+
+    // "76.123.456-7" -> "76123456". Si no trae guion, se descarta el ultimo
+    // caracter (el digito verificador).
+    static char[] claveDesdeRut(String rut) {
+        String limpio = rut == null ? "" : rut.replace(".", "").replace(" ", "");
+        int guion = limpio.indexOf('-');
+        String cuerpo = guion >= 0 ? limpio.substring(0, guion)
+                : (limpio.length() > 1 ? limpio.substring(0, limpio.length() - 1) : "");
+        String soloDigitos = cuerpo.replaceAll("\\D", "");
+        if (soloDigitos.isEmpty()) {
+            throw new BusinessException("El RUT de la empresa no es válido para generar la clave del respaldo");
+        }
+        return soloDigitos.toCharArray();
     }
 
     // Mismo chequeo que ya hace scripts/backup-empresa.sh antes de

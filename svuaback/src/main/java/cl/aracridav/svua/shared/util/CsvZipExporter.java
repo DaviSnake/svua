@@ -28,6 +28,17 @@ public class CsvZipExporter {
 
     public void exportarComoCsv(ZipOutputStream zip, String nombreArchivo, String sql) throws IOException {
 
+        byte[] csv = generarCsv(nombreArchivo, sql);
+
+        zip.putNextEntry(new ZipEntry(nombreArchivo + ".csv"));
+        zip.write(csv);
+        zip.closeEntry();
+    }
+
+    // Solo genera el contenido del CSV, sin atarlo a un tipo de zip
+    // concreto (lo usa tambien el respaldo cifrado de EmpresaBackupService).
+    public byte[] generarCsv(String nombreArchivo, String sql) {
+
         StringBuilder csv = new StringBuilder();
         boolean[] encabezadoEscrito = { false };
 
@@ -45,9 +56,7 @@ public class CsvZipExporter {
             throw new BusinessException("No fue posible exportar la tabla " + nombreArchivo, ex);
         }
 
-        zip.putNextEntry(new ZipEntry(nombreArchivo + ".csv"));
-        zip.write(csv.toString().getBytes(StandardCharsets.UTF_8));
-        zip.closeEntry();
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private void escribirEncabezado(StringBuilder csv, ResultSetMetaData meta) throws SQLException {

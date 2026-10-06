@@ -587,6 +587,12 @@ export class EmpresaComponent implements OnInit {
         enlace.download = `empresa_${empresa.id}_backup_${fecha}.zip`;
         enlace.click();
         window.URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Respaldo protegido con clave',
+          text: 'Para abrir el zip, la clave es el RUT de la empresa sin puntos, guion ni dígito verificador. Ábrelo con 7-Zip o WinRAR (el Explorador de Windows no soporta este cifrado).'
+        });
       },
       error: () => {
         this.descargandoBackupId = null;
