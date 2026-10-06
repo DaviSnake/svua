@@ -140,14 +140,14 @@ public class EmpresaController {
     @GetMapping("/{empresaId}/backup")
     public ResponseEntity<byte[]> backup(@PathVariable Long empresaId) {
 
-        byte[] zip = empresaBackupService.generarBackup(empresaId);
+        byte[] respaldo = empresaBackupService.generarBackup(empresaId);
         String nombreArchivo = "empresa_" + empresaId + "_backup_"
-                + java.time.LocalDate.now() + ".zip";
+                + java.time.LocalDate.now() + ".7z";
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
-                .body(zip);
+                .body(respaldo);
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN_EMPRESA')")

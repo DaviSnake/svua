@@ -14,6 +14,12 @@ COPY src ./src
 # Compilar y empaquetar la aplicación
 RUN mvn clean package -DskipTests
 
+# 🔒 Se extrae el jar a un layout plano (jar fino + lib/): la libreria nativa
+# 7-Zip-JBinding (respaldo cifrado .7z) busca sus clases con el classloader
+# del sistema, que NO ve los jars anidados de un fat jar de Spring Boot, y
+# tumba la JVM entera con "Class ... IInStream not found".
+RUN java -Djarmode=tools -jar target/svuaback-0.0.1.jar extract --destination /app/extracted
+
 # --------- Etapa 2: Imagen final con JDK ----------
 FROM eclipse-temurin:21-jdk
 
@@ -28,8 +34,8 @@ RUN apt-get update && apt-get install -y tzdata \
 # Directorio de trabajo
 WORKDIR /app
 
-# Copiar el jar desde la etapa anterior
-COPY --from=build /app/target/svuaback-0.0.1.jar app.jar
+# Copiar el jar extraido (svuaback-0.0.1.jar + lib/) desde la etapa anterior
+COPY --from=build /app/extracted /app
 
 # Ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "svuaback-0.0.1.jar"]

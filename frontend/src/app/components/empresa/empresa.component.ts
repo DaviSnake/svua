@@ -566,7 +566,7 @@ export class EmpresaComponent implements OnInit {
   }
 
   // 💾 Respaldo puntual de solo esta empresa (CSV por tabla, dentro de
-  // un .zip): pensado para archivo/auditoria antes de desactivar o
+  // un .7z cifrado): pensado para archivo/auditoria antes de desactivar o
   // eliminar una empresa, ver EmpresaBackupService en el backend.
   descargarBackup(empresa: Empresa): void {
 
@@ -584,9 +584,15 @@ export class EmpresaComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const enlace = document.createElement('a');
         enlace.href = url;
-        enlace.download = `empresa_${empresa.id}_backup_${fecha}.zip`;
+        enlace.download = `empresa_${empresa.id}_backup_${fecha}.7z`;
         enlace.click();
         window.URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Respaldo protegido con clave',
+          text: 'El archivo es un .7z. Al abrirlo con 7-Zip o WinRAR (doble clic) pide la clave una sola vez: el RUT de la empresa sin puntos, guion ni dígito verificador. El Explorador de Windows no puede abrir este formato.'
+        });
       },
       error: () => {
         this.descargandoBackupId = null;
