@@ -1,11 +1,11 @@
 package cl.aracridav.svua.empresa.service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,13 +18,11 @@ import cl.aracridav.svua.empresa.repository.EmpresaRepository;
 import cl.aracridav.svua.multitenancy.RlsContextService;
 import cl.aracridav.svua.shared.exception.BusinessException;
 import cl.aracridav.svua.shared.util.CsvZipExporter;
+import cl.aracridav.svua.shared.util.Respaldo7zCifrado;
+import cl.aracridav.svua.shared.util.Respaldo7zCifrado.Entrada;
 import lombok.RequiredArgsConstructor;
-import net.lingala.zip4j.io.outputstream.ZipOutputStream;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.model.enums.EncryptionMethod;
 
-// 🔒 Respaldo de UNA sola empresa (tenant): un .zip con un .csv por
+// 🔒 Respaldo de UNA sola empresa (tenant): un .7z cifrado con un .csv por
 // tabla, pensado para archivo/auditoria puntual (ej. antes de
 // desactivar o eliminar una empresa), NO como mecanismo de
 // restauracion en caliente. Complementa al backup completo de toda la
@@ -91,27 +89,30 @@ public class EmpresaBackupService {
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new BusinessException("No existe una empresa con id " + empresaId));
 
-        // 🔒 El zip sale cifrado (AES-256): para abrirlo se pide una clave,
-        // que es el RUT de la empresa sin puntos, guion ni digito verificador.
+        // 🔒 El archivo sale cifrado (.7z, AES-256, con los nombres de archivo
+        // tambien cifrados): al abrirlo se pide una clave, que es el RUT de la
+        // empresa sin puntos, guion ni digito verificador.
         char[] clave = claveDesdeRut(empresa.getRut());
 
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        List<Entrada> entradas = new ArrayList<>();
 
-        try (ZipOutputStream zip = new ZipOutputStream(buffer, clave)) {
+        try {
 
             rlsContextService.aplicarEmpresa(empresaId);
 
             List<String> tablas = jdbcTemplate.queryForList(SQL_TABLAS_CON_EMPRESA_ID, String.class);
             for (String tabla : tablas) {
                 byte[] csv = csvZipExporter.generarCsv(tabla, "SELECT * FROM \"" + tabla + "\"");
-                agregarEntrada(zip, tabla + ".csv", csv);
+                entradas.add(Entrada.deBytes(tabla + ".csv", csv));
             }
 
             // 🔥 los adjuntos (logo, archivos de checklist de ordenes) viven
             // en disco, no en la base -- sin esto el respaldo por empresa
             // quedaba incompleto para restaurar/auditar de verdad.
-            agregarLogoEmpresa(zip, empresaId);
-            agregarAdjuntosMantenimientos(zip, empresaId);
+            agregarLogoEmpresa(entradas, empresaId);
+            agregarAdjuntosMantenimientos(entradas, empresaId);
+
+            return Respaldo7zCifrado.crear(entradas, clave);
 
         } catch (IOException ex) {
             throw new BusinessException("No fue posible generar el respaldo de la empresa", ex);
@@ -120,14 +121,12 @@ public class EmpresaBackupService {
             // EmpresaController.backup): ese es su estado normal.
             rlsContextService.aplicarBypass();
         }
-
-        return buffer.toByteArray();
     }
 
     // 🔥 Logo de la empresa (ver EmpresaServiceImpl.guardarLogoSeguro):
     // se guarda como "uploads/logos/<empresaId>.<ext>", nombre fijo sin
     // timestamp (una sola subida vigente por empresa a la vez).
-    private void agregarLogoEmpresa(ZipOutputStream zip, Long empresaId) throws IOException {
+    private void agregarLogoEmpresa(List<Entrada> entradas, Long empresaId) throws IOException {
 
         Path carpetaLogos = Paths.get("uploads/logos");
         if (!Files.isDirectory(carpetaLogos)) {
@@ -149,7 +148,7 @@ public class EmpresaBackupService {
                         : nombre;
 
                 if (nombreSinExtension.equals(idComoTexto)) {
-                    copiarArchivoAZip(zip, archivo, "adjuntos/logo/" + nombre);
+                    entradas.add(Entrada.deArchivo("adjuntos/logo/" + nombre, archivo));
                 }
             }
         }
@@ -159,7 +158,7 @@ public class EmpresaBackupService {
     // OrdenMantenimientoServiceImpl.guardarArchivoSeguro): cada empresa
     // tiene su propia subcarpeta "uploads/mantenimientos/<empresaId>_<nombre>",
     // sin mas anidamiento (los archivos quedan directo adentro).
-    private void agregarAdjuntosMantenimientos(ZipOutputStream zip, Long empresaId) throws IOException {
+    private void agregarAdjuntosMantenimientos(List<Entrada> entradas, Long empresaId) throws IOException {
 
         Path carpetaBase = Paths.get("uploads/mantenimientos");
         if (!Files.isDirectory(carpetaBase)) {
@@ -184,37 +183,13 @@ public class EmpresaBackupService {
                 try (DirectoryStream<Path> archivos = Files.newDirectoryStream(carpetaEmpresa)) {
                     for (Path archivo : archivos) {
                         if (Files.isRegularFile(archivo)) {
-                            copiarArchivoAZip(zip, archivo,
-                                    "adjuntos/mantenimientos/" + nombreCarpeta + "/" + archivo.getFileName());
+                            entradas.add(Entrada.deArchivo(
+                                    "adjuntos/mantenimientos/" + nombreCarpeta + "/" + archivo.getFileName(), archivo));
                         }
                     }
                 }
             }
         }
-    }
-
-    private void copiarArchivoAZip(ZipOutputStream zip, Path archivo, String nombreEnZip) throws IOException {
-        zip.putNextEntry(parametrosCifrados(nombreEnZip));
-        Files.copy(archivo, zip);
-        zip.closeEntry();
-    }
-
-    private void agregarEntrada(ZipOutputStream zip, String nombreEnZip, byte[] contenido) throws IOException {
-        zip.putNextEntry(parametrosCifrados(nombreEnZip));
-        zip.write(contenido);
-        zip.closeEntry();
-    }
-
-    // AES-256: el cifrado ZIP clasico (ZipCrypto) se rompe con facilidad.
-    // Para abrir el archivo hace falta 7-Zip/WinRAR (el Explorador de
-    // Windows no soporta AES).
-    private ZipParameters parametrosCifrados(String nombreEnZip) {
-        ZipParameters parametros = new ZipParameters();
-        parametros.setFileNameInZip(nombreEnZip);
-        parametros.setEncryptFiles(true);
-        parametros.setEncryptionMethod(EncryptionMethod.AES);
-        parametros.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-        return parametros;
     }
 
     // "76.123.456-7" -> "76123456". Si no trae guion, se descarta el ultimo
